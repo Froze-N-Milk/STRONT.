@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"embed"
 	"flag"
 	"fmt"
@@ -10,6 +11,10 @@ import (
 	"os"
 
 	"github.com/olivere/vite"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
+
+	"plange/api"
 )
 
 //go:embed all:frontend/dist
@@ -29,12 +34,24 @@ func main() {
 	port := flag.Int("port", 3000, "http port")
 	flag.Parse()
 
+	db, err := gorm.Open(sqlite.Open("local.db"), &gorm.Config{})
+	if err != nil {
+		panic("failed to connect database")
+	}
+
 	var mux *http.ServeMux
 	if *isDev {
 		mux = MakeDevServer()
 	} else {
 		mux = MakeProdServer()
 	}
+
+	ctx := context.Background()
+
+	mux.Handle("POST /create-event", &api.CreateEvent {
+		DB: db,
+		CTX: &ctx,
+	})
 
 	server := http.Server{
 		Addr:    fmt.Sprintf("localhost:%d", *port),
