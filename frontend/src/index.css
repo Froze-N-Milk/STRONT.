@@ -4,8 +4,8 @@
   font-weight: 400;
 
   color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  color: rgba(0, 0, 0, 0.87);
+  background-color: #ffffff;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -20,6 +20,137 @@ a {
 }
 a:hover {
   color: #535bf2;
+}
+
+.bg_tint {
+  background-color: rgba(0, 0, 0, 0.308);
+  height: 100vh;
+  width: 100vw;
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+h3 {
+  font-weight: 500;
+  font-size: 1.1em;
+  padding: 1em 0 0.4em 0;
+  margin: 0;
+}
+
+.add_popover {
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  padding: 2em;
+  width: 400px;
+  min-height: 80vh;
+  margin: 10px;
+  border-radius: 5px;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+  background-color: white;
+  z-index: 1;
+}
+
+input[type=text] {
+  height: 3em;
+  background-color: white;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+  color: black;
+  padding: 0 0 0 1em;
+  margin: 0 0 2em 0;
+  border: none;
+  border-radius: 5px;
+  font-size: 1.1em;
+  width: 95%;
+}
+
+.sel_date_specificity {
+  align-self: center;
+  width: 98%;
+  background-color: rgb(245, 245, 245);
+  border: 1px solid darkgray;
+  border-radius: 5px;
+  height: 2.7em;
+  position: relative;
+}
+
+.sel_date_specificity button {
+  color: rgb(106, 106, 106);
+  border-radius: 5px;
+  width: 50%;
+  height: 100%;
+  background: none;
+}
+
+.sel_date_specificity button:focus {
+  outline: none;
+}
+
+.sel_date_specificity .active {
+  color: #00994C;
+  background-color: rgb(230, 244, 230);
+  box-shadow: 0 0 3px #00994C;
+  border: 1px solid #00994C;
+  pointer-events: none;
+}
+
+.time_selection {
+  display: flex;
+  gap: 1em;
+  align-items: center;
+  width: 100%
+}
+
+.dropdown_menu {
+  width: 45%;
+  position: relative;
+  
+}
+
+.dropdown_menu * {
+  font-weight: 300;
+}
+
+.dropdown_menu button {
+  width: 100%;
+  height: 2.8em;
+  border-radius: 5px;
+  background-color: white;
+  color: black;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+}
+
+.dropdown_options {
+  z-index: 1;
+  background-color: white;
+  width: 100%;
+  height: 11.2em;
+  color: black;
+  border-radius: 5px;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+  overflow: scroll;
+  position: absolute;
+  top: 0;
+}
+
+.dropdown_option {
+  height: 2.8em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.3s ease;
+}
+
+.dropdown_option:hover {
+  background-color: rgb(241, 241, 241);
+}
+
+.dropdown_option[data-selected] {
+  background-color: rgb(211, 252, 211);
 }
 
 body {
@@ -42,27 +173,52 @@ button {
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  background-color: #1a1a1a;
+  background-color: #00994C;
   cursor: pointer;
   transition: border-color 0.25s;
 }
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+
+.cal_wrapper {
+  width: 90%;
+  align-self: center;
+  border-radius: 5px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  padding: 0em 2em 4em 2em;
+  margin-bottom: 2em;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+.react-aria-RangeCalendar {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.cal_nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.cal_nav button {
+  height: 2em;
+  width: 2em;
+  padding: 0;
+  border-radius: 50%;
+  background-color: white;
+  color: black;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cal_nav button:hover {
+  background-color: rgb(234, 234, 234);
+}
+
+.react-aria-CalendarCell[data-selected="true"] {
+  background-color: blue;
+}
+
+#create_button {
+  align-self: center;
 }
