@@ -2,6 +2,7 @@
 - go
 - node
 - make
+- sqlite3
 
 # Commands:
 

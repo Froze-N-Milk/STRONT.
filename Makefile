@@ -5,6 +5,7 @@ all: build
 build: main
 
 frontend/dist:
+	rm -rf frontend/dist
 	cd frontend; npm install && npm run build
 
 main: frontend/dist
@@ -15,15 +16,20 @@ frontend-dev:
 	cd frontend; npm install && npm run dev
 
 .PHONY: dev
-dev:
+dev: local.db
+	touch frontend/dist/.marker
 	go run main.go --dev
 
 .PHONY: run
-run: build
+run: build local.db
 	./main
+
+local.db:
+	sqlite3 -init init.sql local.db .quit
 
 .PHONY: clean
 clean:
 	go clean
-	rm -r frontend/dist
+	rm -f local.db
+	rm -rf frontend/dist
 
