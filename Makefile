@@ -17,6 +17,7 @@ frontend-dev:
 
 .PHONY: dev
 dev: local.db
+	mkdir -p frontend/dist
 	touch frontend/dist/.marker
 	go run main.go --dev
 
