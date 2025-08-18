@@ -6,3 +6,6 @@ main
 
 # dev db
 local.db
+
+# jetbrains
+/.idea
