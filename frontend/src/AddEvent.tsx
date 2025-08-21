@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Listbox, ListboxButton, ListboxOption, ListboxOptions } from '@headlessui/react';
 import { Button, CalendarCell, CalendarGrid, CalendarGridBody, CalendarGridHeader, CalendarHeaderCell, type DateRange, Heading, RangeCalendar, Text } from 'react-aria-components';
-import { parseDate } from '@internationalized/date';
-import {ChevronLeft, ChevronRight} from 'lucide-react';
+import { getLocalTimeZone, today } from '@internationalized/date';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const times = [
     '00:00',
@@ -91,21 +91,23 @@ export default function AddEvent({ close }: { close: () => void }) {
             </div>
             <h3>What dates might work?</h3>
             <div className="cal_wrapper">
-                <RangeCalendar 
-                    aria-label="Date range" 
+                <RangeCalendar
+                    aria-label="Date range (controlled)"
                     value={range} onChange={setRange}
                     defaultValue={{
-                        start: parseDate('2020-02-03'),
-                        end: parseDate('2020-02-12')
+                        start: today(getLocalTimeZone()),
+                        end: today(getLocalTimeZone())
                     }}
-                    allowsNonContiguousRanges
                     pageBehavior="single">
                     <div className="cal_nav">
-                    <Button slot="previous"><ChevronLeft size={20} /></Button>
-                    <Heading />
-                    <Button slot="next"><ChevronRight size={20} /></Button>
+                        <Button slot="previous"><ChevronLeft size={20} /></Button>
+                        <Heading />
+                        <Button slot="next"><ChevronRight size={20} /></Button>
                     </div>
                     <CalendarGrid>
+                        <CalendarGridHeader>
+                            {(day) => <CalendarHeaderCell>{day}</CalendarHeaderCell>}
+                        </CalendarGridHeader>
                         <CalendarGridBody>
                             {(date) => <CalendarCell date={date} />}
                         </CalendarGridBody>
@@ -113,7 +115,18 @@ export default function AddEvent({ close }: { close: () => void }) {
                     <Text slot="errorMessage" />
                 </RangeCalendar>
             </div>
-            <button id="create_button">Create Event</button>
+            <button id="create_button" onClick={() => fetch(
+                "/create-event?" + new URLSearchParams({
+                    eventName: "",
+                    startTime: "0",
+                    duration: "1",
+                    startDate: "0",
+                    days: "0",
+                }),
+                {
+                    method: "POST",
+                }
+            )}>Create Event</button>
         </div>
     </div>
 }
