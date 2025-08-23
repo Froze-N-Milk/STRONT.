@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -12,7 +13,7 @@ import (
 );
 
 type Event struct {
-	ID        uint64
+	ID        uint64 `json:"id"`
 	Name      string
 	StartTime uint32
 	Duration  uint32
@@ -72,4 +73,6 @@ func (self *CreateEvent) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Add("Location", fmt.Sprintf("/event/%d", event.ID))
 	w.WriteHeader(http.StatusSeeOther)
+	encoder := json.NewEncoder(w)
+	encoder.Encode(event)
 }
