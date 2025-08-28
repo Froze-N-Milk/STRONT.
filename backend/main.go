@@ -33,6 +33,20 @@ func main() {
 
 	ctx := context.Background()
 
+	salt, err := api.CreateSalt()
+	if err != nil {
+		log.Panic(err.Error())
+	}
+
+	hash := api.HashPassword("idfk", salt)
+
+	// Seed the database
+	_ = gorm.G[api.Account](db.Clauses(clause.OnConflict{DoNothing: true})).Create(ctx, &api.Account{
+		Email:        "oscar@fuck.mychungus.life",
+		PasswordHash: hash[:],
+		PasswordSalt: salt[:],
+	})
+
 	mux.Handle("POST /create-event", &api.CreateEvent{
 		DB:  db,
 		CTX: &ctx,
