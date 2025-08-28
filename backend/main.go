@@ -7,8 +7,9 @@ import (
 	"log"
 	"net/http"
 
-	"gorm.io/driver/sqlite"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 
 	"plange/api"
 	"plange/backend/vite"
@@ -18,7 +19,8 @@ func main() {
 	port := flag.Int("port", 3000, "http port")
 	flag.Parse()
 
-	db, err := gorm.Open(sqlite.Open("local.db"), &gorm.Config{})
+	connectionString := "host=localhost user=admin password=password dbname=restaurant_db port=5432 sslmode=disable TimeZone=Australia/Sydney"
+	db, err := gorm.Open(postgres.Open(connectionString))
 	if err != nil {
 		panic("failed to connect database")
 	}
