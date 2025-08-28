@@ -38,6 +38,10 @@ func main() {
 		CTX: &ctx,
 	})
 
+	mux.Handle("POST /api/login", &api.LoginHandler{
+		DB: db,
+	})
+
 	server := http.Server{
 		Addr:    fmt.Sprintf("localhost:%d", *port),
 		Handler: mux,
