@@ -1,4 +1,5 @@
 DROP TABLE IF EXISTS account CASCADE;
+DROP TABLE IF EXISTS session_tokens CASCADE;
 DROP TABLE IF EXISTS availability CASCADE;
 DROP TABLE IF EXISTS restaurant CASCADE;
 DROP TABLE IF EXISTS availability_exclusion CASCADE;
@@ -9,12 +10,20 @@ DROP TABLE IF EXISTS booking CASCADE;
 
 CREATE TABLE account
 (
-    id            UUID PRIMARY KEY,
-    email         TEXT NOT NULL,
-    password_hash CHAR(256),
-    password_salt CHAR(128)
+    id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    email         TEXT NOT NULL UNIQUE,
+    password_hash BYTEA CHECK (length(password_hash) = 256),
+    password_salt BYTEA CHECK (length(password_salt) = 128)
 );
+CREATE INDEX ON account USING HASH (email);
 
+/*CREATE TABLE session_tokens
+(
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    account_id UUID NOT NULL,
+    FOREIGN KEY (account_id) REFERENCES account (id) ON DELETE CASCADE
+);
+*/
 CREATE TABLE availability
 (
     id                  UUID PRIMARY KEY,
@@ -30,8 +39,8 @@ CREATE TABLE availability
 CREATE TABLE restaurant
 (
     id              UUID PRIMARY KEY,
-    account_id      UUID         NOT NULL,
-    availability_id UUID         NOT NULL,
+    account_id      UUID NOT NULL,
+    availability_id UUID NOT NULL,
     name            TEXT NOT NULL,
     description     TEXT,
     location_text   TEXT,
