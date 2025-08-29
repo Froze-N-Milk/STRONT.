@@ -11,7 +11,7 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
-	"plange/api"
+	"plange/backend/api"
 	"plange/backend/vite"
 )
 
