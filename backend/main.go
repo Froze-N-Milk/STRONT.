@@ -29,6 +29,7 @@ func main() {
 	vite.Adapter.AddRoute("/")
 	vite.Adapter.AddRoute("/demo")
 	vite.Adapter.AddRoute("/login")
+	vite.Adapter.AddRoute("/sign-up")
 	vite.Adapter.AddRoute("/account")
 	mux.Handle("/", vite.Adapter.IntoHandler())
 

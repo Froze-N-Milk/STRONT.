@@ -3,7 +3,6 @@ package api
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"log/slog"
 	"net/http"
 
@@ -48,6 +47,6 @@ func (h *LoginHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Return success if match
 	// TODO: Generate session tokens
 	w.Header().Add("Set-Cookie", "session=MySessionToken; HttpOnly; SameSite=Strict; Secure; Partitioned")
-	w.Header().Add("Location", fmt.Sprintf("/account/%s", account.ID.String()))
+	w.Header().Add("Location", "/account")
 	w.WriteHeader(http.StatusSeeOther)
 }
