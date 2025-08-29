@@ -27,8 +27,9 @@ func main() {
 
 	mux := http.NewServeMux()
 	vite.Adapter.AddRoute("/")
-	vite.Adapter.AddRoute("/index.html")
 	vite.Adapter.AddRoute("/demo")
+	vite.Adapter.AddRoute("/login")
+	vite.Adapter.AddRoute("/account")
 	mux.Handle("/", vite.Adapter.IntoHandler())
 
 	ctx := context.Background()
@@ -38,6 +39,15 @@ func main() {
 
 	_ = gorm.G[api.Account](db.Clauses(clause.OnConflict{DoNothing: true})).Create(ctx, &api.Account{
 		Email:        "oscar@fuck.mychungus.life",
+		PasswordHash: hash[:],
+		PasswordSalt: salt[:],
+	})
+
+	// Seed the database
+	salt, hash = api.CreateSaltAndHashPassword("password")
+
+	_ = gorm.G[api.Account](db.Clauses(clause.OnConflict{DoNothing: true})).Create(ctx, &api.Account{
+		Email:        "admin@example.com",
 		PasswordHash: hash[:],
 		PasswordSalt: salt[:],
 	})
