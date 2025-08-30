@@ -6,10 +6,10 @@ type Account = {
 
 // WARNING: this does not currently work, as the backend endpoint has not been
 // added
-const accountInfo = (): Promise<Account> =>
-	fetch("/api/account", {
-		method: "GET",
-	}).then(async r => r.json())
+//const accountInfo = (): Promise<Account> =>
+//	fetch("/api/account", {
+//		method: "GET",
+//	}).then(async r => r.json())
 
 async function Account() {
 	// see above warning
