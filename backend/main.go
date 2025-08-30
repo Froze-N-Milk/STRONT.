@@ -7,8 +7,9 @@ import (
 	"log"
 	"net/http"
 
-	"gorm.io/driver/sqlite"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 
 	"plange/api"
 	"plange/backend/vite"
@@ -18,7 +19,8 @@ func main() {
 	port := flag.Int("port", 3000, "http port")
 	flag.Parse()
 
-	db, err := gorm.Open(sqlite.Open("local.db"), &gorm.Config{})
+	connectionString := "host=localhost user=admin password=password dbname=restaurant_db port=5432 sslmode=disable TimeZone=Australia/Sydney"
+	db, err := gorm.Open(postgres.Open(connectionString))
 	if err != nil {
 		panic("failed to connect database")
 	}
@@ -31,9 +33,27 @@ func main() {
 
 	ctx := context.Background()
 
+	salt, err := api.CreateSalt()
+	if err != nil {
+		log.Panic(err.Error())
+	}
+
+	hash := api.HashPassword("idfk", salt)
+
+	// Seed the database
+	_ = gorm.G[api.Account](db.Clauses(clause.OnConflict{DoNothing: true})).Create(ctx, &api.Account{
+		Email:        "oscar@fuck.mychungus.life",
+		PasswordHash: hash[:],
+		PasswordSalt: salt[:],
+	})
+
 	mux.Handle("POST /create-event", &api.CreateEvent{
 		DB:  db,
 		CTX: &ctx,
+	})
+
+	mux.Handle("POST /api/login", &api.LoginHandler{
+		DB: db,
 	})
 
 	server := http.Server{

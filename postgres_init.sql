@@ -1,4 +1,5 @@
 DROP TABLE IF EXISTS account CASCADE;
+DROP TABLE IF EXISTS session_tokens CASCADE;
 DROP TABLE IF EXISTS availability CASCADE;
 DROP TABLE IF EXISTS restaurant CASCADE;
 DROP TABLE IF EXISTS availability_exclusion CASCADE;
@@ -9,12 +10,20 @@ DROP TABLE IF EXISTS booking CASCADE;
 
 CREATE TABLE account
 (
-    id            UUID PRIMARY KEY,
-    email         VARCHAR(128) NOT NULL,
-    password_hash CHAR(256),
-    password_salt CHAR(128)
+    id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    email         TEXT NOT NULL UNIQUE,
+    password_hash BYTEA CHECK (length(password_hash) = 256),
+    password_salt BYTEA CHECK (length(password_salt) = 128)
 );
+CREATE INDEX ON account USING HASH (email);
 
+/*CREATE TABLE session_tokens
+(
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    account_id UUID NOT NULL,
+    FOREIGN KEY (account_id) REFERENCES account (id) ON DELETE CASCADE
+);
+*/
 CREATE TABLE availability
 (
     id                  UUID PRIMARY KEY,
@@ -30,12 +39,12 @@ CREATE TABLE availability
 CREATE TABLE restaurant
 (
     id              UUID PRIMARY KEY,
-    account_id      UUID         NOT NULL,
-    availability_id UUID         NOT NULL,
-    name            VARCHAR(256) NOT NULL,
-    description     VARCHAR(1024),
-    location_text   VARCHAR(256),
-    location_url    VARCHAR(256),
+    account_id      UUID NOT NULL,
+    availability_id UUID NOT NULL,
+    name            TEXT NOT NULL,
+    description     TEXT,
+    location_text   TEXT,
+    location_url    TEXT,
     FOREIGN KEY (account_id) REFERENCES account (id) ON DELETE CASCADE,
     FOREIGN KEY (availability_id) REFERENCES availability (id) ON DELETE CASCADE
 );
@@ -54,7 +63,7 @@ CREATE TABLE seating_zone
 (
     id            UUID PRIMARY KEY,
     restaurant_id UUID NOT NULL,
-    zone_name     VARCHAR(128),
+    zone_name     TEXT,
     seats         INT  NOT NULL CHECK (seats > 0),
     FOREIGN KEY (restaurant_id) REFERENCES restaurant (id) ON DELETE CASCADE
 );
@@ -69,10 +78,10 @@ CREATE TABLE restaurant_frontpage
 CREATE TABLE customer_contact
 (
     id          UUID PRIMARY KEY,
-    given_name  VARCHAR(128) NOT NULL,
-    family_name VARCHAR(128) NOT NULL,
-    phone       CHAR(10),
-    email       VARCHAR(128) NOT NULL
+    given_name  TEXT NOT NULL,
+    family_name TEXT NOT NULL,
+    phone       TEXT,
+    email       TEXT NOT NULL
 );
 
 CREATE TABLE booking

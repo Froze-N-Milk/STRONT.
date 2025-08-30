@@ -9,3 +9,4 @@ local.db
 
 # jetbrains
 /.idea
+/*.http
