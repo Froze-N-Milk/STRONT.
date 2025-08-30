@@ -7,22 +7,10 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
-type Account struct {
-	ID           uuid.UUID `json:"id" gorm:"primary_key;default:gen_random_uuid()"`
-	Email        string    `json:"email"`
-	PasswordHash []byte    `json:"password_hash" gorm:"type:bytea"`
-	PasswordSalt []byte    `json:"password_salt" gorm:"type:bytea"`
-}
-
-func (Account) TableName() string {
-	return "account"
-}
-
-type login struct {
+type loginRequest struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
@@ -32,7 +20,7 @@ type LoginHandler struct {
 }
 
 func (h *LoginHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	login := login{}
+	login := loginRequest{}
 	err := json.NewDecoder(r.Body).Decode(&login) // Try decoding request to the login object
 	if err != nil {                               // If the decode failed, log the error and send status request back
 		slog.Error(err.Error())
@@ -59,7 +47,7 @@ func (h *LoginHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// Return success if match
 	// TODO: Generate session tokens
-	w.Header().Add("Set-Cookie", "session=MySessionToken")
+	w.Header().Add("Set-Cookie", "session=MySessionToken; HttpOnly; SameSite=Strict; Secure; Partitioned")
 	w.Header().Add("Location", fmt.Sprintf("/account/%s", account.ID.String()))
 	w.WriteHeader(http.StatusSeeOther)
 }
