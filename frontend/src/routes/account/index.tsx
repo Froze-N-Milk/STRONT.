@@ -1,25 +1,20 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 
-type Account = {
-	email: string,
-}
-
-// WARNING: this does not currently work, as the backend endpoint has not been
-// added
-//const accountInfo = (): Promise<Account> =>
-//	fetch("/api/account", {
-//		method: "GET",
-//	}).then(async r => r.json())
+const accountInfo = (): Promise<string> =>
+	fetch("/api/account", {
+		method: "GET",
+	}).then(async r => r.text())
 
 async function Account() {
-	// see above warning
-	// const account = await accountInfo();
-	const account = {
-		email: "admin@example.com"
-	}
+	const [email, setEmail] = useState("")
+	useEffect(() => {
+		accountInfo()
+			.then(setEmail)
+	}, [])
 
 	return <div>
-		Hello {account.email}!
+		Hello {email}!
 	</div>
 }
 

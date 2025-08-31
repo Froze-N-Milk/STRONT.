@@ -12,17 +12,34 @@ import (
 	"gorm.io/gorm/clause"
 
 	"plange/backend/api"
+	"plange/backend/lib"
 	"plange/backend/vite"
 )
 
 func main() {
 	port := flag.Int("port", 3000, "http port")
+	jwtKeyFile := flag.String("jwt-key-file", ".jwt-key", "file that contains base64 encoded jwt signing key")
 	flag.Parse()
+
+	jwtKey, err := api.GetOrMakeJWTSigningKey(*jwtKeyFile)
+	if err != nil {
+		panic(err)
+	}
 
 	connectionString := "host=localhost user=admin password=password dbname=restaurant_db port=5432 sslmode=disable TimeZone=Australia/Sydney"
 	db, err := gorm.Open(postgres.Open(connectionString))
 	if err != nil {
-		panic("failed to connect database")
+		log.Panic("failed to connect database", err)
+	}
+
+	appMiddleware := api.AppMiddleware{
+		DB: api.DBMiddleware{DB: db},
+	}
+	authedAppMiddleware := api.AuthedAppMiddleware{
+		Auth: api.AuthMiddleware{
+			Mode: api.Api,
+			Key:  &jwtKey,
+		},
 	}
 
 	mux := http.NewServeMux()
@@ -30,8 +47,11 @@ func main() {
 	vite.Adapter.AddRoute("/demo")
 	vite.Adapter.AddRoute("/login")
 	vite.Adapter.AddRoute("/sign-up")
-	vite.Adapter.AddRoute("/account")
-	mux.Handle("/", vite.Adapter.IntoHandler())
+	vite.Adapter.AddAuthedRoute("/account")
+	mux.Handle("/", vite.Adapter.IntoHandler(api.AuthMiddleware{
+		Mode: api.Frontend,
+		Key:  &jwtKey,
+	}))
 
 	ctx := context.Background()
 
@@ -53,9 +73,13 @@ func main() {
 		PasswordSalt: salt[:],
 	})
 
-	mux.Handle("POST /api/login", &api.LoginHandler{
-		DB: db,
-	})
+	mux.Handle("POST /api/login", appMiddleware.Service(&api.LoginHandler{
+		JWTKey: &jwtKey,
+	}))
+
+	mux.Handle("GET /api/account", authedAppMiddleware.Service(lib.HandlerFunc[api.AuthedAppContext](func(ctx api.AuthedAppContext, w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(ctx.User.Email))
+	})))
 
 	server := http.Server{
 		Addr:    fmt.Sprintf("localhost:%d", *port),
