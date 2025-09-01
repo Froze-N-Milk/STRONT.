@@ -158,12 +158,16 @@ type User struct {
 	Email string
 }
 
-func setSessionTokenCookie(w http.ResponseWriter, email string, key *[32]byte) error {
+func setSessionTokenCookie(w http.ResponseWriter, content string) {
+	w.Header().Add("Set-Cookie", fmt.Sprintf("session-token=\"%s\"; HttpOnly; Secure; Partitioned; Path=/", content))
+}
+
+func setSessionToken(w http.ResponseWriter, email string, key *[32]byte) error {
 	token, err := NewJWT(email, key)
 	if err != nil {
 		return err
 	}
-	w.Header().Add("Set-Cookie", fmt.Sprintf("session-token=%s; HttpOnly; Secure; Partitioned; Path=/", token))
+	setSessionTokenCookie(w, token)
 	return nil
 }
 
@@ -202,13 +206,13 @@ func authMiddleware(h lib.Handler[User], key *[32]byte, onErr func(http.Response
 		email, remainingTime, err := ValidateJWT(token.Value, key)
 		if err != nil {
 			slog.Error("Invalid session token", "url", r.URL, "error", err)
-			w.Header().Add("Set-Cookie", "session-token=; HttpOnly; Secure; Partitioned; Path=/")
+			setSessionTokenCookie(w, "")
 			onErr(w)
 			return
 		}
 
 		if remainingTime > 0 && remainingTime < 30*time.Minute {
-			err := setSessionTokenCookie(w, email, key)
+			err := setSessionToken(w, email, key)
 			if err != nil {
 				slog.Error("Unable to re-issue fresh token for", "email", email, "url", r.URL, "error", err)
 			}
