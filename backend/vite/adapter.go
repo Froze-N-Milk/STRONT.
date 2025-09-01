@@ -1,26 +1,17 @@
 package vite
 
 import (
-	"log/slog"
 	"net/http"
+	"plange/backend/api"
+	"plange/backend/lib"
 )
 
 var Adapter ViteAdapter
 var IsDev bool
 
-//	type ViteAdapter struct {
-//		Mux               *http.ServeMux
-//		make_vite_handler func(path string) http.Handler
-//	}
-//
-//	func MakeViteAdapter(make_vite_handler func(path string) http.Handler) ViteAdapter {
-//		return ViteAdapter{
-//			Mux:               http.NewServeMux(),
-//			make_vite_handler: make_vite_handler,
-//		}
-//	}
 type ViteAdapter struct {
 	paths             []string
+	authedPaths       []string
 	assets            http.Handler
 	make_vite_handler func(path string) http.Handler
 }
@@ -35,23 +26,25 @@ func MakeViteAdapter(assets http.Handler, make_vite_handler func(path string) ht
 func (self *ViteAdapter) AddRoute(path string) {
 	self.paths = append(self.paths, path)
 }
-func (self ViteAdapter) IntoHandler() *http.ServeMux {
+
+func (self *ViteAdapter) AddAuthedRoute(path string) {
+	self.authedPaths = append(self.authedPaths, path)
+}
+
+func (self ViteAdapter) IntoHandler(middleware api.AuthMiddleware) *http.ServeMux {
 	res := http.NewServeMux()
 	res.Handle("/assets/", self.assets)
 	for _, path := range self.paths {
-		handler := self.make_vite_handler(path)
-		res.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
-			slog.Debug("serve vite", "url", r.URL)
-			handler.ServeHTTP(w, r)
-		})
+		res.Handle(path, self.make_vite_handler(path))
+	}
+	for _, path := range self.authedPaths {
+		h := self.make_vite_handler(path)
+		res.Handle(path, middleware.Service(lib.HandlerFunc[api.User](func(ctx api.User, w http.ResponseWriter, r *http.Request) {
+			h.ServeHTTP(w, r)
+		})))
 	}
 	return res
 }
-
-//func (self *ViteAdapter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-//	log.Printf("Vite Adapter, request url: %s\n", r.URL)
-//	self.Mux.ServeHTTP(w, r)
-//}
 
 var indexTmpl = `
 <!doctype html>

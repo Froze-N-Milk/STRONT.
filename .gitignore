@@ -4,8 +4,8 @@
 # build output
 main
 
-# dev db
-local.db
+# jwt key
+.jwt-key
 
 # jetbrains
 /.idea
