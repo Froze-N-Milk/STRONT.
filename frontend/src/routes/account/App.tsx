@@ -59,8 +59,49 @@ function App(){
     setTimeout(() => setSaveMessage(''), 3000);
     setIsSaving(false);
   };
-
   
+  // Booking-related functions
+  // Add a new booking if required fields are filled
+  const handleAddBooking = () => {
+    if (newBooking.customerName && newBooking.date && newBooking.time && newBooking.phone) {
+      const booking = {
+        id: Date.now(),  // use timestamp as a simple ID
+        ...newBooking,
+        status: 'pending' as const
+      };
+      setBookings([...bookings, booking]); // add to booking list
+      setNewBooking({ customerName: '', date: '', time: '', guests: 1, phone: '' });
+      setShowAddModal(false);
+    }
+  };
+
+  // Confirm a booking by id
+  const handleConfirmBooking = async (id: number) => {
+    setBookings(bookings.map(booking =>
+      booking.id === id ? { ...booking, status: 'confirmed' as const } : booking
+    ));
+    // Mock API call (pretend to call backend)
+    await new Promise(resolve => setTimeout(resolve, 500));
+  };
+
+  // Cancel a booking by id
+  const handleCancelBooking = async (id: number) => {
+    setBookings(bookings.map(booking =>
+      booking.id === id ? { ...booking, status: 'cancelled' as const } : booking
+    ));
+
+    //Mock API call (pretend to call backend)
+    await new Promise(resolve => setTimeout(resolve, 500));
+  };
+
+  //Reset the new booking form
+  const resetNewBooking = () => {
+    setNewBooking({ customerName: '', date: '', time: '', guests: 1, phone: '' });
+    setShowAddModal(false);
+  };
+  
+
+
 }
 
 
