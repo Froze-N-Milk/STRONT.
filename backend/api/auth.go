@@ -96,3 +96,10 @@ func (h *SignUpHandler) ServeHTTP(ctx AppContext, w http.ResponseWriter, r *http
 	w.Header().Add("Location", "/account")
 	w.WriteHeader(http.StatusSeeOther)
 }
+
+type LogoutHandler struct{}
+
+func (h *LogoutHandler) ServeHTTP(ctx AppContext, w http.ResponseWriter, r *http.Request) {
+	setSessionTokenCookie(w, "")
+	w.WriteHeader(http.StatusOK)
+}
