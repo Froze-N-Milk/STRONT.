@@ -8,12 +8,24 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
+import { createFileRoute } from '@tanstack/react-router'
+
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SignUpIndexRouteImport } from './routes/sign-up/index'
+import { Route as PlayIndexRouteImport } from './routes/play/index'
 import { Route as LoginIndexRouteImport } from './routes/login/index'
 import { Route as AccountIndexRouteImport } from './routes/account/index'
+import { Route as PlayLayoutRouteImport } from './routes/play/_layout'
+import { Route as PlayRestaurantSlugIndexRouteImport } from './routes/play/restaurant/$slug.index'
 
+const PlayRouteImport = createFileRoute('/play')()
+
+const PlayRoute = PlayRouteImport.update({
+  id: '/play',
+  path: '/play',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -23,6 +35,11 @@ const SignUpIndexRoute = SignUpIndexRouteImport.update({
   id: '/sign-up/',
   path: '/sign-up/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const PlayIndexRoute = PlayIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => PlayRoute,
 } as any)
 const LoginIndexRoute = LoginIndexRouteImport.update({
   id: '/login/',
@@ -34,36 +51,77 @@ const AccountIndexRoute = AccountIndexRouteImport.update({
   path: '/account/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PlayLayoutRoute = PlayLayoutRouteImport.update({
+  id: '/_layout',
+  getParentRoute: () => PlayRoute,
+} as any)
+const PlayRestaurantSlugIndexRoute = PlayRestaurantSlugIndexRouteImport.update({
+  id: '/restaurant/$slug/',
+  path: '/restaurant/$slug/',
+  getParentRoute: () => PlayRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/play': typeof PlayLayoutRoute
   '/account': typeof AccountIndexRoute
   '/login': typeof LoginIndexRoute
+  '/play/': typeof PlayIndexRoute
   '/sign-up': typeof SignUpIndexRoute
+  '/play/restaurant/$slug': typeof PlayRestaurantSlugIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/play': typeof PlayIndexRoute
   '/account': typeof AccountIndexRoute
   '/login': typeof LoginIndexRoute
   '/sign-up': typeof SignUpIndexRoute
+  '/play/restaurant/$slug': typeof PlayRestaurantSlugIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/play': typeof PlayRouteWithChildren
+  '/play/_layout': typeof PlayLayoutRoute
   '/account/': typeof AccountIndexRoute
   '/login/': typeof LoginIndexRoute
+  '/play/': typeof PlayIndexRoute
   '/sign-up/': typeof SignUpIndexRoute
+  '/play/restaurant/$slug/': typeof PlayRestaurantSlugIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/account' | '/login' | '/sign-up'
+  fullPaths:
+    | '/'
+    | '/play'
+    | '/account'
+    | '/login'
+    | '/play/'
+    | '/sign-up'
+    | '/play/restaurant/$slug'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/account' | '/login' | '/sign-up'
-  id: '__root__' | '/' | '/account/' | '/login/' | '/sign-up/'
+  to:
+    | '/'
+    | '/play'
+    | '/account'
+    | '/login'
+    | '/sign-up'
+    | '/play/restaurant/$slug'
+  id:
+    | '__root__'
+    | '/'
+    | '/play'
+    | '/play/_layout'
+    | '/account/'
+    | '/login/'
+    | '/play/'
+    | '/sign-up/'
+    | '/play/restaurant/$slug/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  PlayRoute: typeof PlayRouteWithChildren
   AccountIndexRoute: typeof AccountIndexRoute
   LoginIndexRoute: typeof LoginIndexRoute
   SignUpIndexRoute: typeof SignUpIndexRoute
@@ -71,6 +129,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/play': {
+      id: '/play'
+      path: '/play'
+      fullPath: '/play'
+      preLoaderRoute: typeof PlayRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -84,6 +149,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/sign-up'
       preLoaderRoute: typeof SignUpIndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/play/': {
+      id: '/play/'
+      path: '/'
+      fullPath: '/play/'
+      preLoaderRoute: typeof PlayIndexRouteImport
+      parentRoute: typeof PlayRoute
     }
     '/login/': {
       id: '/login/'
@@ -99,11 +171,40 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/play/_layout': {
+      id: '/play/_layout'
+      path: '/play'
+      fullPath: '/play'
+      preLoaderRoute: typeof PlayLayoutRouteImport
+      parentRoute: typeof PlayRoute
+    }
+    '/play/restaurant/$slug/': {
+      id: '/play/restaurant/$slug/'
+      path: '/restaurant/$slug'
+      fullPath: '/play/restaurant/$slug'
+      preLoaderRoute: typeof PlayRestaurantSlugIndexRouteImport
+      parentRoute: typeof PlayRoute
+    }
   }
 }
 
+interface PlayRouteChildren {
+  PlayLayoutRoute: typeof PlayLayoutRoute
+  PlayIndexRoute: typeof PlayIndexRoute
+  PlayRestaurantSlugIndexRoute: typeof PlayRestaurantSlugIndexRoute
+}
+
+const PlayRouteChildren: PlayRouteChildren = {
+  PlayLayoutRoute: PlayLayoutRoute,
+  PlayIndexRoute: PlayIndexRoute,
+  PlayRestaurantSlugIndexRoute: PlayRestaurantSlugIndexRoute,
+}
+
+const PlayRouteWithChildren = PlayRoute._addFileChildren(PlayRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  PlayRoute: PlayRouteWithChildren,
   AccountIndexRoute: AccountIndexRoute,
   LoginIndexRoute: LoginIndexRoute,
   SignUpIndexRoute: SignUpIndexRoute,
