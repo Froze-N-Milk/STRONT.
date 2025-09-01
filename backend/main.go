@@ -76,9 +76,12 @@ func main() {
 	mux.Handle("POST /api/login", appMiddleware.Service(&api.LoginHandler{
 		JWTKey: &jwtKey,
 	}))
+
 	mux.Handle("POST /api/sign-up", appMiddleware.Service(&api.SignUpHandler{
 		JWTKey: &jwtKey,
 	}))
+
+	mux.Handle("POST /api/logout", appMiddleware.Service(&api.LogoutHandler{}))
 
 	mux.Handle("GET /api/account", authedAppMiddleware.Service(lib.HandlerFunc[api.AuthedAppContext](func(ctx api.AuthedAppContext, w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(ctx.User.Email))
