@@ -19,14 +19,12 @@ function Login() {
 	const [email, setEmail] = useState("")
 	const [password, setPassword] = useState("")
 
-	return <div style={{
-		display: "flex",
-		flexDirection: "column",
-		gap: 10,
-	}}>
+	return <div className="log_sign_wrapper">
+		<div style={{display:'flex'}}> <p>sign in to your <b>STRONT.</b> account</p></div>
 		<input type="email" onChange={e => setEmail(e.currentTarget.value)} placeholder="email" />
 		<input type="password" onChange={e => setPassword(e.currentTarget.value)} placeholder="password" />
 		<button
+			className="submit_button"
 			onClick={async () => await loginRequest(email, password)}>
 			Login
 		</button>

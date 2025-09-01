@@ -18,14 +18,14 @@ function SignUp() {
 	const [email, setEmail] = useState("")
 	const [password, setPassword] = useState("")
 
-	return <div style={{
-		display: "flex",
-		flexDirection: "column",
-		gap: 10,
-	}}>
+	return <div className="log_sign_wrapper">
+		<div><p>never <b>STRONT</b>ed before?</p></div>
+		<h3>CREATE ACCOUNT</h3>
+
 		<input type="email" onChange={e => setEmail(e.currentTarget.value)} placeholder="email" />
 		<input type="password" onChange={e => setPassword(e.currentTarget.value)} placeholder="password" />
 		<button
+			className="submit_button"
 			onClick={async () => await signupRequest(email, password)}>
 			Sign Up
 		</button>
