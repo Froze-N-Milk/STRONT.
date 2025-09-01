@@ -59,7 +59,7 @@ function App(){
     setTimeout(() => setSaveMessage(''), 3000);
     setIsSaving(false);
   };
-  
+
   // Booking-related functions
   // Add a new booking if required fields are filled
   const handleAddBooking = () => {
@@ -100,8 +100,50 @@ function App(){
     setShowAddModal(false);
   };
   
+  return(
+    <div className="App">
+      <div className="header">
+        <div className="user-avatar">
+          <span className="avatar-icon">👤</span>
+        </div>
+        <div className="restaurant-title">
+          BIG JOE'S PIZZA
+          <span className="dropdown-arrow">▼</span>
+        </div>
+      </div>
+
+      <div className="main-container">
+        <div className="sidebar">
+          <button
+            className={`nav-btn ${activeTab === 'profile' ? 'active' : ''}`}
+            onClick={() => setActiveTab('profile')}
+          >
+            Edit Profile
+          </button>
+          <button
+            className={`nav-btn ${activeTab === 'bookings' ? 'active' : ''}`}
+            onClick={() => setActiveTab('bookings')}
+          >
+            Bookings
+          </button>
+          <button
+            className={`nav-btn ${activeTab === 'booking-settings' ? 'active' : ''}`}
+            onClick={() => setActiveTab('booking-settings')}
+          >
+            Booking Settings
+          </button>
+          <button
+            className={`nav-btn ${activeTab === 'account' ? 'active' : ''}`}
+            onClick={() => setActiveTab('account')}
+          >
+            Account Settings
+          </button>
+        </div>
 
 
+      </div>
+    </div>  
+  );
 }
 
 
