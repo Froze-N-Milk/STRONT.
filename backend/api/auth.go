@@ -46,7 +46,7 @@ func (h *LoginHandler) ServeHTTP(ctx AppContext, w http.ResponseWriter, r *http.
 	}
 
 	// Return success if match
-	err = setSessionTokenCookie(w, account.Email, h.JWTKey)
+	err = setSessionToken(w, account.Email, h.JWTKey)
 	if err != nil {
 		slog.Error("unable to set session cookie", "error", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -87,7 +87,7 @@ func (h *SignUpHandler) ServeHTTP(ctx AppContext, w http.ResponseWriter, r *http
 	// TODO: verify email
 
 	// set session cookie
-	err = setSessionTokenCookie(w, signUp.Email, h.JWTKey)
+	err = setSessionToken(w, signUp.Email, h.JWTKey)
 	if err != nil {
 		slog.Error("unable to set session cookie", "error", err)
 		w.WriteHeader(http.StatusInternalServerError)
