@@ -18,8 +18,12 @@ build: main
 frontend/dist:
 	cd frontend; npm install && npm run build
 
-main: frontend/dist db
+main: frontend/dist
 	go build -o main backend/main.go
+
+.PHONY: test
+test:
+	go test -v
 
 .PHONY: frontend-dev
 frontend-dev:
