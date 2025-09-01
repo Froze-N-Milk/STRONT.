@@ -2,7 +2,7 @@
 - go
 - node
 - make
-- sqlite3
+- docker / podman
 
 # Commands:
 
