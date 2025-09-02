@@ -7,6 +7,9 @@ main
 # jwt key
 .jwt-key
 
+# sqlite cleanup
+local.db
+
 # jetbrains
 /.idea
 /*.http
