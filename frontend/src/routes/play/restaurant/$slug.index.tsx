@@ -1,14 +1,11 @@
 import { createFileRoute, useParams } from '@tanstack/react-router'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, Fragment } from 'react'
 
 type ApiUser = { id: number; email: string; name: string }
 const AUTH_KEY = 'plange_auth_user'
 
-// 샘플 레스토랑 데이터 (홈 카드와 동일한 3개)
-const RESTAURANTS: Record<
-  string,
-  { name: string; about: string; img: string; tags: string[] }
-> = {
+/** Sample restaurant data to mirror home cards */
+const RESTAURANTS: Record<string, { name: string; about: string; img: string; tags: string[] }> = {
   'tony-strombolis-italian': {
     name: "Tony Stromboli’s Italian",
     about: 'TONY COOKS UP ONE HELL OF A PIZZA PIE',
@@ -36,7 +33,7 @@ export const Route = createFileRoute('/play/restaurant/$slug/')({
 function Page() {
   const { slug } = useParams({ from: '/play/restaurant/$slug/' })
 
-  // --- 로그인 상태 -------------------------------
+  /** Login state (read from localStorage and listen to modal events) */
   const [me, setMe] = useState<ApiUser | null>(() => {
     try {
       const raw = localStorage.getItem(AUTH_KEY)
@@ -53,7 +50,7 @@ function Page() {
   }, [])
   const authed = !!me
 
-  // --- 좌측: 레스토랑 정보 ------------------------
+  /** Left: restaurant information */
   const info =
     RESTAURANTS[slug ?? ''] ??
     ({
@@ -63,47 +60,41 @@ function Page() {
       tags: ['restaurant'],
     } as const)
 
-  // --- 우측: 달력 + 시간 선택 ---------------------
+  /** Right: simple client-side calendar + time selector */
   const [view, setView] = useState(() => {
     const d = new Date()
-    return { year: d.getFullYear(), month: d.getMonth() } // month: 0~11
+    return { year: d.getFullYear(), month: d.getMonth() } // month: 0..11
   })
   const [date, setDate] = useState<Date | null>(null)
   const [time, setTime] = useState<string | null>(null)
 
-  const times = ['18:00', '18:30', '19:00', '19:30', '20:00']
+  // time slots (we’ll insert a divider after '14:00')
+  const times = [
+    '09:30','10:00','10:30','11:00','11:30','12:00','12:30',
+    '13:00','13:30','14:00',
+    '17:00','17:30','18:00','18:30','19:00','19:30','20:00','20:30','21:00','21:30','22:00',
+  ]
 
   const weeks = useMemo(() => buildMonthMatrix(view.year, view.month), [view])
 
   function prevMonth() {
-    setView((v) => {
-      const m = v.month - 1
-      return m < 0 ? { year: v.year - 1, month: 11 } : { year: v.year, month: m }
-    })
+    setView((v) => (v.month - 1 < 0 ? { year: v.year - 1, month: 11 } : { year: v.year, month: v.month - 1 }))
   }
   function nextMonth() {
-    setView((v) => {
-      const m = v.month + 1
-      return m > 11 ? { year: v.year + 1, month: 0 } : { year: v.year, month: m }
-    })
+    setView((v) => (v.month + 1 > 11 ? { year: v.year + 1, month: 0 } : { year: v.year, month: v.month + 1 }))
   }
   function pick(d: Date) {
-    if (!authed) return // 비로그인 시 선택 불가
+    if (!authed) return // cannot pick if not logged in
     setDate(d)
     setTime(null)
   }
-
   function onBook() {
     if (!authed) {
-      // 로그인 유도: 홈으로 이동 + 모달 자동 오픈
-      window.location.href = '/?auth=1'
+      window.location.href = '/?auth=1' // open login on home
       return
     }
     if (!date || !time) return
-    const y = date.getFullYear()
-    const m = String(date.getMonth() + 1).padStart(2, '0')
-    const dd = String(date.getDate()).padStart(2, '0')
-    alert(`Booked: ${info.name}\nWhen: ${y}-${m}-${dd} ${time}\n(데모)`)
+    alert(`Booked: ${info.name}\nWhen: ${fmtDate(date)} ${time}\n(demo only)`)
   }
 
   return (
@@ -186,25 +177,9 @@ function Page() {
               marginBottom: 8,
             }}
           >
-            <button
-              onClick={prevMonth}
-              aria-label="prev"
-              style={navBtnStyle}
-              title="Previous month"
-            >
-              ‹
-            </button>
-            <strong>
-              {MONTH_NAMES[view.month]} {view.year}
-            </strong>
-            <button
-              onClick={nextMonth}
-              aria-label="next"
-              style={navBtnStyle}
-              title="Next month"
-            >
-              ›
-            </button>
+            <button onClick={prevMonth} aria-label="prev" style={navBtnStyle} title="Previous month">‹</button>
+            <strong>{MONTH_NAMES[view.month]} {view.year}</strong>
+            <button onClick={nextMonth} aria-label="next" style={navBtnStyle} title="Next month">›</button>
           </div>
 
           <div
@@ -243,13 +218,7 @@ function Page() {
                   key={cell.toISOString()}
                   onClick={() => pick(cell)}
                   disabled={disabled || !authed}
-                  title={
-                    !authed
-                      ? 'Log in to pick a date'
-                      : disabled
-                      ? 'Past date'
-                      : `${cell.toDateString()}`
-                  }
+                  title={!authed ? 'Log in to pick a date' : disabled ? 'Past date' : `${cell.toDateString()}`}
                   style={{
                     padding: '8px 0',
                     borderRadius: 8,
@@ -274,23 +243,36 @@ function Page() {
             const active = time === t
             const disabled = !authed || !date
             return (
-              <button
-                key={t}
-                onClick={() => !disabled && setTime(t)}
-                disabled={disabled}
-                title={disabled ? 'Select a date & log in first' : ''}
-                style={{
-                  padding: '8px 12px',
-                  borderRadius: 8,
-                  border: active ? '2px solid #111' : '1px solid #ddd',
-                  background: active ? '#111' : '#fff',
-                  color: active ? '#fff' : '#111',
-                  cursor: disabled ? 'not-allowed' : 'pointer',
-                  opacity: disabled ? 0.6 : 1,
-                }}
-              >
-                {t}
-              </button>
+              <Fragment key={t}>
+                <button
+                  onClick={() => !disabled && setTime(t)}
+                  disabled={disabled}
+                  title={disabled ? 'Select a date & log in first' : ''}
+                  style={{
+                    padding: '8px 12px',
+                    borderRadius: 8,
+                    border: active ? '2px solid #111' : '1px solid #ddd',
+                    background: active ? '#111' : '#fff',
+                    color: active ? '#fff' : '#111',
+                    cursor: disabled ? 'not-allowed' : 'pointer',
+                    opacity: disabled ? 0.6 : 1,
+                  }}
+                >
+                  {t}
+                </button>
+
+                {/* divider after 14:00 */}
+                {t === '14:00' && (
+                  <div
+                    style={{
+                      flexBasis: '100%',
+                      height: 0,
+                      borderTop: '1px dashed #e5e5e5',
+                      margin: '6px 0',
+                    }}
+                  />
+                )}
+              </Fragment>
             )
           })}
         </div>
@@ -299,19 +281,9 @@ function Page() {
           onClick={onBook}
           disabled={!authed || !date || !time}
           className="create_button"
-          style={{
-            width: '100%',
-            cursor: !authed || !date || !time ? 'not-allowed' : 'pointer',
-            opacity: !authed || !date || !time ? 0.6 : 1,
-          }}
+          style={{ width: '100%', cursor: !authed || !date || !time ? 'not-allowed' : 'pointer', opacity: !authed || !date || !time ? 0.6 : 1 }}
         >
-          {!authed
-            ? 'Log in to book'
-            : !date
-            ? 'Select a date'
-            : !time
-            ? 'Select a time'
-            : `Book ${fmtDate(date)} ${time}`}
+          {!authed ? 'Log in to book' : !date ? 'Select a date' : !time ? 'Select a time' : `Book ${fmtDate(date)} ${time}`}
         </button>
 
         {!authed && (
@@ -341,59 +313,25 @@ function Page() {
   )
 }
 
-/** Utilities */
-const MONTH_NAMES = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December',
-]
+/** ---------- Utilities ---------- */
+const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December']
 
-const navBtnStyle: React.CSSProperties = {
-  width: 28,
-  height: 28,
-  borderRadius: 6,
-  border: '1px solid #ddd',
-  background: '#fff',
-  cursor: 'pointer',
-}
+const navBtnStyle: React.CSSProperties = { width: 28, height: 28, borderRadius: 6, border: '1px solid #ddd', background: '#fff', cursor: 'pointer' }
 
-function startOfDay(d: Date) {
-  const x = new Date(d)
-  x.setHours(0, 0, 0, 0)
-  return x
-}
-function isPast(d: Date) {
-  return startOfDay(d).getTime() < startOfDay(new Date()).getTime()
-}
-function fmtDate(d: Date) {
-  const y = d.getFullYear()
-  const m = String(d.getMonth() + 1).padStart(2, '0')
-  const dd = String(d.getDate()).padStart(2, '0')
-  return `${y}-${m}-${dd}`
-}
+function startOfDay(d: Date) { const x = new Date(d); x.setHours(0, 0, 0, 0); return x }
+function isPast(d: Date) { return startOfDay(d).getTime() < startOfDay(new Date()).getTime() }
+function fmtDate(d: Date) { const y = d.getFullYear(); const m = String(d.getMonth() + 1).padStart(2, '0'); const dd = String(d.getDate()).padStart(2, '0'); return `${y}-${m}-${dd}` }
 
-/** 해당 월을 6주(최대 42칸) 매트릭스로 반환. 이전/다음달은 null 채움 */
+/** Build 6x7 matrix for a month (padding with null) */
 function buildMonthMatrix(year: number, month: number): (Date | null)[] {
   const first = new Date(year, month, 1)
   const firstDay = first.getDay() // 0=Sun
   const daysInMonth = new Date(year, month + 1, 0).getDate()
 
   const cells: (Date | null)[] = []
-  // 앞쪽 빈칸
-  for (let i = 0; i < firstDay; i++) cells.push(null)
-  // 이번 달
-  for (let d = 1; d <= daysInMonth; d++) cells.push(new Date(year, month, d))
-  // 6*7=42 칸으로 패딩
-  while (cells.length < 42) cells.push(null)
+  for (let i = 0; i < firstDay; i++) cells.push(null)       // leading blanks
+  for (let d = 1; d <= daysInMonth; d++) cells.push(new Date(year, month, d)) // days
+  while (cells.length < 42) cells.push(null)               // trailing blanks
   return cells
 }
 
