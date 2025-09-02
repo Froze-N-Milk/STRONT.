@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import './App.css';
+import { createFileRoute } from "@tanstack/react-router";
+import "./index.css";
+import { useState } from "react";
 
-function App(){
+function Account() {
   const [activeTab, setActiveTab] = useState('profile');
   const [tags, setTags] = useState(['italian', 'fast food']);
   const [newTag, setNewTag] = useState('');
@@ -99,7 +100,7 @@ function App(){
     setNewBooking({ customerName: '', date: '', time: '', guests: 1, phone: '' });
     setShowAddModal(false);
   };
-  
+
   return(
     <div className="App">
       <div className="header">
@@ -140,6 +141,7 @@ function App(){
           </button>
         </div>
         <div className="content">
+
           {activeTab === 'profile' && (
             <div className="profile-content">
               <h2>Edit Restaurant Profile</h2>
@@ -189,6 +191,7 @@ function App(){
               </div>
             </div>
           )}
+
           {activeTab === 'bookings' && (
             <div className="bookings-content">
               <div className="bookings-header">
@@ -214,7 +217,7 @@ function App(){
                     <div className="booking-details">
                       <p><strong>Date: </strong> {booking.date}</p>
                       <p><strong>Time: </strong> {booking.time}</p>
-                      <p><strong>Guests: </strong> {booking.guests}人</p>
+                      <p><strong>Guests: </strong> {booking.guests}</p>
                       <p><strong>Phone: </strong> {booking.phone}</p>
                     </div>
                     <div className="booking-actions">
@@ -289,7 +292,7 @@ function App(){
                           min="1"
                           max="20"
                           value={newBooking.guests}
-                          onChange={(e) => setNewBooking({ ...newBooking, guests: parseInt(e.target.value) })}
+                          onChange={(e) => setNewBooking({ ...newBooking, guests: Number(e.target.value) })}
                           className="number-input"
                         />
                       </div>
@@ -317,9 +320,10 @@ function App(){
               )}
             </div>
           )}
+
           {activeTab === 'booking-settings' && (
             <div className="settings-content">
-              <h2>Booking Setting</h2>
+              <h2>Booking Settings</h2>
 
               <div className="form-section">
                 <label>Business Hours:</label>
@@ -370,9 +374,10 @@ function App(){
               </div>
             </div>
           )}
+
           {activeTab === 'account' && (
             <div className="account-content">
-              <h2>Account Setting</h2>
+              <h2>Account Settings</h2>
 
               <div className="form-section">
                 <label>Restaurant Name:</label>
@@ -418,5 +423,6 @@ function App(){
   );
 }
 
-
-export default App;
+export const Route = createFileRoute("/account/")({
+  component: Account,
+});
