@@ -55,6 +55,13 @@ function AuthModal({ onClose }: { onClose: () => void }) {
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose])
 
+  // Lock body scroll while modal is open  // CHANGED
+  useEffect(() => {
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = prev }
+  }, [])
+
   async function submit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
@@ -106,99 +113,146 @@ function AuthModal({ onClose }: { onClose: () => void }) {
   const padX14: React.CSSProperties = { paddingLeft: 14, paddingRight: 14 }
 
   const modal = (
-    <div onClick={onClose}
-      style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.45)', display: 'grid', placeItems: 'center', zIndex: 50 }}
-      aria-modal="true" role="dialog">
-      <div onClick={(e) => e.stopPropagation()}
-        style={{ width: 'min(92vw, 640px)', background: '#fff', borderRadius: 12, boxShadow: '0 20px 60px rgba(0,0,0,.25)', overflow: 'hidden' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: '1px solid #eee' }}>
+    <div
+      onClick={(e) => { if (e.target === e.currentTarget) onClose() }} // close only on backdrop click  // CHANGED
+      style={{
+        position: 'fixed',
+        inset: 0,
+        background: 'rgba(0,0,0,.45)',
+        zIndex: 50,
+        padding: 12,                   // CHANGED
+        overflowY: 'auto',             // CHANGED (overlay scroll)
+        WebkitOverflowScrolling: 'touch',
+        display: 'block',              // CHANGED
+      }}
+      aria-modal="true" role="dialog"
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          width: 'min(92vw, 640px)',
+          margin: '40px auto',         // CHANGED
+          background: '#fff',
+          borderRadius: 12,
+          boxShadow: '0 20px 60px rgba(0,0,0,.25)',
+          overflow: 'hidden',
+          maxHeight: '90dvh',          // CHANGED
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+      >
+        {/* sticky header */}
+        <div
+          style={{
+            position: 'sticky',
+            top: 0,
+            zIndex: 1,
+            background: '#fff',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '12px 16px',
+            borderBottom: '1px solid #eee',
+            flex: '0 0 auto',
+          }}
+        >
           <strong>Log in / Sign up</strong>
           <button aria-label="Close" onClick={onClose} style={{ fontSize: 22, lineHeight: 1, background: 'transparent', border: 0, cursor: 'pointer' }}>×</button>
         </div>
 
-        <div style={{ padding: 16 }}>
-          <div id="auth-root" style={{ maxWidth: 520, margin: '0 auto', textAlign: 'left' }}>
-            {me ? (
-              <div className="card">
-                <p style={{ marginBottom: 8 }}>Logged in as <b>{me.name}</b> ({me.email})</p>
-                <button onClick={logout} disabled={loading}>{loading ? '…' : 'Log out'}</button>
-              </div>
-            ) : (
-              <div className="card" style={mode === 'login' ? { minHeight: LOGIN_MIN_HEIGHT } : undefined}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 12 }}>
-                  <button onClick={() => setMode('login')}
-                    style={{ padding: '.6em 1.2em', borderRadius: 8, border: '1px solid #ddd', background: mode === 'login' ? '#00994C' : '#eee', color: mode === 'login' ? '#fff' : '#333' }}
-                    aria-pressed={mode === 'login'}>Log in</button>
-                  <button onClick={() => setMode('signup')}
-                    style={{ padding: '.6em 1.2em', borderRadius: 8, border: '1px solid #ddd', background: mode === 'signup' ? '#00994C' : '#eee', color: mode === 'signup' ? '#fff' : '#333' }}
-                    aria-pressed={mode === 'signup'}>Sign up</button>
+        {/* scrollable body */}
+        <div
+          style={{
+            flex: '1 1 auto',
+            minHeight: 0,
+            overflowY: 'auto',
+            WebkitOverflowScrolling: 'touch',
+          }}
+        >
+          <div style={{ padding: 16 }}>
+            <div id="auth-root" style={{ maxWidth: 520, margin: '0 auto', textAlign: 'left' }}>
+              {me ? (
+                <div className="card">
+                  <p style={{ marginBottom: 8 }}>Logged in as <b>{me.name}</b> ({me.email})</p>
+                  <button onClick={logout} disabled={loading}>{loading ? '…' : 'Log out'}</button>
                 </div>
-
-                <form onSubmit={submit}>
-                  {mode === 'login' && (
-                    <div style={box}>
-                      <div style={{ marginBottom: 10 }}>
-                        <label htmlFor="email" style={{ display: 'block', marginBottom: 6 }}>Email or phone</label>
-                        <input ref={emailRef} id="email" type="text" value={email} onChange={(e)=>setEmail(e.target.value)}
-                          placeholder="you@example.com / 123456789" required style={inputStyle} autoComplete="username" />
-                      </div>
-                      <div style={{ marginBottom: 10 }}>
-                        <label htmlFor="password" style={{ display: 'block', marginBottom: 6 }}>Password</label>
-                        <input id="password" type="password" value={password} onChange={(e)=>setPassword(e.target.value)}
-                          placeholder="••••••••" required minLength={6} style={inputStyle} autoComplete="current-password" />
-                      </div>
-                    </div>
-                  )}
-
-                  {mode === 'signup' && (
-                    <div style={box}>
-                      <div style={{ marginBottom: 10 }}>
-                        <label htmlFor="email2" style={{ display: 'block', marginBottom: 6 }}>Email or phone</label>
-                        <input ref={emailRef} id="email2" type="text" value={email} onChange={(e)=>setEmail(e.target.value)}
-                          placeholder="you@example.com / 123456789" required style={inputStyle} autoComplete="username" />
-                      </div>
-                      <div style={{ marginBottom: 10 }}>
-                        <label htmlFor="code" style={{ display: 'block', marginBottom: 6 }}>Verification code (4 number)</label>
-                        <input id="code" type="text" value={verificationCode}
-                          onChange={(e)=>setVerificationCode(e.target.value.replace(/\D/g,'').slice(0,4))}
-                          placeholder="****" maxLength={4} required style={inputStyle} inputMode="numeric" pattern="\d{4}" />
-                      </div>
-                      <div style={{ marginBottom: 10 }}>
-                        <label htmlFor="name" style={{ display: 'block', marginBottom: 6 }}>Name (nickname)</label>
-                        <input id="name" type="text" value={name} onChange={(e)=>setName(e.target.value)}
-                          placeholder="Your name" required style={inputStyle} autoComplete="nickname" />
-                      </div>
-                      <div style={{ marginBottom: 10 }}>
-                        <label htmlFor="password1" style={{ display: 'block', marginBottom: 6 }}>Password</label>
-                        <input id="password1" type="password" value={password} onChange={(e)=>setPassword(e.target.value)}
-                          placeholder="6+ characters" required minLength={6} style={inputStyle} autoComplete="new-password" />
-                      </div>
-                      <div style={{ marginBottom: 10 }}>
-                        <label htmlFor="password2" style={{ display: 'block', marginBottom: 6 }}>Re-enter password</label>
-                        <input id="password2" type="password" value={confirmPassword} onChange={(e)=>setConfirmPassword(e.target.value)}
-                          placeholder="Confirm password" required minLength={6} style={inputStyle} autoComplete="new-password" />
-                      </div>
-                    </div>
-                  )}
-
-                  {error && <p role="alert" aria-live="assertive" style={{ color: '#b00020', margin: '6px 14px' }}>{error}</p>}
-
-                  <div style={padX14}>
-                    <button type="submit" disabled={loading} className="create_button" style={{ width: '100%' }}>
-                      {loading ? '…' : mode === 'login' ? 'Log in' : 'Create account'}
-                    </button>
+              ) : (
+                <div className="card" style={mode === 'login' ? { minHeight: LOGIN_MIN_HEIGHT } : undefined}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 12 }}>
+                    <button onClick={() => setMode('login')}
+                      style={{ padding: '.6em 1.2em', borderRadius: 8, border: '1px solid #ddd', background: mode === 'login' ? '#00994C' : '#eee', color: mode === 'login' ? '#fff' : '#333' }}
+                      aria-pressed={mode === 'login'}>Log in</button>
+                    <button onClick={() => setMode('signup')}
+                      style={{ padding: '.6em 1.2em', borderRadius: 8, border: '1px solid #ddd', background: mode === 'signup' ? '#00994C' : '#eee', color: mode === 'signup' ? '#fff' : '#333' }}
+                      aria-pressed={mode === 'signup'}>Sign up</button>
                   </div>
 
-                  <div style={{ ...padX14, marginTop: 10 }}>
-                    <div style={{ border: '1px dashed #ccc', borderRadius: 8, padding: 10 }}>
-                      <b>Demo login (frontend only)</b>
-                      <div>email: <code>{DEMO.email}</code></div>
-                      <div>password: <code>{DEMO.password}</code></div>
+                  <form onSubmit={submit}>
+                    {mode === 'login' && (
+                      <div style={box}>
+                        <div style={{ marginBottom: 10 }}>
+                          <label htmlFor="email" style={{ display: 'block', marginBottom: 6 }}>Email or phone</label>
+                          <input ref={emailRef} id="email" type="text" value={email} onChange={(e)=>setEmail(e.target.value)}
+                            placeholder="you@example.com / 123456789" required style={inputStyle} autoComplete="username" />
+                        </div>
+                        <div style={{ marginBottom: 10 }}>
+                          <label htmlFor="password" style={{ display: 'block', marginBottom: 6 }}>Password</label>
+                          <input id="password" type="password" value={password} onChange={(e)=>setPassword(e.target.value)}
+                            placeholder="••••••••" required minLength={6} style={inputStyle} autoComplete="current-password" />
+                        </div>
+                      </div>
+                    )}
+
+                    {mode === 'signup' && (
+                      <div style={box}>
+                        <div style={{ marginBottom: 10 }}>
+                          <label htmlFor="email2" style={{ display: 'block', marginBottom: 6 }}>Email or phone</label>
+                          <input ref={emailRef} id="email2" type="text" value={email} onChange={(e)=>setEmail(e.target.value)}
+                            placeholder="you@example.com / 123456789" required style={inputStyle} autoComplete="username" />
+                        </div>
+                        <div style={{ marginBottom: 10 }}>
+                          <label htmlFor="code" style={{ display: 'block', marginBottom: 6 }}>Verification code (4 number)</label>
+                          <input id="code" type="text" value={verificationCode}
+                            onChange={(e)=>setVerificationCode(e.target.value.replace(/\D/g,'').slice(0,4))}
+                            placeholder="****" maxLength={4} required style={inputStyle} inputMode="numeric" pattern="\d{4}" />
+                        </div>
+                        <div style={{ marginBottom: 10 }}>
+                          <label htmlFor="name" style={{ display: 'block', marginBottom: 6 }}>Name (nickname)</label>
+                          <input id="name" type="text" value={name} onChange={(e)=>setName(e.target.value)}
+                            placeholder="Your name" required style={inputStyle} autoComplete="nickname" />
+                        </div>
+                        <div style={{ marginBottom: 10 }}>
+                          <label htmlFor="password1" style={{ display: 'block', marginBottom: 6 }}>Password</label>
+                          <input id="password1" type="password" value={password} onChange={(e)=>setPassword(e.target.value)}
+                            placeholder="6+ characters" required minLength={6} style={inputStyle} autoComplete="new-password" />
+                        </div>
+                        <div style={{ marginBottom: 10 }}>
+                          <label htmlFor="password2" style={{ display: 'block', marginBottom: 6 }}>Re-enter password</label>
+                          <input id="password2" type="password" value={confirmPassword} onChange={(e)=>setConfirmPassword(e.target.value)}
+                            placeholder="Confirm password" required minLength={6} style={inputStyle} autoComplete="new-password" />
+                        </div>
+                      </div>
+                    )}
+
+                    {error && <p role="alert" aria-live="assertive" style={{ color: '#b00020', margin: '6px 14px' }}>{error}</p>}
+
+                    <div style={padX14}>
+                      <button type="submit" disabled={loading} className="create_button" style={{ width: '100%' }}>
+                        {loading ? '…' : mode === 'login' ? 'Log in' : 'Create account'}
+                      </button>
                     </div>
-                  </div>
-                </form>
-              </div>
-            )}
+
+                    <div style={{ ...padX14, marginTop: 10 }}>
+                      <div style={{ border: '1px dashed #ccc', borderRadius: 8, padding: 10 }}>
+                        <b>Demo login (frontend only)</b>
+                        <div>email: <code>{DEMO.email}</code></div>
+                        <div>password: <code>{DEMO.password}</code></div>
+                      </div>
+                    </div>
+                  </form>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -244,7 +298,6 @@ function RootShell() {
       </header>
 
       <main style={{ maxWidth: 1200, margin: '0 auto', padding: '24px 16px' }}>
-        {}
         <Outlet />
       </main>
 
