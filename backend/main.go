@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"plange/backend/model"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -58,7 +59,7 @@ func main() {
 	// Seed the database
 	salt, hash := api.CreateSaltAndHashPassword("idfk")
 
-	_ = gorm.G[api.Account](db.Clauses(clause.OnConflict{DoNothing: true})).Create(ctx, &api.Account{
+	_ = gorm.G[model.Account](db.Clauses(clause.OnConflict{DoNothing: true})).Create(ctx, &model.Account{
 		Email:        "oscar@fuck.mychungus.life",
 		PasswordHash: hash[:],
 		PasswordSalt: salt[:],
@@ -67,7 +68,7 @@ func main() {
 	// Seed the database
 	salt, hash = api.CreateSaltAndHashPassword("password")
 
-	_ = gorm.G[api.Account](db.Clauses(clause.OnConflict{DoNothing: true})).Create(ctx, &api.Account{
+	_ = gorm.G[model.Account](db.Clauses(clause.OnConflict{DoNothing: true})).Create(ctx, &model.Account{
 		Email:        "admin@example.com",
 		PasswordHash: hash[:],
 		PasswordSalt: salt[:],
