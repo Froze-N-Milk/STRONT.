@@ -574,3 +574,43 @@
   .main-container {
     flex-direction: column;
   }
+  .sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid #e0e0e0;
+  }
+
+  .content {
+    margin: 10px;
+    padding: 20px;
+  }
+
+  .time-settings {
+    grid-template-columns: 1fr;
+  }
+
+  .bookings-header {
+    flex-direction: column;
+    gap: 15px;
+    align-items: stretch;
+  }
+
+  .add-booking-btn {
+    align-self: stretch;
+    justify-content: center;
+  }
+
+  .modal {
+    width: 95%;
+    margin: 20px;
+  }
+
+  .modal-footer {
+    flex-direction: column;
+  }
+
+  .btn-secondary,
+  .btn-primary {
+    width: 100%;
+  }
+}
