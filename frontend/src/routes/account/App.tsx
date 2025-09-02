@@ -317,7 +317,59 @@ function App(){
               )}
             </div>
           )}
+          {activeTab === 'booking-settings' && (
+            <div className="settings-content">
+              <h2>Booking Setting</h2>
 
+              <div className="form-section">
+                <label>Business Hours:</label>
+                <div className="time-settings">
+                  <div className="time-input">
+                    <span>Start Time:</span>
+                    <input type="time" defaultValue="09:00" />
+                  </div>
+                  <div className="time-input">
+                    <span>End Time:</span>
+                    <input type="time" defaultValue="22:00" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="form-section">
+                <label>Booking Rules:</label>
+                <div className="rules-settings">
+                  <div className="rule-item">
+                    <input type="checkbox" id="advance-booking" defaultChecked />
+                    <label htmlFor="advance-booking">Allow advance booking</label>
+                  </div>
+                  <div className="rule-item">
+                    <input type="checkbox" id="same-day" defaultChecked />
+                    <label htmlFor="same-day">Allow same-day booking</label>
+                  </div>
+                  <div className="rule-item">
+                    <input type="checkbox" id="cancellation" />
+                    <label htmlFor="cancellation">Allow cancellations</label>
+                  </div>
+                </div>
+              </div>
+
+              <div className="form-section">
+                <label>Maximum Guests Per Booking:</label>
+                <input type="number" min="1" max="20" defaultValue="10" className="number-input" />
+              </div>
+
+              <div className="save-section">
+                <button
+                  className={`save-btn ${isSaving ? 'saving' : ''}`}
+                  onClick={saveBookingSettings}
+                  disabled={isSaving}
+                >
+                  {isSaving ? 'Saving...' : 'Save Booking Settings'}
+                </button>
+                {saveMessage && <div className="save-message">{saveMessage}</div>}
+              </div>
+            </div>
+          )}
 
 
 
