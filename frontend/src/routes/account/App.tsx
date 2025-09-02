@@ -189,9 +189,140 @@ function App(){
               </div>
             </div>
           )}
+          {activeTab === 'bookings' && (
+            <div className="bookings-content">
+              <div className="bookings-header">
+                <h2>Bookings</h2>
+                <button
+                  className="add-booking-btn"
+                  onClick={() => setShowAddModal(true)}
+                >
+                  + Add Booking
+                </button>
+              </div>
+
+              <div className="bookings-list">
+                {bookings.map(booking => (
+                  <div key={booking.id} className="booking-card">
+                    <div className="booking-header">
+                      <h3>{booking.customerName}</h3>
+                      <span className={`status ${booking.status}`}>
+                        {booking.status === 'confirmed' ? 'confirmed' :
+                          booking.status === 'pending' ? 'pending' : 'cancelled'}
+                      </span>
+                    </div>
+                    <div className="booking-details">
+                      <p><strong>Date: </strong> {booking.date}</p>
+                      <p><strong>Time: </strong> {booking.time}</p>
+                      <p><strong>Guests: </strong> {booking.guests}人</p>
+                      <p><strong>Phone: </strong> {booking.phone}</p>
+                    </div>
+                    <div className="booking-actions">
+                      {booking.status === 'pending' && (
+                        <>
+                          <button
+                            className="action-btn confirm"
+                            onClick={() => handleConfirmBooking(booking.id)}
+                          >
+                            Confirm
+                          </button>
+                          <button
+                            className="action-btn cancel"
+                            onClick={() => handleCancelBooking(booking.id)}
+                          >
+                            Cancel
+                          </button>
+                        </>
+                      )}
+                      {booking.status === 'confirmed' && (
+                        <span className="status-message">✅ Booking Confirmed</span>
+                      )}
+                      {booking.status === 'cancelled' && (
+                        <span className="status-message">❌ Booking Cancelled</span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Add Booking Modal */}
+              {showAddModal && (
+                <div className="modal-overlay">
+                  <div className="modal">
+                    <div className="modal-header">
+                      <h3>Add New Booking</h3>
+                      <button className="close-btn" onClick={resetNewBooking}>×</button>
+                    </div>
+                    <div className="modal-body">
+                      <div className="form-section">
+                        <label>Customer Name:</label>
+                        <input
+                          type="text"
+                          value={newBooking.customerName}
+                          onChange={(e) => setNewBooking({ ...newBooking, customerName: e.target.value })}
+                          placeholder="Enter customer name"
+                          className="text-input"
+                        />
+                      </div>
+                      <div className="form-section">
+                        <label>Booking Date:</label>
+                        <input
+                          type="date"
+                          value={newBooking.date}
+                          onChange={(e) => setNewBooking({ ...newBooking, date: e.target.value })}
+                          className="text-input"
+                        />
+                      </div>
+                      <div className="form-section">
+                        <label>Booking Time:</label>
+                        <input
+                          type="time"
+                          value={newBooking.time}
+                          onChange={(e) => setNewBooking({ ...newBooking, time: e.target.value })}
+                          className="text-input"
+                        />
+                      </div>
+                      <div className="form-section">
+                        <label>Guests:</label>
+                        <input
+                          type="number"
+                          min="1"
+                          max="20"
+                          value={newBooking.guests}
+                          onChange={(e) => setNewBooking({ ...newBooking, guests: parseInt(e.target.value) })}
+                          className="number-input"
+                        />
+                      </div>
+                      <div className="form-section">
+                        <label>Phone Number:</label>
+                        <input
+                          type="tel"
+                          value={newBooking.phone}
+                          onChange={(e) => setNewBooking({ ...newBooking, phone: e.target.value })}
+                          placeholder="Enter phone number"
+                          className="text-input"
+                        />
+                      </div>
+                    </div>
+                    <div className="modal-footer">
+                      <button className="btn-secondary" onClick={resetNewBooking}>
+                        Cancel
+                      </button>
+                      <button className="btn-primary" onClick={handleAddBooking}>
+                        Add Booking
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+
+
+
+
         </div>
-
-
       </div>
     </div>  
   );
