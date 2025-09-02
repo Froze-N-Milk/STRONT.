@@ -139,6 +139,57 @@ function App(){
             Account Settings
           </button>
         </div>
+        <div className="content">
+          {activeTab === 'profile' && (
+            <div className="profile-content">
+              <h2>Edit Restaurant Profile</h2>
+
+              <div className="form-section">
+                <label>Tags:</label>
+                <div className="tags-container">
+                  {tags.map(tag => (
+                    <span key={tag} className="tag">
+                      {tag}
+                      <button onClick={() => removeTag(tag)} className="remove-tag">×</button>
+                    </span>
+                  ))}
+                </div>
+                <div className="add-tag-section">
+                  <input
+                    type="text"
+                    placeholder="Add a tag..."
+                    value={newTag}
+                    onChange={(e) => setNewTag(e.target.value)}
+                    className="tag-input"
+                  />
+                  <button onClick={addTag} className="add-tag-btn">✓</button>
+                </div>
+              </div>
+
+              <div className="form-section">
+                <label>Restaurant Description</label>
+                <textarea
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)}
+                  placeholder="Enter restaurant description..."
+                  className="bio-textarea"
+                  rows={6}
+                />
+              </div>
+
+              <div className="save-section">
+                <button
+                  className={`save-btn ${isSaving ? 'saving' : ''}`}
+                  onClick={saveProfile}
+                  disabled={isSaving}
+                >
+                  {isSaving ? 'Saving...' : 'Save Changes'}
+                </button>
+                {saveMessage && <div className="save-message">{saveMessage}</div>}
+              </div>
+            </div>
+          )}
+        </div>
 
 
       </div>
