@@ -370,10 +370,48 @@ function App(){
               </div>
             </div>
           )}
+          {activeTab === 'account' && (
+            <div className="account-content">
+              <h2>Account Setting</h2>
 
+              <div className="form-section">
+                <label>Restaurant Name:</label>
+                <input type="text" value="BIG JOE'S PIZZA" className="text-input" readOnly />
+              </div>
 
+              <div className="form-section">
+                <label>Phone Number:</label>
+                <input type="tel" placeholder="Enter phone number" className="text-input" />
+              </div>
 
+              <div className="form-section">
+                <label>Restaurant Address:</label>
+                <input type="text" placeholder="Enter restaurant address" className="text-input" />
+              </div>
 
+              <div className="form-section">
+                <label>E-mail Address:</label>
+                <input type="email" placeholder="Enter email address" className="text-input" />
+              </div>
+
+              <div className="form-section">
+                <label>Change Password:</label>
+                <input type="password" placeholder="Enter new password" className="text-input" />
+                <input type="password" placeholder="Confirm new password" className="text-input" />
+              </div>
+
+              <div className="save-section">
+                <button
+                  className={`save-btn ${isSaving ? 'saving' : ''}`}
+                  onClick={saveAccountInfo}
+                  disabled={isSaving}
+                >
+                  {isSaving ? 'Saving...' : 'Save Account Info'}
+                </button>
+                {saveMessage && <div className="save-message">{saveMessage}</div>}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>  
