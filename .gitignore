@@ -4,7 +4,10 @@
 # build output
 main
 
-# dev db
+# jwt key
+.jwt-key
+
+# sqlite cleanup
 local.db
 
 # jetbrains
