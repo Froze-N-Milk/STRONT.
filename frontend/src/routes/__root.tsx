@@ -1,9 +1,10 @@
+// frontend/src/routes/__root.tsx
 import { createRootRoute, Outlet, Link } from '@tanstack/react-router'
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 
-/** ---------- Simple auth state ---------- */
+// ---- simple auth state ----
 type User = { id: number; email: string; name: string }
 const AUTH_KEY = 'plange_auth_user'
 const DEMO = { email: 'demo@plange.app', password: 'pass1234', name: 'Demo User' } as const
@@ -24,7 +25,6 @@ function useAuthedUser() {
   }, [])
   return me
 }
-
 function setAuthedUser(user: User | null) {
   if (user) {
     localStorage.setItem(AUTH_KEY, JSON.stringify(user))
@@ -35,7 +35,7 @@ function setAuthedUser(user: User | null) {
   }
 }
 
-/** ---------- Auth modal (login / signup) ---------- */
+// ---- Auth modal ----
 function AuthModal({ onClose }: { onClose: () => void }) {
   const [mode, setMode] = useState<'login'|'signup'>('login')
   const [email, setEmail] = useState('')
@@ -46,6 +46,7 @@ function AuthModal({ onClose }: { onClose: () => void }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const emailRef = useRef<HTMLInputElement>(null)
+  const me = useAuthedUser()
 
   useEffect(() => { emailRef.current?.focus() }, [mode])
   useEffect(() => {
@@ -57,7 +58,6 @@ function AuthModal({ onClose }: { onClose: () => void }) {
   async function submit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
-
     if (mode === 'login') {
       const okId = isEmail(email) || isPhone(email)
       if (!okId) return setError('Please enter a valid email or phone.')
@@ -95,7 +95,6 @@ function AuthModal({ onClose }: { onClose: () => void }) {
       } finally { setLoading(false) }
     }
   }
-
   async function logout() {
     setLoading(true); setError(null)
     try { await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }) } catch {}
@@ -105,8 +104,6 @@ function AuthModal({ onClose }: { onClose: () => void }) {
   const box: React.CSSProperties = { border: '1px solid #d9d9d9', borderRadius: 10, padding: 14, marginBottom: 12, width: '100%' }
   const inputStyle: React.CSSProperties = { width: '100%', padding: '10px 12px', border: '1px solid #ccc', borderRadius: 8, boxSizing: 'border-box' }
   const padX14: React.CSSProperties = { paddingLeft: 14, paddingRight: 14 }
-
-  const me = useAuthedUser()
 
   const modal = (
     <div onClick={onClose}
@@ -161,10 +158,10 @@ function AuthModal({ onClose }: { onClose: () => void }) {
                           placeholder="you@example.com / 123456789" required style={inputStyle} autoComplete="username" />
                       </div>
                       <div style={{ marginBottom: 10 }}>
-                        <label htmlFor="code" style={{ display: 'block', marginBottom: 6 }}>Verification code (4 digits)</label>
+                        <label htmlFor="code" style={{ display: 'block', marginBottom: 6 }}>Verification code (4 number)</label>
                         <input id="code" type="text" value={verificationCode}
                           onChange={(e)=>setVerificationCode(e.target.value.replace(/\D/g,'').slice(0,4))}
-                          placeholder="****" maxLength={4} required style={inputStyle} inputMode="numeric" pattern="[0-9]{4}" />
+                          placeholder="****" maxLength={4} required style={inputStyle} inputMode="numeric" pattern="\d{4}" />
                       </div>
                       <div style={{ marginBottom: 10 }}>
                         <label htmlFor="name" style={{ display: 'block', marginBottom: 6 }}>Name (nickname)</label>
@@ -210,11 +207,11 @@ function AuthModal({ onClose }: { onClose: () => void }) {
   return createPortal(modal, document.body)
 }
 
-/** ---------- Small account icon (links to /account) ---------- */
+// ---- small account icon link ----
 function AccountIconLink() {
   return (
     <Link to="/account" aria-label="Account" title="Account" style={{ display: 'inline-flex', alignItems: 'center' }}>
-      <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden>
+      <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden>
         <circle cx="12" cy="8" r="4" fill="#111" />
         <path d="M4 20c0-4 4-6 8-6s8 2 8 6" fill="none" stroke="#111" strokeWidth="2" />
       </svg>
@@ -222,16 +219,9 @@ function AccountIconLink() {
   )
 }
 
-/** ---------- Root shell (global header/footer) ---------- */
 function RootShell() {
   const me = useAuthedUser()
   const [open, setOpen] = useState(false)
-
-  // Auto-open modal when visiting "/?auth=1"
-  useEffect(() => {
-    const sp = new URLSearchParams(window.location.search)
-    if (sp.get('auth') === '1') setOpen(true)
-  }, [])
 
   return (
     <>
@@ -240,15 +230,12 @@ function RootShell() {
           maxWidth: 1200, margin: '0 auto', padding: '0 16px', height: 64,
           display: 'flex', alignItems: 'center', justifyContent: 'space-between'
         }}>
-          {/* LEFT: account icon + brand */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <AccountIconLink />
             <Link to="/" style={{ fontWeight: 800, fontSize: 20, textDecoration: 'none', color: '#111' }}>
               FOOD YUM <span style={{ fontSize: 12 }}>(inc)</span>
             </Link>
           </div>
-
-          {/* RIGHT: login button */}
           <button onClick={() => setOpen(true)}
             style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #ddd', background: '#00994C', color: '#fff' }}>
             {me ? `Hello, ${me.name.split(' ')[0]}` : 'Log in / Sign up'}
@@ -257,6 +244,7 @@ function RootShell() {
       </header>
 
       <main style={{ maxWidth: 1200, margin: '0 auto', padding: '24px 16px' }}>
+        {}
         <Outlet />
       </main>
 
@@ -265,7 +253,6 @@ function RootShell() {
       </footer>
 
       {open && <AuthModal onClose={() => setOpen(false)} />}
-
       <TanStackRouterDevtools />
     </>
   )
