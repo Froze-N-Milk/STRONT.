@@ -54,3 +54,27 @@
   padding: 20px 0;
   border-right: 1px solid #e0e0e0;
 }
+
+.nav-btn {
+  width: 100%;
+  padding: 15px 25px;
+  border: none;
+  background: transparent;
+  text-align: left;
+  font-size: 16px;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-left: 4px solid transparent;
+}
+
+.nav-btn:hover {
+  background: #f8f9fa;
+  color: #333;
+}
+
+.nav-btn.active {
+  background: #28a745;
+  color: white;
+  border-left-color: #28a745;
+}
