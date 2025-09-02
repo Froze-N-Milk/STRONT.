@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
+	"plange/backend/model"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -29,7 +30,7 @@ func (h *LoginHandler) ServeHTTP(ctx AppContext, w http.ResponseWriter, r *http.
 	}
 
 	// Pull account matching email
-	account, err := gorm.G[Account](ctx.DB).Where("email = ?", login.Email).First(r.Context())
+	account, err := gorm.G[model.Account](ctx.DB).Where("email = ?", login.Email).First(r.Context())
 	if err != nil {
 		slog.Error(err.Error())
 		w.WriteHeader(http.StatusBadRequest)
@@ -72,7 +73,7 @@ func (h *SignUpHandler) ServeHTTP(ctx AppContext, w http.ResponseWriter, r *http
 	// Pull account matching email
 	salt, hash := CreateSaltAndHashPassword(signUp.Password)
 
-	err = gorm.G[Account](ctx.DB.Clauses(clause.OnConflict{DoNothing: true})).Create(r.Context(), &Account{
+	err = gorm.G[model.Account](ctx.DB.Clauses(clause.OnConflict{DoNothing: true})).Create(r.Context(), &model.Account{
 		Email:        signUp.Email,
 		PasswordHash: hash[:],
 		PasswordSalt: salt[:],
