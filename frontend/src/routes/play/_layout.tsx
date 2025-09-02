@@ -1,12 +1,20 @@
 // frontend/src/routes/play/_layout.tsx
-import { createFileRoute, Outlet } from '@tanstack/react-router'
-import PlayLayout from '../../components/play/_layout'
+import { createFileRoute, Outlet, Link } from '@tanstack/react-router'
 
-// Layout routes key '/play'
-export const Route = createFileRoute('/play/_layout')({
-  component: () => (
-    <PlayLayout>
+function PlayLayout() {
+  return (
+    <div style={{ display: 'grid', gap: 20 }}>
+      {/* (Optional) simple sub-nav for /play */}
+      <nav style={{ borderBottom: '1px solid #eee', paddingBottom: 8 }}>
+        <Link to="/" style={{ textDecoration: 'none', color: '#111', fontWeight: 700 }}>← Home</Link>
+      </nav>
       <Outlet />
-    </PlayLayout>
-  ),
+    </div>
+  )
+}
+
+export const Route = createFileRoute('/play/_layout')({
+  component: PlayLayout,
 })
+
+export default PlayLayout // default export added to satisfy default import style
