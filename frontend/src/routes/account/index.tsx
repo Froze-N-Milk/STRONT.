@@ -1,20 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { AccountContext } from "../__root";
+import { use } from "react";
 
-const accountInfo = (): Promise<string> =>
-	fetch("/api/account", {
-		method: "GET",
-	}).then(async r => r.text())
-
-async function Account() {
-	const [email, setEmail] = useState("")
-	useEffect(() => {
-		accountInfo()
-			.then(setEmail)
-	}, [])
-
+function Account() {
+	const account = use(AccountContext)!
 	return <div>
-		Hello {email}!
+		Hello {account.email}!
 	</div>
 }
 

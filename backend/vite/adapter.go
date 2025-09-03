@@ -56,7 +56,7 @@ var indexTmpl = `
 		<title>{{ .Title }}</title>
 		{{ .Vite.Tags }}
 	</head>
-	<body class="min-h-screen antialiased">
+	<body>
 		<div id="root"></div>
 	</body>
 </html>
