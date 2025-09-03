@@ -101,7 +101,7 @@ function LoginModal() {
     top: 0,
     zIndex: 1,
   };
-  const body: React.CSSProperties = { padding: 20, overflowY: "auto" };
+  const body: React.CSSProperties = { padding: 20, overflowY: "auto", display: "flex", justifyContent:"center"};
   const closeBtn: React.CSSProperties = {
     width: 36,
     height: 36,
@@ -111,6 +111,7 @@ function LoginModal() {
     cursor: "pointer",
     fontSize: 20,
     lineHeight: 1,
+	color: "black",
   };
   const footerLink: React.CSSProperties = {
     marginTop: 12,
@@ -147,7 +148,7 @@ function LoginModal() {
           <form onSubmit={onSubmit}>
             <div
               className="log_sign_wrapper"
-              style={{ width: "100%", boxShadow: "none", padding: 0, alignItems: "stretch" }}
+              style={{boxShadow: "none", padding: 0, alignItems: "center" }}
             >
               <div style={fieldGroup}>
                 <label htmlFor="login-email">Email</label>
@@ -183,7 +184,7 @@ function LoginModal() {
                 </p>
               )}
 
-              <button type="submit" disabled={loading} className="submit_button" style={{ width: "100%" }}>
+              <button type="submit" disabled={loading} className="submit_button" style={{alignSelf:"center"}}>
                 {loading ? "…" : "Log in"}
               </button>
 
@@ -195,9 +196,9 @@ function LoginModal() {
               </div>
             </div>
           </form>
+		  </div>
         </div>
       </div>
-    </div>
   );
 
   const portalRoot = document.getElementById("pagebody_wrapper") ?? document.body;

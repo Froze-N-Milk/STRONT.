@@ -113,7 +113,7 @@ function SignUpModal() {
     top: 0,
     zIndex: 1,
   };
-  const body: React.CSSProperties = { padding: 20, overflowY: "auto" };
+  const body: React.CSSProperties = { padding: 20, overflowY: "auto", display: "flex", justifyContent:"center"};
   const closeBtn: React.CSSProperties = {
     width: 36,
     height: 36,
@@ -162,7 +162,7 @@ function SignUpModal() {
         </div>
 
         <div style={body}>
-          <form onSubmit={onSubmit}>
+          <form style={{width: "400px"}} onSubmit={onSubmit}>
             {/* Use vertical stacking; keep existing site styles with minimal inline tweaks */}
             <div
               className="log_sign_wrapper"
