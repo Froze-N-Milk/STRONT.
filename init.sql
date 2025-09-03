@@ -13,8 +13,8 @@ CREATE TABLE account
 (
     id            UUID PRIMARY KEY DEFAULT pg_catalog.gen_random_uuid(),
     email         TEXT NOT NULL UNIQUE,
-    password_hash BYTEA CHECK (length(password_hash) = 256),
-    password_salt BYTEA CHECK (length(password_salt) = 128)
+    password_hash BYTEA NOT NULL CHECK (length(password_hash) = 256),
+    password_salt BYTEA NOT NULL CHECK (length(password_salt) = 128)
 );
 -- Speed up indexing of account on email comparisons by constructing a searchable binary tree
 CREATE INDEX idx_account_email ON account (email);
