@@ -33,13 +33,14 @@ CREATE TABLE availability
 
 CREATE TABLE restaurant
 (
-    id              UUID PRIMARY KEY DEFAULT pg_catalog.gen_random_uuid(),
-    account_id      UUID NOT NULL,
-    availability_id UUID NOT NULL,
-    name            TEXT NOT NULL,
-    description     TEXT,
-    location_text   TEXT,
-    location_url    TEXT,
+    id                 UUID PRIMARY KEY DEFAULT pg_catalog.gen_random_uuid(),
+    account_id         UUID NOT NULL,
+    availability_id    UUID NOT NULL,
+    name               TEXT NOT NULL,
+    description        TEXT,
+    location_text      TEXT,
+    location_url       TEXT,
+    frontpage_markdown TEXT,
     FOREIGN KEY (account_id) REFERENCES account (id) ON DELETE CASCADE,
     FOREIGN KEY (availability_id) REFERENCES availability (id) ON DELETE CASCADE
 );
@@ -50,7 +51,7 @@ CREATE TABLE availability_exclusion
     availability_id  UUID   NOT NULL,
     close_date       DATE   NOT NULL,
     hour_mask        BIGINT NOT NULL CHECK (hour_mask > 0), -- Check that they've actually set some time off
-    yearly_recurring BOOL DEFAULT false,
+    yearly_recurring BOOL             DEFAULT false,
     FOREIGN KEY (availability_id) REFERENCES availability (id) ON DELETE CASCADE
 );
 
@@ -61,13 +62,6 @@ CREATE TABLE seating_zone
     zone_name     TEXT,
     seats         INT  NOT NULL CHECK (seats > 0),
     FOREIGN KEY (restaurant_id) REFERENCES restaurant (id) ON DELETE CASCADE
-);
-
-CREATE TABLE restaurant_frontpage
-(
-    id            UUID PRIMARY KEY DEFAULT pg_catalog.gen_random_uuid(),
-    restaurant_id UUID NOT NULL,
-    markdown      TEXT
 );
 
 CREATE TABLE customer_contact
