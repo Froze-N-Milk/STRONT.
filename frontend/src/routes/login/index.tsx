@@ -1,13 +1,13 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 
 /** Call backend login API */
 async function loginRequest(email: string, password: string) {
   const res = await fetch("/api/login", {
     method: "POST",
+    // no need for credentials here
     headers: { "Content-Type": "application/json" },
-    credentials: "include",
     body: JSON.stringify({ email, password }),
   });
   return res;
@@ -20,14 +20,8 @@ function LoginModal() {
   const [pw, setPw] = useState("");
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const emailRef = useRef<HTMLInputElement>(null);
 
-  // Autofocus email field
-  useEffect(() => {
-    emailRef.current?.focus();
-  }, []);
-
-  // ESC to close + lock body scroll while modal is open
+  // lock body scroll while modal is open
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", onKey);
@@ -39,12 +33,10 @@ function LoginModal() {
     };
   }, []);
 
-  // Close modal and go back to home
   function onClose() {
     navigate({ to: "/", replace: true });
   }
 
-  // Submit login form
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setErr(null);
@@ -55,19 +47,20 @@ function LoginModal() {
     setLoading(true);
     try {
       const res = await loginRequest(email, pw);
+
+      // backend WILL ALWAYS redirect upon successful login
       if (res.redirected) {
-        // backend might redirect after login
-        window.location.replace(res.url);
+        const to = new URL(res.url);
+        navigate({ to: (to.pathname || "/") as any, replace: true });
         return;
       }
+
+      // Normally we shouldn't hit this line if login succeeds (server redirects).
       if (!res.ok) {
-        let msg = "Login failed";
-        try {
-          msg = (await res.json())?.error ?? msg;
-        } catch {}
-        throw new Error(msg);
+        // backend doesn't return structured error yet — show generic message
+        throw new Error("Login failed");
       }
-      // success -> go home (navbar will render account state)
+
       navigate({ to: "/", replace: true });
     } catch (e: any) {
       setErr(e?.message ?? "Login failed");
@@ -76,7 +69,7 @@ function LoginModal() {
     }
   }
 
-  // Minimal inline styles (do NOT rely on other files)
+  // minimal inline styles to avoid touching other files
   const overlay: React.CSSProperties = {
     position: "absolute",
     inset: 0,
@@ -133,12 +126,10 @@ function LoginModal() {
     width: "100%",
   };
 
-  // Modal contents
   const modal = (
     <div
       style={overlay}
       onClick={(e) => {
-        // close only when clicking the backdrop, not inside the card
         if (e.target === e.currentTarget) onClose();
       }}
       role="dialog"
@@ -154,7 +145,6 @@ function LoginModal() {
 
         <div style={body}>
           <form onSubmit={onSubmit}>
-            {/* Keep site wrapper class; ensure strict vertical stacking via fieldGroup */}
             <div
               className="log_sign_wrapper"
               style={{ width: "100%", boxShadow: "none", padding: 0, alignItems: "stretch" }}
@@ -162,7 +152,6 @@ function LoginModal() {
               <div style={fieldGroup}>
                 <label htmlFor="login-email">Email</label>
                 <input
-                  ref={emailRef}
                   id="login-email"
                   type="email"
                   value={email}
@@ -170,6 +159,7 @@ function LoginModal() {
                   placeholder="you@example.com"
                   required
                   autoComplete="username"
+                  autoFocus
                 />
               </div>
 
@@ -198,7 +188,7 @@ function LoginModal() {
               </button>
 
               <div style={footerLink}>
-                Don’t have an account?{" "}
+                <span>Don’t have an account? </span>
                 <Link to="/sign-up" style={{ color: "#a4161a", textDecoration: "underline" }}>
                   Sign up
                 </Link>
@@ -210,7 +200,6 @@ function LoginModal() {
     </div>
   );
 
-  // Render inside the page body wrapper to look like a single part with the header
   const portalRoot = document.getElementById("pagebody_wrapper") ?? document.body;
   return createPortal(modal, portalRoot);
 }
