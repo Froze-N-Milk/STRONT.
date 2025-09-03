@@ -31,7 +31,7 @@ function Account() {
   };
   
   return (
-  <div className="App">
+  <div className="acc-page App">
     <div className="header">
       <div className="user-avatar">
         <span className="avatar-icon">👤</span>
