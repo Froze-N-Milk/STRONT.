@@ -9,7 +9,6 @@ function Account() {
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
 
-
   const addTag = () => {
     if (newTag.trim() && !tags.includes(newTag.trim())) {
       setTags([...tags, newTag.trim()]);
@@ -32,16 +31,6 @@ function Account() {
   
   return (
   <div className="acc-page App">
-    <div className="header">
-      <div className="user-avatar">
-        <span className="avatar-icon">👤</span>
-      </div>
-      <div className="restaurant-title">
-        BIG JOE'S PIZZA
-        <span className="dropdown-arrow">▼</span>
-      </div>
-    </div>
-
     <div className="main-container">
       <div className="sidebar">
         <button className="nav-btn active">Edit Profile</button>
