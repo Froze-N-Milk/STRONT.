@@ -7,7 +7,6 @@ async function signupRequest(email: string, password: string) {
   const res = await fetch("/api/sign-up", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    // Note: no need to set credentials here per review
     body: JSON.stringify({ email, password }),
   });
   return res;
@@ -23,6 +22,7 @@ function SignUpModal() {
   const [loading, setLoading] = useState(false);
 
   // ESC to close + lock body scroll while modal is open
+  // TODO: later, extract this shared effect into a small custom hook.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", onKey);
@@ -62,7 +62,7 @@ function SignUpModal() {
 
       if (res.redirected) {
         // Backend will normally redirect on success; this navigate is the proper client-side handoff.
-        navigate({ to: res.url, replace: true });
+        window.location.assign(res.url);
         return; // This line shouldn't normally get hit afterwards.
       }
 
@@ -207,6 +207,7 @@ function SignUpModal() {
                   required
                   minLength={6}
                   autoComplete="new-password"
+                  autoFocus
                 />
               </div>
 

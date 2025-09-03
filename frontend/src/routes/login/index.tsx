@@ -6,8 +6,8 @@ import { createPortal } from "react-dom";
 async function loginRequest(email: string, password: string) {
   const res = await fetch("/api/login", {
     method: "POST",
-    // no need for credentials here
-    headers: { "Content-Type": "application/json" },
+
+	  headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password }),
   });
   return res;
@@ -50,9 +50,8 @@ function LoginModal() {
 
       // backend WILL ALWAYS redirect upon successful login
       if (res.redirected) {
-        const to = new URL(res.url);
-        navigate({ to: (to.pathname || "/") as any, replace: true });
-        return;
+        window.location.assign(res.url);                
+        return;                                         
       }
 
       // Normally we shouldn't hit this line if login succeeds (server redirects).
@@ -111,7 +110,7 @@ function LoginModal() {
     cursor: "pointer",
     fontSize: 20,
     lineHeight: 1,
-	color: "black",
+	color: "#111",
   };
   const footerLink: React.CSSProperties = {
     marginTop: 12,
