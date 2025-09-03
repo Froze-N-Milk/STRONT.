@@ -10,6 +10,9 @@ const signupRequest = (email: string, password: string) =>
 			email,
 			password,
 		})
+	}).then(r => {
+		if (r.redirected) window.location.replace(r.url)
+		return r
 	})
 
 

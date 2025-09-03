@@ -42,7 +42,7 @@ const accountInfo = makeAccountInfo();
 const Navbar = ({ children }: { children?: React.ReactNode }) => <div id="pagecontent_container">
 	<div className="navbar_wrapper">
 		<div id="navbar_container">
-			<div className="stront">STRONT.</div>
+			<Link className="navbar_button" to="/"><div className="stront">STRONT.</div></Link>
 			<div className="navbar_items">
 				{children}
 			</div>
@@ -55,7 +55,7 @@ const Layout = ({ account }: { account: Account | null }) => <AccountContext val
 		{account
 			? <>
 				<Link className="navbar_button" to="/account">account</Link>
-				<button className="navbar_button" onClick={async () => {
+				<button className="navbar_true_button" onClick={async () => {
 					await accountInfo.logout()
 				}}>sign out</button>
 			</>

@@ -52,6 +52,23 @@
   font-weight: 600;
 }
 
+.navbar_true_button {
+  font-weight: 600;
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  background-color: white;
+  color: black;
+  outline: none;
+  border: none;
+  font-size: 16px;
+  padding: 0;
+  margin: 0;
+}
+
+.navbar_true_button:hover {
+  color: #a4161a;
+  cursor: pointer;
+}
+
 .navbar_button:hover {
   color: #a4161a;
 }
@@ -63,7 +80,8 @@
   align-items: center;
 }
 
-input[type=email], input[type=password] {
+input[type=email],
+input[type=password] {
   width: 14rem;
   height: 2rem;
   border: 1px solid #a4161a;
@@ -74,11 +92,13 @@ input[type=email], input[type=password] {
   transition: padding-inline 0.2s ease;
 }
 
-input[type=email]:hover , input[type=password]:hover {
+input[type=email]:hover,
+input[type=password]:hover {
   padding-inline: 5px;
 }
 
-input[type=email]:focus , input[type=password]:focus {
+input[type=email]:focus,
+input[type=password]:focus {
   outline: 1px solid rgba(255, 0, 0, 0.346);
   padding-inline: 5px;
 
@@ -86,19 +106,17 @@ input[type=email]:focus , input[type=password]:focus {
 
 .log_sign_wrapper {
   display: flex;
-	flex-direction: column;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
-	gap: 10px;
+  gap: 10px;
   padding: 3em 3em 3em 3em;
   width: 300px;
   box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
   border-radius: 15px;
 }
 
-#footer {
-
-}
+#footer {}
 
 .submit_button {
   width: 10rem;
@@ -113,10 +131,6 @@ input[type=email]:focus , input[type=password]:focus {
   background-color: #e5383b;
 }
 
-.side_panel {
+.side_panel {}
 
-}
-
-.side_panel_option {
-
-}
+.side_panel_option {}
