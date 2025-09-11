@@ -7,9 +7,9 @@ import (
 )
 
 type AvailabilityExclusion struct {
-	ID              uuid.UUID `json:"id" gorm:"primaryKey;default:gen_random_uuid()"`
+	ID              uuid.UUID `gorm:"primaryKey;default:gen_random_uuid()"`
 	AvailabilityID  uuid.UUID `gorm:"not null"`
-	CloseDate       time.Time `json:"close_date" gorm:"type:date;not null"`
-	HourMask        int64     `json:"hour_mask" gorm:"not null"`
-	YearlyRecurring bool      `json:"yearly_recurring" gorm:"default:false;not null"`
+	CloseDate       time.Time `gorm:"type:date;not null"`
+	HourMask        int64     `gorm:"not null"`
+	YearlyRecurring bool      `gorm:"default:false;not null"`
 }
