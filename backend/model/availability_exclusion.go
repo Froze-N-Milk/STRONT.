@@ -13,3 +13,7 @@ type AvailabilityExclusion struct {
 	HourMask        int64     `gorm:"not null"`
 	YearlyRecurring bool      `gorm:"default:false;not null"`
 }
+
+func (AvailabilityExclusion) TableName() string {
+	return "availability_exclusion"
+}
