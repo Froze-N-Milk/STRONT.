@@ -33,11 +33,11 @@ func CreateSalt() [128]byte {
 	return salt
 }
 
-type InccorectKeyLenError struct {
+type IncorrectKeyLenError struct {
 	len int
 }
 
-func (e *InccorectKeyLenError) Error() string {
+func (e *IncorrectKeyLenError) Error() string {
 	return fmt.Sprintf("Expected a 32 byte key, got %d bytes", e.len)
 }
 
@@ -78,7 +78,7 @@ func GetOrMakeJWTSigningKey(path string) ([32]byte, error) {
 		return key, err
 	}
 	if n != 32 {
-		return key, &InccorectKeyLenError{n}
+		return key, &IncorrectKeyLenError{n}
 	}
 
 	return key, nil
