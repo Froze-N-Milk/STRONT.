@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"plange/backend/model"
+	"time"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -68,11 +69,41 @@ func main() {
 	// Seed the database
 	salt, hash = api.CreateSaltAndHashPassword("password")
 
-	_ = gorm.G[model.Account](db.Clauses(clause.OnConflict{DoNothing: true})).Create(ctx, &model.Account{
+	// bit mask for 9am-8:30pm
+	const weekdayHours int64 = 0b0000000000000000001111111111111111111111111000000000000000000000
+	// bit mask for 10am-6pm
+	const weekendHours int64 = 0b0000000000000000000011111111111111111100000000000000000000000000
+
+	account := model.Account{
 		Email:        "admin@example.com",
 		PasswordHash: hash[:],
 		PasswordSalt: salt[:],
-	})
+		Restaurants: []model.Restaurant{{
+			Name:         "My Restaurant",
+			Description:  "This is a restaurant",
+			LocationText: "123 Apple St, Sydney NSW 2000",
+			Availability: &model.Availability{
+				MondayHourMask:    weekdayHours,
+				TuesdayHourMask:   weekdayHours,
+				WednesdayHourMask: weekdayHours,
+				ThursdayHourMask:  weekdayHours,
+				FridayHourMask:    weekdayHours,
+				SaturdayHourMask:  weekendHours,
+				SundayHourMask:    weekendHours,
+				Exclusions: []model.AvailabilityExclusion{
+					{
+						CloseDate:       time.Now(),
+						HourMask:        0,
+						YearlyRecurring: false,
+					},
+				},
+			},
+		}},
+	}
+
+	db.Create(&account)
+
+	//_ = gorm.G[model.Account](db.Session(&gorm.Session{FullSaveAssociations: true}).Clauses(clause.OnConflict{DoNothing: true})).Create(ctx, &account)
 
 	mux.Handle("POST /api/login", appMiddleware.Service(&api.LoginHandler{
 		JWTKey: &jwtKey,
