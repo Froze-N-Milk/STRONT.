@@ -109,7 +109,7 @@ func main() {
 		JWTKey: &jwtKey,
 	}))
 
-	mux.Handle("POST /api/sign-up", appMiddleware.Service(&api.SignUpHandler{
+	mux.Handle("POST /api/register", appMiddleware.Service(&api.RegisterAccountHandler{
 		JWTKey: &jwtKey,
 	}))
 
