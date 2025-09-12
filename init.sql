@@ -85,7 +85,7 @@ CREATE TABLE booking
     creation_method TEXT NOT NULL CHECK (creation_method IN ('online', 'phone', 'walk-in')), -- NOTE: may need to adjust contact reference if booking is walk-in
     attendance TEXT CHECK (attendance IN ('attended', 'late', 'cancelled', 'no-show') AND start_time > now()), -- Ensure that attendance can't be set until their booking is actually due to begin
     bill NUMERIC(12, 2), -- Total bill of the table
-    paid NUMERIC(12, 2) CHECK (end_time >= now()), -- Amount paid towards the bill. Ensure that paid cannot be updated until they have been checked out of the booking
+    paid NUMERIC(12, 2) CHECK (end_time <= now()), -- Amount paid towards the bill. Ensure that paid cannot be updated until they have been checked out of the booking
     FOREIGN KEY (contact_id) REFERENCES customer_contact (id) ON DELETE CASCADE,
     FOREIGN KEY (restaurant_id) REFERENCES restaurant (id) ON DELETE CASCADE,
     FOREIGN KEY (seating_id) REFERENCES seating_zone (id) ON DELETE CASCADE
