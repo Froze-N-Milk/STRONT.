@@ -59,7 +59,7 @@ CREATE TABLE seating_zone
 (
     id            UUID PRIMARY KEY DEFAULT pg_catalog.gen_random_uuid(),
     restaurant_id UUID NOT NULL,
-    zone_name     TEXT,
+    zone_name     TEXT NOT NULL,
     seats         INT  NOT NULL CHECK (seats > 0),
     FOREIGN KEY (restaurant_id) REFERENCES restaurant (id) ON DELETE CASCADE
 );
