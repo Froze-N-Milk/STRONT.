@@ -21,6 +21,11 @@ function SignUpModal() {
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  // Close modal and go back to home
+  function onClose() {
+    navigate({ to: "/", replace: true });
+  }
+
   // ESC to close + lock body scroll while modal is open
   // TODO: later, extract this shared effect into a small custom hook.
   useEffect(() => {
@@ -32,12 +37,7 @@ function SignUpModal() {
       window.removeEventListener("keydown", onKey);
       document.body.style.overflow = prev;
     };
-  }, []);
-
-  // Close modal and go back to home
-  function onClose() {
-    navigate({ to: "/", replace: true });
-  }
+  });
 
   // Submit sign-up form
   async function onSubmit(e: React.FormEvent) {
@@ -68,14 +68,13 @@ function SignUpModal() {
 
       if (!res.ok) {
         // Backend doesn't currently return a JSON error body; keep a generic message.
-        throw new Error("Sign up failed");
+        setErr("Sign up failed");
+        return;
       }
 
       // Fallback: if backend doesn't redirect (should be rare), go home so navbar can refresh user state.
       // This line shouldn't normally get hit.
       navigate({ to: "/", replace: true });
-    } catch (e: any) {
-      setErr(e?.message ?? "Sign up failed");
     } finally {
       setLoading(false);
     }
@@ -113,7 +112,12 @@ function SignUpModal() {
     top: 0,
     zIndex: 1,
   };
-  const body: React.CSSProperties = { padding: 20, overflowY: "auto", display: "flex", justifyContent:"center"};
+  const body: React.CSSProperties = {
+    padding: 20,
+    overflowY: "auto",
+    display: "flex",
+    justifyContent: "center",
+  };
   const closeBtn: React.CSSProperties = {
     width: 36,
     height: 36,
@@ -162,11 +166,16 @@ function SignUpModal() {
         </div>
 
         <div style={body}>
-          <form style={{width: "400px"}} onSubmit={onSubmit}>
+          <form style={{ width: "400px" }} onSubmit={onSubmit}>
             {/* Use vertical stacking; keep existing site styles with minimal inline tweaks */}
             <div
               className="log_sign_wrapper"
-              style={{ width: "100%", boxShadow: "none", padding: 0, alignItems: "stretch" }}
+              style={{
+                width: "100%",
+                boxShadow: "none",
+                padding: 0,
+                alignItems: "stretch",
+              }}
             >
               <div style={fieldGroup}>
                 <label htmlFor="signup-email">Email</label>
@@ -212,19 +221,31 @@ function SignUpModal() {
               </div>
 
               {err && (
-                <p style={{ color: "#b00020" }} role="alert" aria-live="assertive">
+                <p
+                  style={{ color: "#b00020" }}
+                  role="alert"
+                  aria-live="assertive"
+                >
                   {err}
                 </p>
               )}
 
-              <button type="submit" disabled={loading} className="submit_button" style={{ width: "100%" }}>
+              <button
+                type="submit"
+                disabled={loading}
+                className="submit_button"
+                style={{ width: "100%" }}
+              >
                 {loading ? "…" : "Create account"}
               </button>
 
               <div style={{ textAlign: "center", marginTop: 12 }}>
                 <span style={footerLine}>
                   <span>Already have an account?</span>
-                  <Link to="/login" style={{ color: "#a4161a", textDecoration: "underline" }}>
+                  <Link
+                    to="/login"
+                    style={{ color: "#a4161a", textDecoration: "underline" }}
+                  >
                     Log in
                   </Link>
                 </span>
@@ -237,7 +258,8 @@ function SignUpModal() {
   );
 
   // Render inside the page body wrapper to look like a single part with the header
-  const portalRoot = document.getElementById("pagebody_wrapper") ?? document.body;
+  const portalRoot =
+    document.getElementById("pagebody_wrapper") ?? document.body;
   return createPortal(modal, portalRoot);
 }
 

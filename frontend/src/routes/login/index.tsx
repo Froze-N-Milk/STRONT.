@@ -6,8 +6,7 @@ import { createPortal } from "react-dom";
 async function loginRequest(email: string, password: string) {
   const res = await fetch("/api/auth/login", {
     method: "POST",
-
-	  headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password }),
   });
   return res;
@@ -21,6 +20,10 @@ function LoginModal() {
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  function onClose() {
+    navigate({ to: "/", replace: true });
+  }
+
   // lock body scroll while modal is open
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -31,11 +34,7 @@ function LoginModal() {
       window.removeEventListener("keydown", onKey);
       document.body.style.overflow = prev;
     };
-  }, []);
-
-  function onClose() {
-    navigate({ to: "/", replace: true });
-  }
+  });
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -50,19 +49,18 @@ function LoginModal() {
 
       // backend WILL ALWAYS redirect upon successful login
       if (res.redirected) {
-        window.location.assign(res.url);                
-        return;                                         
+        window.location.assign(res.url);
+        return;
       }
 
       // Normally we shouldn't hit this line if login succeeds (server redirects).
       if (!res.ok) {
         // backend doesn't return structured error yet — show generic message
-        throw new Error("Login failed");
+        setErr("Login failed");
+        return;
       }
 
       navigate({ to: "/", replace: true });
-    } catch (e: any) {
-      setErr(e?.message ?? "Login failed");
     } finally {
       setLoading(false);
     }
@@ -100,7 +98,12 @@ function LoginModal() {
     top: 0,
     zIndex: 1,
   };
-  const body: React.CSSProperties = { padding: 20, overflowY: "auto", display: "flex", justifyContent:"center"};
+  const body: React.CSSProperties = {
+    padding: 20,
+    overflowY: "auto",
+    display: "flex",
+    justifyContent: "center",
+  };
   const closeBtn: React.CSSProperties = {
     width: 36,
     height: 36,
@@ -110,7 +113,7 @@ function LoginModal() {
     cursor: "pointer",
     fontSize: 20,
     lineHeight: 1,
-	color: "#111",
+    color: "#111",
   };
   const footerLink: React.CSSProperties = {
     marginTop: 12,
@@ -147,7 +150,7 @@ function LoginModal() {
           <form onSubmit={onSubmit}>
             <div
               className="log_sign_wrapper"
-              style={{boxShadow: "none", padding: 0, alignItems: "center" }}
+              style={{ boxShadow: "none", padding: 0, alignItems: "center" }}
             >
               <div style={fieldGroup}>
                 <label htmlFor="login-email">Email</label>
@@ -178,29 +181,42 @@ function LoginModal() {
               </div>
 
               {err && (
-                <p style={{ color: "#b00020" }} role="alert" aria-live="assertive">
+                <p
+                  style={{ color: "#b00020" }}
+                  role="alert"
+                  aria-live="assertive"
+                >
                   {err}
                 </p>
               )}
 
-              <button type="submit" disabled={loading} className="submit_button" style={{alignSelf:"center"}}>
+              <button
+                type="submit"
+                disabled={loading}
+                className="submit_button"
+                style={{ alignSelf: "center" }}
+              >
                 {loading ? "…" : "Log in"}
               </button>
 
               <div style={footerLink}>
                 <span>Don’t have an account? </span>
-                <Link to="/sign-up" style={{ color: "#a4161a", textDecoration: "underline" }}>
+                <Link
+                  to="/sign-up"
+                  style={{ color: "#a4161a", textDecoration: "underline" }}
+                >
                   Sign up
                 </Link>
               </div>
             </div>
           </form>
-		  </div>
         </div>
       </div>
+    </div>
   );
 
-  const portalRoot = document.getElementById("pagebody_wrapper") ?? document.body;
+  const portalRoot =
+    document.getElementById("pagebody_wrapper") ?? document.body;
   return createPortal(modal, portalRoot);
 }
 
