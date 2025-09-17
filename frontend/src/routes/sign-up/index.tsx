@@ -4,7 +4,7 @@ import { createPortal } from "react-dom";
 
 /** Call backend account registration API */
 async function signupRequest(email: string, password: string) {
-  const res = await fetch("/api/register", {
+  const res = await fetch("/api/account/register", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password }),

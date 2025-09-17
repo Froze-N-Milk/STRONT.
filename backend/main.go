@@ -108,13 +108,12 @@ func main() {
 	appMux := lib.BindServeMux(mux, &appMiddleware)
 	authedAppMux := lib.BindServeMux(mux, &authedAppMiddleware)
 
-	appMux.Handle("POST /api/login", &api.LoginHandler{JWTKey: &jwtKey})
-	appMux.Handle("POST /api/register", &api.RegisterAccountHandler{JWTKey: &jwtKey})
-	appMux.Handle("POST /api/logout", &api.LogoutHandler{})
+	appMux.Handle("POST /api/auth/login", &api.LoginHandler{JWTKey: &jwtKey})
+	appMux.Handle("POST /api/auth/logout", &api.LogoutHandler{})
 
-	authedAppMux.HandleFunc("GET /api/account", func(ctx api.AuthedAppContext, w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte(ctx.User.Email))
-	})
+	appMux.Handle("POST /api/account/register", &api.RegisterAccountHandler{JWTKey: &jwtKey})
+
+	authedAppMux.HandleFunc("GET /api/account/name", func(ctx api.AuthedAppContext, w http.ResponseWriter, r *http.Request) { w.Write([]byte(ctx.User.Email)) })
 
 	server := http.Server{
 		Addr:    fmt.Sprintf("localhost:%d", *port),
