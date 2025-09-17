@@ -50,3 +50,21 @@ func (h *RegisterAccountHandler) ServeHTTP(ctx AppContext, w http.ResponseWriter
 	w.Header().Add("Location", "/account")
 	w.WriteHeader(http.StatusSeeOther)
 }
+
+type DeleteAccountHandler struct{}
+
+func (h *DeleteAccountHandler) ServeHTTP(ctx AuthedAppContext, w http.ResponseWriter, r *http.Request) {
+	i, err := gorm.G[model.Account](ctx.DB).Where("email = ?", ctx.User.Email).Delete(r.Context())
+	if err != nil {
+		slog.Error("something went wrong", "error", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	// clear all the site data to logout, doesn't matter if the account exists or not
+	w.Header().Add("Clear-Site-Data", "*")
+	if i == 0 {
+		slog.Error("attempt to delete non-existent account", "email", ctx.User.Email)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+}
