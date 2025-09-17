@@ -13,8 +13,8 @@ CREATE TABLE account
 (
     id            UUID PRIMARY KEY DEFAULT pg_catalog.gen_random_uuid(),
     email         TEXT NOT NULL UNIQUE,
-    password_hash BYTEA CHECK (length(password_hash) = 256),
-    password_salt BYTEA CHECK (length(password_salt) = 128)
+    password_hash BYTEA NOT NULL CHECK (length(password_hash) = 256),
+    password_salt BYTEA NOT NULL CHECK (length(password_salt) = 128)
 );
 -- Speed up indexing of account on email comparisons by constructing a searchable binary tree
 CREATE INDEX idx_account_email ON account (email);
@@ -59,7 +59,7 @@ CREATE TABLE seating_zone
 (
     id            UUID PRIMARY KEY DEFAULT pg_catalog.gen_random_uuid(),
     restaurant_id UUID NOT NULL,
-    zone_name     TEXT,
+    zone_name     TEXT NOT NULL,
     seats         INT  NOT NULL CHECK (seats > 0),
     FOREIGN KEY (restaurant_id) REFERENCES restaurant (id) ON DELETE CASCADE
 );
@@ -82,10 +82,10 @@ CREATE TABLE booking
     start_time    TIMESTAMP WITH TIME ZONE NOT NULL,
     end_time      TIMESTAMP WITH TIME ZONE NOT NULL,
     creation_date TIMESTAMP WITH TIME ZONE NOT NULL,
-    creation_method TEXT CHECK (creation_method IN ('online', 'phone', 'walk-in')), -- NOTE: may need to adjust contact reference if booking is walk-in
+    creation_method TEXT NOT NULL CHECK (creation_method IN ('online', 'phone', 'walk-in')), -- NOTE: may need to adjust contact reference if booking is walk-in
     attendance TEXT CHECK (attendance IN ('attended', 'late', 'cancelled', 'no-show') AND start_time > now()), -- Ensure that attendance can't be set until their booking is actually due to begin
     bill NUMERIC(12, 2), -- Total bill of the table
-    paid NUMERIC(12, 2) CHECK (end_time >= now()), -- Amount paid towards the bill. Ensure that paid cannot be updated until they have been checked out of the booking
+    paid NUMERIC(12, 2) CHECK (end_time <= now()), -- Amount paid towards the bill. Ensure that paid cannot be updated until they have been checked out of the booking
     FOREIGN KEY (contact_id) REFERENCES customer_contact (id) ON DELETE CASCADE,
     FOREIGN KEY (restaurant_id) REFERENCES restaurant (id) ON DELETE CASCADE,
     FOREIGN KEY (seating_id) REFERENCES seating_zone (id) ON DELETE CASCADE

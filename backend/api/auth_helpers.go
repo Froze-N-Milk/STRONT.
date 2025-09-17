@@ -12,20 +12,8 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/google/uuid"
 	"golang.org/x/crypto/argon2"
 )
-
-type Account struct {
-	ID           uuid.UUID `json:"id" gorm:"primary_key;default:gen_random_uuid()"`
-	Email        string    `json:"email"`
-	PasswordHash []byte    `json:"password_hash" gorm:"type:bytea"`
-	PasswordSalt []byte    `json:"password_salt" gorm:"type:bytea"`
-}
-
-func (Account) TableName() string {
-	return "account"
-}
 
 func CreateSaltAndHashPassword(password string) (salt [128]byte, hash [256]byte) {
 	salt = CreateSalt()
@@ -45,11 +33,11 @@ func CreateSalt() [128]byte {
 	return salt
 }
 
-type InccorectKeyLenError struct {
+type IncorrectKeyLenError struct {
 	len int
 }
 
-func (e *InccorectKeyLenError) Error() string {
+func (e *IncorrectKeyLenError) Error() string {
 	return fmt.Sprintf("Expected a 32 byte key, got %d bytes", e.len)
 }
 
@@ -90,7 +78,7 @@ func GetOrMakeJWTSigningKey(path string) ([32]byte, error) {
 		return key, err
 	}
 	if n != 32 {
-		return key, &InccorectKeyLenError{n}
+		return key, &IncorrectKeyLenError{n}
 	}
 
 	return key, nil
