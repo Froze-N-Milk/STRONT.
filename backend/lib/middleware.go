@@ -32,6 +32,13 @@ func NewServeMux[CTX any] (middleware Middleware[CTX]) ServeMux[CTX] {
 	}
 }
 
+func BindServeMux[CTX any] (mux *http.ServeMux, middleware Middleware[CTX]) ServeMux[CTX] {
+	return ServeMux[CTX] {
+		middleware,
+		mux,
+	}
+}
+
 func (h *ServeMux[CTX]) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.mux.ServeHTTP(w, r)
 }
