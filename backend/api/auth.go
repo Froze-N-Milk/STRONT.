@@ -59,6 +59,7 @@ func (h *LoginHandler) ServeHTTP(ctx AppContext, w http.ResponseWriter, r *http.
 type LogoutHandler struct{}
 
 func (h *LogoutHandler) ServeHTTP(ctx AppContext, w http.ResponseWriter, r *http.Request) {
-	setSessionTokenCookie(w, "")
+	// clear all the site data
+	w.Header().Add("Clear-Site-Data", "*")
 	w.WriteHeader(http.StatusOK)
 }
