@@ -68,3 +68,43 @@ func (h *DeleteAccountHandler) ServeHTTP(ctx AuthedAppContext, w http.ResponseWr
 		return
 	}
 }
+
+type UpdateAccountHandler struct{}
+
+func (h *UpdateAccountHandler) ServeHTTP(ctx AuthedAppContext, w http.ResponseWriter, r *http.Request) {
+	accountDetails := request{}
+	err := json.NewDecoder(r.Body).Decode(&accountDetails)
+
+	if err != nil {
+		slog.Error("invalid edit-account request", "error", err, "request", r.Body)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	updatedAccount := model.Account{}
+
+	if accountDetails.Email != "" {
+		updatedAccount.Email = accountDetails.Email
+	}
+
+	// only true if there is a new password value
+	// TODO: reject passwords that do not match a length requirement
+	if accountDetails.Password != "" {
+		// create new salt and hash, reusing the old values would be insecure
+		salt, hash := CreateSaltAndHashPassword(accountDetails.Password)
+		updatedAccount.PasswordHash = hash[:]
+		updatedAccount.PasswordSalt = salt[:]
+	}
+
+	i, err := gorm.G[model.Account](ctx.DB).Where("email = ?", ctx.User.Email).Updates(r.Context(), updatedAccount)
+	if err != nil {
+		slog.Error("something went wrong", "error", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	if i == 0 {
+		slog.Error("attempt to update non-existent account", "email", ctx.User.Email)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+}
