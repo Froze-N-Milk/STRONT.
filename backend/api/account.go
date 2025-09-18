@@ -10,20 +10,24 @@ import (
 	"gorm.io/gorm/clause"
 )
 
+// Creates a new account in the database for the email and password provided
+//
+// expects: { email: string, password: string, }
+//
+// bound to: /api/account/register
 type RegisterAccountHandler struct {
-	JWTKey *[32]byte
+	JWTKey *[32]byte // 32 byte signing key for jwt session tokens
 }
 
 func (h *RegisterAccountHandler) ServeHTTP(ctx AppContext, w http.ResponseWriter, r *http.Request) {
 	signUp := request{}
 	err := json.NewDecoder(r.Body).Decode(&signUp)
-	if err != nil {
+	if err != nil || signUp.Email == "" || signUp.Password == "" {
 		slog.Error("invalid sign-up request", "error", err, "request", r.Body)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	// Pull account matching email
 	salt, hash := CreateSaltAndHashPassword(signUp.Password)
 
 	err = gorm.G[model.Account](ctx.DB.Clauses(clause.OnConflict{DoNothing: true})).Create(r.Context(), &model.Account{
@@ -51,6 +55,11 @@ func (h *RegisterAccountHandler) ServeHTTP(ctx AppContext, w http.ResponseWriter
 	w.WriteHeader(http.StatusSeeOther)
 }
 
+// Deletes the currently authenticated account
+//
+// authed endpoint
+//
+// bound to: /api/account/delete
 type DeleteAccountHandler struct{}
 
 func (h *DeleteAccountHandler) ServeHTTP(ctx AuthedAppContext, w http.ResponseWriter, r *http.Request) {
@@ -69,13 +78,22 @@ func (h *DeleteAccountHandler) ServeHTTP(ctx AuthedAppContext, w http.ResponseWr
 	}
 }
 
-type UpdateAccountHandler struct{}
+// Updates the email and / or password of the currently authenticated account
+//
+// authed endpoint
+//
+// expects: { email: string?, password: string?, }
+//
+// bound to: /api/account/register
+type UpdateAccountHandler struct {
+	JWTKey *[32]byte // 32 byte signing key for jwt session tokens
+}
 
 func (h *UpdateAccountHandler) ServeHTTP(ctx AuthedAppContext, w http.ResponseWriter, r *http.Request) {
 	accountDetails := request{}
 	err := json.NewDecoder(r.Body).Decode(&accountDetails)
 
-	if err != nil {
+	if err != nil || (accountDetails.Email == "" && accountDetails.Password == "") {
 		slog.Error("invalid edit-account request", "error", err, "request", r.Body)
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -97,6 +115,7 @@ func (h *UpdateAccountHandler) ServeHTTP(ctx AuthedAppContext, w http.ResponseWr
 	}
 
 	i, err := gorm.G[model.Account](ctx.DB).Where("email = ?", ctx.User.Email).Updates(r.Context(), updatedAccount)
+
 	if err != nil {
 		slog.Error("something went wrong", "error", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -104,7 +123,16 @@ func (h *UpdateAccountHandler) ServeHTTP(ctx AuthedAppContext, w http.ResponseWr
 	}
 	if i == 0 {
 		slog.Error("attempt to update non-existent account", "email", ctx.User.Email)
+		// remove site data
+		w.Header().Add("Clear-Site-Data", "*")
 		w.WriteHeader(http.StatusBadRequest)
 		return
+	}
+
+	// if we've updated the email, re-issue the session cookie
+	if updatedAccount.Email != "" {
+		// remove the old cookie re-issue if it exists
+		w.Header().Del("Set-Cookie")
+		setSessionToken(w, updatedAccount.Email, h.JWTKey)
 	}
 }

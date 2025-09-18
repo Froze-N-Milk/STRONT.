@@ -11,6 +11,7 @@ type AppContext struct {
 	DB *gorm.DB
 }
 
+// services a http endpoint to inject database access
 type AppMiddleware struct {
 	DB DBMiddleware
 }
@@ -25,11 +26,13 @@ func (m *AppMiddleware) Service(h lib.Handler[AppContext]) http.Handler {
 	}))
 }
 
+// combines AppContext with authed user data
 type AuthedAppContext struct {
 	User User
 	AppContext
 }
 
+// combines AppMiddleware with AuthMiddleware
 type AuthedAppMiddleware struct {
 	Auth AuthMiddleware
 	AppMiddleware

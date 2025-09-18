@@ -10,13 +10,13 @@ import (
 	"gorm.io/gorm"
 )
 
-type request struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
-}
-
+// Attempts to log a user in
+//
+// expects: { email: string, password: string, }
+//
+// bound to: /api/account/login
 type LoginHandler struct {
-	JWTKey *[32]byte
+	JWTKey *[32]byte // 32 byte signing key for jwt session tokens
 }
 
 func (h *LoginHandler) ServeHTTP(ctx AppContext, w http.ResponseWriter, r *http.Request) {
@@ -56,6 +56,11 @@ func (h *LoginHandler) ServeHTTP(ctx AppContext, w http.ResponseWriter, r *http.
 	w.WriteHeader(http.StatusSeeOther)
 }
 
+// Logs out the currently authenticated user
+//
+// authed endpoint
+//
+// bound to: /api/account/logout
 type LogoutHandler struct{}
 
 func (h *LogoutHandler) ServeHTTP(ctx AppContext, w http.ResponseWriter, r *http.Request) {
