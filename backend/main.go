@@ -7,6 +7,7 @@ import (
 	"log"
 	"log/slog"
 	"net/http"
+	"os"
 	"plange/backend/model"
 	"time"
 
@@ -32,7 +33,11 @@ func main() {
 		panic(err)
 	}
 
-	connectionString := "host=localhost user=admin password=password dbname=restaurant_db port=5432 sslmode=disable TimeZone=Australia/Sydney"
+	connectionString := os.Getenv("DB_CONNECTION_STRING")
+	if connectionString == "" {
+		log.Panic("No connection string set in env variable DB_CONNECTION_STRING")
+	}
+
 	db, err := gorm.Open(postgres.Open(connectionString))
 	if err != nil {
 		log.Panic("failed to connect database", err)
