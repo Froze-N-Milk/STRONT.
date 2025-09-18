@@ -10,7 +10,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// Attempts to log a user in
+// LoginHandler attempts to log a user in
 //
 // expects: { email: string, password: string, }
 //
@@ -56,7 +56,7 @@ func (h *LoginHandler) ServeHTTP(ctx AppContext, w http.ResponseWriter, r *http.
 	w.WriteHeader(http.StatusSeeOther)
 }
 
-// Logs out the currently authenticated user
+// LogoutHandler logs out the currently authenticated user
 //
 // authed endpoint
 //

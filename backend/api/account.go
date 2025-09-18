@@ -10,7 +10,7 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-// Creates a new account in the database for the email and password provided
+// RegisterAccountHandler creates a new account in the database for the email and password provided
 //
 // expects: { email: string, password: string, }
 //
@@ -55,7 +55,7 @@ func (h *RegisterAccountHandler) ServeHTTP(ctx AppContext, w http.ResponseWriter
 	w.WriteHeader(http.StatusSeeOther)
 }
 
-// Deletes the currently authenticated account
+// DeleteAccountHandler deletes the currently authenticated account
 //
 // authed endpoint
 //
@@ -78,7 +78,7 @@ func (h *DeleteAccountHandler) ServeHTTP(ctx AuthedAppContext, w http.ResponseWr
 	}
 }
 
-// Updates the email and / or password of the currently authenticated account
+// UpdateAccountHandler updates the email and / or password of the currently authenticated account
 //
 // authed endpoint
 //

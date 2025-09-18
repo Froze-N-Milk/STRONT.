@@ -27,12 +27,12 @@ func CreateSaltAndHashPassword(password string) (salt [128]byte, hash [256]byte)
 	return salt, hash
 }
 
-// hashes the password with the given salt, using Argon2id
+// HashPassword hashes the password with the given salt, using Argon2id
 func HashPassword(password string, salt [128]byte) [256]byte {
 	return [256]byte(argon2.IDKey([]byte(password), salt[:], 1, 64*1024, 4, 256))
 }
 
-// generates a new salt byte string
+// CreateSalt generates a new salt byte string
 func CreateSalt() [128]byte {
 	salt := [128]byte{}
 	// note: rand.Read will never return an err, so we just ignore the
@@ -41,7 +41,7 @@ func CreateSalt() [128]byte {
 	return salt
 }
 
-// Error used at startup when the JWTkey given to the application is not of the
+// IncorrectKeyLenError is used at startup when the JWTkey given to the application is not of the
 // correct length
 type IncorrectKeyLenError struct {
 	len int
@@ -100,7 +100,7 @@ type jwtClaims struct {
 	jwt.RegisteredClaims
 }
 
-// creates a new JWT that authorises email and is valid for 2 hours
+// NewJWT creates a new JWT that authorises email and is valid for 2 hours
 func NewJWT(email string, key *[32]byte) (string, error) {
 	return jwt.NewWithClaims(
 		jwt.SigningMethodHS256,
@@ -123,7 +123,7 @@ func (*InvalidClaims) Error() string {
 	return "Invalid claims type"
 }
 
-// parses a JWT with an email, that we have signed
+// ValidateJWT parses a JWT with an email, that we have signed
 func ValidateJWT(tokenString string, key *[32]byte) (email string, remainingTime time.Duration, err error) {
 	token, err := jwt.ParseWithClaims(tokenString, &jwtClaims{}, func(token *jwt.Token) (any, error) {
 		return key[:], nil
@@ -140,7 +140,7 @@ func ValidateJWT(tokenString string, key *[32]byte) (email string, remainingTime
 	return claims.Email, claims.ExpiresAt.Sub(time.Now()), nil
 }
 
-// specifies the behaviour of the AuthMiddleware for different cases
+// AuthMode specifies the behaviour of the AuthMiddleware for different cases
 type AuthMode int
 
 const (
@@ -168,7 +168,7 @@ func setSessionToken(w http.ResponseWriter, email string, key *[32]byte) error {
 	return nil
 }
 
-// services a http endpoint to:
+// AuthMiddleware services an http endpoint to:
 // - check for authentication and respond appropriately if not authed
 // - extract authed user email for later use
 // - reissue token if it would expire in the next 30 mins
