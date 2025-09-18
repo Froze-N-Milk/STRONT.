@@ -2,9 +2,9 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 
-/** Call backend sign-up API */
+/** Call backend account registration API */
 async function signupRequest(email: string, password: string) {
-  const res = await fetch("/api/sign-up", {
+  const res = await fetch("/api/account/register", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password }),

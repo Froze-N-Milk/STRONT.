@@ -15,16 +15,24 @@ import (
 	"golang.org/x/crypto/argon2"
 )
 
+// common auth / account request json body
+type request struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
 func CreateSaltAndHashPassword(password string) (salt [128]byte, hash [256]byte) {
 	salt = CreateSalt()
 	hash = HashPassword(password, salt)
 	return salt, hash
 }
 
+// HashPassword hashes the password with the given salt, using Argon2id
 func HashPassword(password string, salt [128]byte) [256]byte {
 	return [256]byte(argon2.IDKey([]byte(password), salt[:], 1, 64*1024, 4, 256))
 }
 
+// CreateSalt generates a new salt byte string
 func CreateSalt() [128]byte {
 	salt := [128]byte{}
 	// note: rand.Read will never return an err, so we just ignore the
@@ -33,6 +41,8 @@ func CreateSalt() [128]byte {
 	return salt
 }
 
+// IncorrectKeyLenError is used at startup when the JWTkey given to the application is not of the
+// correct length
 type IncorrectKeyLenError struct {
 	len int
 }
@@ -84,12 +94,13 @@ func GetOrMakeJWTSigningKey(path string) ([32]byte, error) {
 	return key, nil
 }
 
+// custom JWT claims structure to add email field
 type jwtClaims struct {
 	Email string `json:"email"`
 	jwt.RegisteredClaims
 }
 
-// creates a new JWT that authorises email and is valid for 2 hours
+// NewJWT creates a new JWT that authorises email and is valid for 2 hours
 func NewJWT(email string, key *[32]byte) (string, error) {
 	return jwt.NewWithClaims(
 		jwt.SigningMethodHS256,
@@ -112,6 +123,7 @@ func (*InvalidClaims) Error() string {
 	return "Invalid claims type"
 }
 
+// ValidateJWT parses a JWT with an email, that we have signed
 func ValidateJWT(tokenString string, key *[32]byte) (email string, remainingTime time.Duration, err error) {
 	token, err := jwt.ParseWithClaims(tokenString, &jwtClaims{}, func(token *jwt.Token) (any, error) {
 		return key[:], nil
@@ -128,22 +140,19 @@ func ValidateJWT(tokenString string, key *[32]byte) (email string, remainingTime
 	return claims.Email, claims.ExpiresAt.Sub(time.Now()), nil
 }
 
+// AuthMode specifies the behaviour of the AuthMiddleware for different cases
 type AuthMode int
 
 const (
-	Frontend AuthMode = iota
-	SensitiveFrontend
-	Api
-	SensitiveApi
+	Frontend          AuthMode = iota // unauthed redirects to /login
+	SensitiveFrontend                 // unauthed status forbidden
+	Api                               // unauthed status unauthorized
+	SensitiveApi                      // unauthed status forbidden
 )
 
-type AuthMiddleware struct {
-	Mode AuthMode
-	Key  *[32]byte
-}
-
+// User data extracted from the JWT
 type User struct {
-	Email string
+	Email string // email
 }
 
 func setSessionTokenCookie(w http.ResponseWriter, content string) {
@@ -157,6 +166,15 @@ func setSessionToken(w http.ResponseWriter, email string, key *[32]byte) error {
 	}
 	setSessionTokenCookie(w, token)
 	return nil
+}
+
+// AuthMiddleware services an http endpoint to:
+// - check for authentication and respond appropriately if not authed
+// - extract authed user email for later use
+// - reissue token if it would expire in the next 30 mins
+type AuthMiddleware struct {
+	Mode AuthMode
+	Key  *[32]byte // 32 byte signing key for jwt session tokens
 }
 
 func (m *AuthMiddleware) Service(h lib.Handler[User]) http.Handler {
@@ -183,22 +201,28 @@ func (m *AuthMiddleware) Service(h lib.Handler[User]) http.Handler {
 	}
 }
 
+// common AuthMiddleware behaviour
 func authMiddleware(h lib.Handler[User], key *[32]byte, onErr func(http.ResponseWriter)) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// get session token cookie, ensure that it exists
 		token, err := r.Cookie("session-token")
 		if err != nil || token.Value == "" {
 			slog.Error("session token not set", "url", r.URL, "error", err)
 			onErr(w)
 			return
 		}
+
+		// validate the token
 		email, remainingTime, err := ValidateJWT(token.Value, key)
 		if err != nil {
 			slog.Error("Invalid session token", "url", r.URL, "error", err)
-			setSessionTokenCookie(w, "")
+			// remove all site data
+			w.Header().Add("Clear-Site-Data", "*")
 			onErr(w)
 			return
 		}
 
+		// if less than 30 mins remaining on auth lease, reissue
 		if remainingTime > 0 && remainingTime < 30*time.Minute {
 			err := setSessionToken(w, email, key)
 			if err != nil {

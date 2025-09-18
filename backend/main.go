@@ -105,19 +105,19 @@ func main() {
 
 	//_ = gorm.G[model.Account](db.Session(&gorm.Session{FullSaveAssociations: true}).Clauses(clause.OnConflict{DoNothing: true})).Create(ctx, &account)
 
-	mux.Handle("POST /api/login", appMiddleware.Service(&api.LoginHandler{
-		JWTKey: &jwtKey,
-	}))
+	appMux := lib.BindServeMux(mux, &appMiddleware)
+	authedAppMux := lib.BindServeMux(mux, &authedAppMiddleware)
 
-	mux.Handle("POST /api/sign-up", appMiddleware.Service(&api.SignUpHandler{
-		JWTKey: &jwtKey,
-	}))
+	appMux.Handle("POST /api/auth/login", &api.LoginHandler{JWTKey: &jwtKey})
+	appMux.Handle("POST /api/auth/logout", &api.LogoutHandler{})
 
-	mux.Handle("POST /api/logout", appMiddleware.Service(&api.LogoutHandler{}))
+	appMux.Handle("POST /api/account/register", &api.RegisterAccountHandler{JWTKey: &jwtKey})
+	authedAppMux.Handle("POST /api/account/delete", &api.DeleteAccountHandler{})
+	authedAppMux.Handle("POST /api/account/update", &api.UpdateAccountHandler{JWTKey: &jwtKey})
 
-	mux.Handle("GET /api/account", authedAppMiddleware.Service(lib.HandlerFunc[api.AuthedAppContext](func(ctx api.AuthedAppContext, w http.ResponseWriter, r *http.Request) {
+	authedAppMux.HandleFunc("GET /api/account/name", func(ctx api.AuthedAppContext, w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(ctx.User.Email))
-	})))
+	})
 
 	server := http.Server{
 		Addr:    fmt.Sprintf("localhost:%d", *port),

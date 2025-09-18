@@ -10,7 +10,7 @@ export const AccountContext = createContext<Account | null>(null)
 
 const makeAccountInfo = () => {
 	let cache: Account | null = null
-	const fetchData = () => fetch("/api/account", {
+	const fetchData = () => fetch("/api/account/name", {
 		method: "GET",
 	}).then(async r => {
 		promise = null
@@ -31,7 +31,7 @@ const makeAccountInfo = () => {
 		},
 		async logout() {
 			cache = null
-			await fetch("/api/logout", { method: "POST" })
+			await fetch("/api/auth/logout", { method: "POST" })
 			window.location.reload()
 		},
 	}
