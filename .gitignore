@@ -13,3 +13,4 @@ local.db
 # jetbrains
 /.idea
 /*.http
+frontend/src/routeTree.gen.ts
