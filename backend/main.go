@@ -70,9 +70,9 @@ func main() {
 	salt, hash = api.CreateSaltAndHashPassword("password")
 
 	// bit mask for 9am-8:30pm
-	const weekdayHours int64 = 0b0000000000000000001111111111111111111111111000000000000000000000
+	const weekdayHours int64 = 0b0000000000000000000000000000000001111111111111111111111111000000
 	// bit mask for 10am-6pm
-	const weekendHours int64 = 0b0000000000000000000011111111111111111100000000000000000000000000
+	const weekendHours int64 = 0b0000000000000000000000000000000000011111111111111111100000000000
 
 	account := model.Account{
 		Email:        "admin@example.com",
@@ -90,9 +90,9 @@ func main() {
 				FridayHourMask:    weekdayHours,
 				SaturdayHourMask:  weekendHours,
 				SundayHourMask:    weekendHours,
-				Exclusions: []model.AvailabilityExclusion{
+				Occasions: []model.Occasion{
 					{
-						CloseDate:       time.Now(),
+						Date:            time.Now(),
 						HourMask:        0,
 						YearlyRecurring: false,
 					},
