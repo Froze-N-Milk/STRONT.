@@ -123,6 +123,9 @@ func main() {
 		w.Write([]byte(ctx.User.Email))
 	})
 
+	appMux.Handle("GET /api/availability/{restaurant}", &api.GetAvailabilitiesHandler{})
+	authedAppMux.Handle("POST /api/availability/update", &api.UpdateAvailabilitiesHandler{})
+
 	server := http.Server{
 		Addr:    fmt.Sprintf("localhost:%d", *port),
 		Handler: mux,
