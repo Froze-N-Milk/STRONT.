@@ -73,41 +73,55 @@ func main() {
 	// Seed the database
 	salt, hash = api.CreateSaltAndHashPassword("password")
 
-	// bit mask for 9am-8:30pm
-	const weekdayHours int64 = 0b0000000000000000000000000000000001111111111111111111111111000000
-	// bit mask for 10am-6pm
-	const weekendHours int64 = 0b0000000000000000000000000000000000011111111111111111100000000000
+	result := gorm.WithResult()
 
 	account := model.Account{
 		Email:        "admin@example.com",
 		PasswordHash: hash[:],
 		PasswordSalt: salt[:],
-		Restaurants: []model.Restaurant{{
-			Name:         "My Restaurant",
-			Description:  "This is a restaurant",
-			LocationText: "123 Apple St, Sydney NSW 2000",
-			Availability: &model.Availability{
-				MondayHourMask:    weekdayHours,
-				TuesdayHourMask:   weekdayHours,
-				WednesdayHourMask: weekdayHours,
-				ThursdayHourMask:  weekdayHours,
-				FridayHourMask:    weekdayHours,
-				SaturdayHourMask:  weekendHours,
-				SundayHourMask:    weekendHours,
-				Occasions: []model.Occasion{
-					{
-						Date:            time.Now(),
-						HourMask:        0,
-						YearlyRecurring: false,
-					},
-				},
-			},
-		}},
 	}
 
-	db.Create(&account)
+	err = gorm.G[model.Account](db.Clauses(clause.OnConflict{DoNothing: true}, result)).Create(ctx, &account)
 
-	//_ = gorm.G[model.Account](db.Session(&gorm.Session{FullSaveAssociations: true}).Clauses(clause.OnConflict{DoNothing: true})).Create(ctx, &account)
+	if err == nil {
+		// bit mask for 9am-8:30pm
+		const weekdayHours int64 = 0b0000000000000000000000000000000001111111111111111111111111000000
+		// bit mask for 10am-6pm
+		const weekendHours int64 = 0b0000000000000000000000000000000000011111111111111111100000000000
+
+		availability := model.Availability{
+			MondayHourMask:    weekdayHours,
+			TuesdayHourMask:   weekdayHours,
+			WednesdayHourMask: weekdayHours,
+			ThursdayHourMask:  weekdayHours,
+			FridayHourMask:    weekdayHours,
+			SaturdayHourMask:  weekendHours,
+			SundayHourMask:    weekendHours,
+		}
+
+		gorm.G[model.Availability](db.Clauses(clause.OnConflict{DoNothing: true}, result)).Create(ctx, &availability)
+
+		occasion := model.Occasion{
+			AvailabilityID:  availability.ID,
+			Date:            time.Now(),
+			HourMask:        0,
+			YearlyRecurring: false,
+		}
+
+		gorm.G[model.Occasion](db.Clauses(clause.OnConflict{DoNothing: true}, result)).Create(ctx, &occasion)
+
+		restaurant := model.Restaurant{
+			AccountID:      account.ID,
+			AvailabilityID: availability.ID,
+			Name:           "My Restaurant",
+			Description:    "This is a restaurant",
+			LocationText:   "123 Apple St, Sydney NSW 2000",
+		}
+
+		gorm.G[model.Restaurant](db.Clauses(clause.OnConflict{DoNothing: true}, result)).Create(ctx, &restaurant)
+	}
+
+	// bind endpoints
 
 	appMux := lib.BindServeMux(mux, &appMiddleware)
 	authedAppMux := lib.BindServeMux(mux, &authedAppMiddleware)
