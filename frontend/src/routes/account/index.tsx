@@ -82,21 +82,21 @@ function Account() {
               />
             </div>
 
-            <div className="save-section">
-              <button
-                className={`save-btn ${isSaving ? "saving" : ""}`}
-                onClick={saveProfile}
-                disabled={isSaving}
-              >
-                {isSaving ? "Saving..." : "Save Changes"}
-              </button>
-              {saveMessage && <div className="save-message">{saveMessage}</div>}
-            </div>
+          <div className="save-section">
+            <button
+              className={`submit_button ${isSaving ? 'saving' : ''}`}
+              onClick={saveProfile}
+              disabled={isSaving}
+            >
+              {isSaving ? 'Saving...' : 'Save Changes'}
+            </button>
+            {saveMessage && <div className="save-message">{saveMessage}</div>}
           </div>
         </div>
       </div>
     </div>
-  );
+  </div>
+);
 }
 
 export const Route = createFileRoute("/account/")({

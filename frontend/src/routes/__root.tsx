@@ -34,53 +34,39 @@ const makeAccountInfo = () => {
 
 const accountInfo = makeAccountInfo();
 
-const Navbar = ({ children }: { children?: React.ReactNode }) => (
-  <div id="pagecontent_container">
-    <div className="navbar_wrapper">
-      <div id="navbar_container">
-        <Link className="navbar_button" to="/">
-          <div className="stront">STRONT.</div>
-        </Link>
-        <div className="navbar_items">{children}</div>
-      </div>
-    </div>
-  </div>
-);
+const Navbar = ({ children }: { children?: React.ReactNode }) => <div id="pagecontent_container">
+	<div className="navbar_wrapper">
+		<div id="navbar_container">
+			<div className="stront"><Link to="/">STRONT.</Link></div>
+			<div className="navbar_items_container">
+				{children}
+			</div>
+			<div className="navbar_toggle_button">PENITH</div>
+		</div>
+	</div>
+</div>
 
-const Layout = ({ account }: { account: Account | null }) => (
-  <AccountContext value={account}>
-    <Navbar>
-      {account ? (
-        <>
-          <Link className="navbar_button" to="/account">
-            account
-          </Link>
-          <button
-            className="navbar_true_button"
-            onClick={async () => {
-              await accountInfo.logout();
-            }}
-          >
-            sign out
-          </button>
-        </>
-      ) : (
-        <>
-          <Link className="navbar_button" to="/login">
-            login
-          </Link>
-          <Link className="navbar_button" to="/sign-up">
-            sign up
-          </Link>
-        </>
-      )}
-    </Navbar>
-    <div id="pagebody_wrapper">
-      <Outlet />
-    </div>
-    <TanStackRouterDevtools />
-  </AccountContext>
-);
+const Layout = ({ account }: { account: Account | null }) => <AccountContext value={account}>
+	<div id="pagebody_wrapper">
+		<Navbar>
+			{account
+				? <>
+					<div className="navbar_item"><Link to="/account"><button>account</button></Link></div>
+					<div className="navbar_item"><button onClick={async () => {
+						await accountInfo.logout()
+					}}>sign out</button></div>
+				</>
+				: <>
+					<div className="navbar_item"><Link to="/login">login</Link></div>
+					<div className="navbar_item"><Link to="/sign-up">sign up</Link></div>
+				</>
+			}
+		</Navbar>
+		<Outlet />
+	</div>
+	<TanStackRouterDevtools />
+</AccountContext>
+
 
 export const Route = createRootRoute({
   component: () => (

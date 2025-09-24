@@ -8,97 +8,120 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from "./routes/__root";
-import { Route as IndexRouteImport } from "./routes/index";
-import { Route as SignUpIndexRouteImport } from "./routes/sign-up/index";
-import { Route as LoginIndexRouteImport } from "./routes/login/index";
-import { Route as AccountIndexRouteImport } from "./routes/account/index";
+import { Route as rootRouteImport } from './routes/__root'
+import { Route as IndexRouteImport } from './routes/index'
+import { Route as SignUpIndexRouteImport } from './routes/sign-up/index'
+import { Route as MakeBookingIndexRouteImport } from './routes/make-booking/index'
+import { Route as LoginIndexRouteImport } from './routes/login/index'
+import { Route as AccountIndexRouteImport } from './routes/account/index'
 
 const IndexRoute = IndexRouteImport.update({
-  id: "/",
-  path: "/",
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const SignUpIndexRoute = SignUpIndexRouteImport.update({
-  id: "/sign-up/",
-  path: "/sign-up/",
+  id: '/sign-up/',
+  path: '/sign-up/',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
+const MakeBookingIndexRoute = MakeBookingIndexRouteImport.update({
+  id: '/make-booking/',
+  path: '/make-booking/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginIndexRoute = LoginIndexRouteImport.update({
-  id: "/login/",
-  path: "/login/",
+  id: '/login/',
+  path: '/login/',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const AccountIndexRoute = AccountIndexRouteImport.update({
-  id: "/account/",
-  path: "/account/",
+  id: '/account/',
+  path: '/account/',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 
 export interface FileRoutesByFullPath {
-  "/": typeof IndexRoute;
-  "/account": typeof AccountIndexRoute;
-  "/login": typeof LoginIndexRoute;
-  "/sign-up": typeof SignUpIndexRoute;
+  '/': typeof IndexRoute
+  '/account': typeof AccountIndexRoute
+  '/login': typeof LoginIndexRoute
+  '/make-booking': typeof MakeBookingIndexRoute
+  '/sign-up': typeof SignUpIndexRoute
 }
 export interface FileRoutesByTo {
-  "/": typeof IndexRoute;
-  "/account": typeof AccountIndexRoute;
-  "/login": typeof LoginIndexRoute;
-  "/sign-up": typeof SignUpIndexRoute;
+  '/': typeof IndexRoute
+  '/account': typeof AccountIndexRoute
+  '/login': typeof LoginIndexRoute
+  '/make-booking': typeof MakeBookingIndexRoute
+  '/sign-up': typeof SignUpIndexRoute
 }
 export interface FileRoutesById {
-  __root__: typeof rootRouteImport;
-  "/": typeof IndexRoute;
-  "/account/": typeof AccountIndexRoute;
-  "/login/": typeof LoginIndexRoute;
-  "/sign-up/": typeof SignUpIndexRoute;
+  __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
+  '/account/': typeof AccountIndexRoute
+  '/login/': typeof LoginIndexRoute
+  '/make-booking/': typeof MakeBookingIndexRoute
+  '/sign-up/': typeof SignUpIndexRoute
 }
 export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath;
-  fullPaths: "/" | "/account" | "/login" | "/sign-up";
-  fileRoutesByTo: FileRoutesByTo;
-  to: "/" | "/account" | "/login" | "/sign-up";
-  id: "__root__" | "/" | "/account/" | "/login/" | "/sign-up/";
-  fileRoutesById: FileRoutesById;
+  fileRoutesByFullPath: FileRoutesByFullPath
+  fullPaths: '/' | '/account' | '/login' | '/make-booking' | '/sign-up'
+  fileRoutesByTo: FileRoutesByTo
+  to: '/' | '/account' | '/login' | '/make-booking' | '/sign-up'
+  id:
+    | '__root__'
+    | '/'
+    | '/account/'
+    | '/login/'
+    | '/make-booking/'
+    | '/sign-up/'
+  fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute;
-  AccountIndexRoute: typeof AccountIndexRoute;
-  LoginIndexRoute: typeof LoginIndexRoute;
-  SignUpIndexRoute: typeof SignUpIndexRoute;
+  IndexRoute: typeof IndexRoute
+  AccountIndexRoute: typeof AccountIndexRoute
+  LoginIndexRoute: typeof LoginIndexRoute
+  MakeBookingIndexRoute: typeof MakeBookingIndexRoute
+  SignUpIndexRoute: typeof SignUpIndexRoute
 }
 
-declare module "@tanstack/react-router" {
+declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    "/": {
-      id: "/";
-      path: "/";
-      fullPath: "/";
-      preLoaderRoute: typeof IndexRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/sign-up/": {
-      id: "/sign-up/";
-      path: "/sign-up";
-      fullPath: "/sign-up";
-      preLoaderRoute: typeof SignUpIndexRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/login/": {
-      id: "/login/";
-      path: "/login";
-      fullPath: "/login";
-      preLoaderRoute: typeof LoginIndexRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/account/": {
-      id: "/account/";
-      path: "/account";
-      fullPath: "/account";
-      preLoaderRoute: typeof AccountIndexRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sign-up/': {
+      id: '/sign-up/'
+      path: '/sign-up'
+      fullPath: '/sign-up'
+      preLoaderRoute: typeof SignUpIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/make-booking/': {
+      id: '/make-booking/'
+      path: '/make-booking'
+      fullPath: '/make-booking'
+      preLoaderRoute: typeof MakeBookingIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login/': {
+      id: '/login/'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/account/': {
+      id: '/account/'
+      path: '/account'
+      fullPath: '/account'
+      preLoaderRoute: typeof AccountIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -106,8 +129,9 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AccountIndexRoute: AccountIndexRoute,
   LoginIndexRoute: LoginIndexRoute,
+  MakeBookingIndexRoute: MakeBookingIndexRoute,
   SignUpIndexRoute: SignUpIndexRoute,
-};
+}
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
-  ._addFileTypes<FileRouteTypes>();
+  ._addFileTypes<FileRouteTypes>()

@@ -49,6 +49,7 @@ func main() {
 	vite.Adapter.AddRoute("/demo")
 	vite.Adapter.AddRoute("/login")
 	vite.Adapter.AddRoute("/sign-up")
+	vite.Adapter.AddRoute("/make-booking")
 	vite.Adapter.AddAuthedRoute("/account")
 	mux.Handle("/", vite.Adapter.IntoHandler(api.AuthMiddleware{
 		Mode: api.Frontend,
