@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "prepare": "cd .. && husky frontend/.husky",
     "lint-staged": "lint-staged",
-    "test": "vitest"
+    "test": "vitest --run"
   },
   "lint-staged": {
     "*.{json,js,jsx,ts,tsx}": [
