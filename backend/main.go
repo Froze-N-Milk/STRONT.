@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"log/slog"
 	"net/http"
 	"plange/backend/model"
 	"time"
@@ -22,6 +23,9 @@ func main() {
 	port := flag.Int("port", 3000, "http port")
 	jwtKeyFile := flag.String("jwt-key-file", ".jwt-key", "file that contains base64 encoded jwt signing key")
 	flag.Parse()
+
+	// set debug events on atm
+	slog.SetLogLoggerLevel(slog.LevelDebug)
 
 	jwtKey, err := api.GetOrMakeJWTSigningKey(*jwtKeyFile)
 	if err != nil {
