@@ -230,12 +230,7 @@ function SignUpModal() {
                 </p>
               )}
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="submit_button"
-                style={{ width: "100%" }}
-              >
+              <button type="submit" disabled={loading} className="submit_button">
                 {loading ? "…" : "Create account"}
               </button>
 

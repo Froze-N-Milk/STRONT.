@@ -60,9 +60,9 @@
 }
 
 .acc-page .nav-btn.active {
-  background: #28a745;
+  background: #BA181B;
   color: white;
-  border-left-color: #28a745;
+  border-left-color: #E5383B;
 }
 
 .acc-page .content {
@@ -205,11 +205,6 @@
   box-shadow: none;
 }
 
-.acc-page .save-btn.saving {
-  background: #17a2b8;
-  cursor: wait;
-}
-
 .acc-page .save-message {
   margin-top: 15px;
   padding: 10px 20px;
@@ -217,9 +212,9 @@
   font-size: 14px;
   font-weight: 500;
   animation: fadeIn 0.3s ease-in;
-  background: #d4edda;
-  color: #155724;
-  border: 1px solid #c3e6cb;
+  background: #ad1e23b9;
+  color: white;
+  border: 1px solid #5b080b8d;
 }
 
 @keyframes fadeIn {

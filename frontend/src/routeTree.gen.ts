@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SignUpIndexRouteImport } from './routes/sign-up/index'
+import { Route as MakeBookingIndexRouteImport } from './routes/make-booking/index'
 import { Route as LoginIndexRouteImport } from './routes/login/index'
 import { Route as AccountIndexRouteImport } from './routes/account/index'
 
@@ -22,6 +23,11 @@ const IndexRoute = IndexRouteImport.update({
 const SignUpIndexRoute = SignUpIndexRouteImport.update({
   id: '/sign-up/',
   path: '/sign-up/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MakeBookingIndexRoute = MakeBookingIndexRouteImport.update({
+  id: '/make-booking/',
+  path: '/make-booking/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginIndexRoute = LoginIndexRouteImport.update({
@@ -39,12 +45,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/account': typeof AccountIndexRoute
   '/login': typeof LoginIndexRoute
+  '/make-booking': typeof MakeBookingIndexRoute
   '/sign-up': typeof SignUpIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/account': typeof AccountIndexRoute
   '/login': typeof LoginIndexRoute
+  '/make-booking': typeof MakeBookingIndexRoute
   '/sign-up': typeof SignUpIndexRoute
 }
 export interface FileRoutesById {
@@ -52,20 +60,28 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/account/': typeof AccountIndexRoute
   '/login/': typeof LoginIndexRoute
+  '/make-booking/': typeof MakeBookingIndexRoute
   '/sign-up/': typeof SignUpIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/account' | '/login' | '/sign-up'
+  fullPaths: '/' | '/account' | '/login' | '/make-booking' | '/sign-up'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/account' | '/login' | '/sign-up'
-  id: '__root__' | '/' | '/account/' | '/login/' | '/sign-up/'
+  to: '/' | '/account' | '/login' | '/make-booking' | '/sign-up'
+  id:
+    | '__root__'
+    | '/'
+    | '/account/'
+    | '/login/'
+    | '/make-booking/'
+    | '/sign-up/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AccountIndexRoute: typeof AccountIndexRoute
   LoginIndexRoute: typeof LoginIndexRoute
+  MakeBookingIndexRoute: typeof MakeBookingIndexRoute
   SignUpIndexRoute: typeof SignUpIndexRoute
 }
 
@@ -83,6 +99,13 @@ declare module '@tanstack/react-router' {
       path: '/sign-up'
       fullPath: '/sign-up'
       preLoaderRoute: typeof SignUpIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/make-booking/': {
+      id: '/make-booking/'
+      path: '/make-booking'
+      fullPath: '/make-booking'
+      preLoaderRoute: typeof MakeBookingIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login/': {
@@ -106,6 +129,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AccountIndexRoute: AccountIndexRoute,
   LoginIndexRoute: LoginIndexRoute,
+  MakeBookingIndexRoute: MakeBookingIndexRoute,
   SignUpIndexRoute: SignUpIndexRoute,
 }
 export const routeTree = rootRouteImport
