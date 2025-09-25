@@ -16,19 +16,6 @@ services:
       interval: 5s
       retries: 5
       start_period: 5s
-  stront:
-    depends_on:
-      db:
-        condition: service_healthy
-    build:
-      context: .
-      target: stront
-    environment:
-      DB_CONNECTION_STRING: host=db user=admin password=password dbname=restaurant_db port=5432 sslmode=disable TimeZone=Australia/Sydney
-    ports:
-      - "3000:3000"
-    networks:
-      - stront_net
 
 networks:
   stront_net:
