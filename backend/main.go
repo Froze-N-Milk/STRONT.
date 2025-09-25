@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"flag"
-	"fmt"
 	"log"
 	"log/slog"
 	"net/http"
@@ -21,7 +20,10 @@ import (
 )
 
 func main() {
-	port := flag.Int("port", 3000, "http port")
+	hostString := os.Getenv("HOST_STRING")
+	if hostString == "" {
+		hostString = "localhost:3000"
+	}
 	jwtKeyFile := flag.String("jwt-key-file", ".jwt-key", "file that contains base64 encoded jwt signing key")
 	flag.Parse()
 
@@ -146,7 +148,7 @@ func main() {
 	authedAppMux.Handle("POST /api/availability/update", &api.UpdateAvailabilitiesHandler{})
 
 	server := http.Server{
-		Addr:    fmt.Sprintf("localhost:%d", *port),
+		Addr:    hostString,
 		Handler: mux,
 	}
 
