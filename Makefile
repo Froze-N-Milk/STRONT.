@@ -32,7 +32,7 @@ frontend-dev:
 
 .PHONY: dev
 dev: db
-	go run -tags dev backend/main.go
+	DB_CONNECTION_STRING="host=localhost user=admin password=password dbname=restaurant_db port=5432 sslmode=disable TimeZone=Australia/Sydney" go run -tags dev backend/main.go
 
 .PHONY: run
 run: build db
@@ -41,11 +41,11 @@ run: build db
 .PHONY: rebuild-db
 rebuild-db:
 	$(CONTAINER_RUNTIME) compose down
-	$(CONTAINER_RUNTIME) compose up --detach
+	$(CONTAINER_RUNTIME) compose up db --detach
 
 .PHONY: db
 db:
-	$(CONTAINER_RUNTIME) compose up --detach
+	$(CONTAINER_RUNTIME) compose up db --detach
 
 .PHONY: clean
 clean:
