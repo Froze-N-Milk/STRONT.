@@ -167,10 +167,19 @@ input[type="password"]:focus {
   border: none;
   border-radius: 50px;
   vertical-align: center;
+  user-select: none;
 }
 
 .round-button:hover {
   background-color: #ca191f;
+}
+
+.disabled {
+  background-color: grey;
+}
+
+.disabled:hover {
+  background-color: grey;
 }
 
 .people-count-buttons {
