@@ -15,6 +15,8 @@ function parseDates(datedata: string) {
   return formattedDates;
 }
 
+const maxTableSize = 5;
+
 const weekdayTitles = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 type DateObj = {
@@ -47,7 +49,7 @@ export default function RouteComponent() {
   const [headCount, setHeadCount] = useState(1);
 
   function headCountPlus() {
-    if (headCount < 4) {
+    if (headCount < maxTableSize) {
       setHeadCount(headCount + 1);
     }
   }
@@ -74,19 +76,35 @@ export default function RouteComponent() {
       <div className="people-count-selector">
         <h3>how many fools you got</h3>
         <div className="people-count-buttons">
-          <button onClick={headCountMinus} className="round-button">
+          <button
+            onClick={headCountMinus}
+            className={
+              !(headCount == 1) ? "round-button" : "round-button disabled"
+            }
+          >
             <h2>&minus;</h2>
           </button>
           <h1>{headCount}</h1>
-          <button onClick={headCountPlus} className="round-button">
+          <button
+            onClick={headCountPlus}
+            className={
+              !(headCount == maxTableSize)
+                ? "round-button"
+                : "round-button disabled"
+            }
+          >
             <h2>+</h2>
           </button>
         </div>
       </div>
 
       <h3>
-        showing tables for {headCount} on {selectedDate.toLocaleDateString()}
+        what time u be wanting for your {headCount} fool/s on{" "}
+        {selectedDate.toLocaleDateString()}
       </h3>
+      <div>
+        <p>no tables mate.</p>
+      </div>
     </div>
   );
 }
