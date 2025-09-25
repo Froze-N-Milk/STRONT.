@@ -10,8 +10,9 @@ type Restaurant struct {
 	Description       string    `gorm:"type:text"`
 	LocationText      string    `gorm:"type:text"`
 	LocationUrl       string    `gorm:"type:text"`
-	FrontpageMarkdown string    `gorm:"type:text"`
+	MaxPeoplePerTable int       `gorm:"not null"`
 	Availability      *Availability
+	Bookings          []Booking
 }
 
 func (Restaurant) TableName() string {
