@@ -12,40 +12,21 @@ endif
 all: build
 
 .PHONY: build
-build: main
+build:
+	$(CONTAINER_RUNTIME) compose -f compose.yaml -f compose.prod.yaml -f compose.dev.yaml build --no-cache
 
-.PHONY: frontend/dist
-frontend/dist:
-	cd frontend; npm install && npm run build
-
-main: frontend/dist
-	go build -o main backend/main.go
-
-.PHONY: test
-test:
-	go test -v ./...
-	cd frontend; npm install && npm run test
-
-.PHONY: frontend-dev
-frontend-dev:
-	cd frontend; npm install && npm run dev
-
-.PHONY: dev
-dev: db
-	DB_CONNECTION_STRING="host=localhost user=admin password=password dbname=restaurant_db port=5432 sslmode=disable TimeZone=Australia/Sydney" go run -tags dev backend/main.go
+# TODO: Containerise and update the test command
+#.PHONY: test
+#test:
+#	go test -v
 
 .PHONY: run
-run: build db
-	./main
+run:
+	$(CONTAINER_RUNTIME) compose -f compose.yaml -f compose.prod.yaml up
 
-.PHONY: rebuild-db
-rebuild-db:
-	$(CONTAINER_RUNTIME) compose down
-	$(CONTAINER_RUNTIME) compose up db --detach
-
-.PHONY: db
-db:
-	$(CONTAINER_RUNTIME) compose up db --detach
+.PHONY: dev
+dev:
+	$(CONTAINER_RUNTIME) compose -f compose.yaml -f compose.dev.yaml up
 
 .PHONY: clean
 clean:
