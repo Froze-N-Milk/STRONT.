@@ -1,30 +1,92 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { Button, Calendar, CalendarCell, CalendarGrid, Heading } from 'react-aria-components'
+import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
 
-export const Route = createFileRoute('/make-booking/')({
-    component: RouteComponent,
-})
+export const Route = createFileRoute("/make-booking/")({
+  component: RouteComponent,
+});
 
-function RouteComponent() {
+const datedummies = `[{ "date": "2025-09-25T00:00:00+10:00", "hours": 0 }, { "date": "2025-09-26T00:00:00+10:00", "hours": 2147483584 }, { "date": "2025-09-27T00:00:00+10:00", "hours": 536868864 }, { "date": "2025-09-28T00:00:00+10:00", "hours": 536868864 }, { "date": "2025-09-29T00:00:00+10:00", "hours": 2147483584 }, { "date": "2025-09-30T00:00:00+10:00", "hours": 2147483584 }, { "date": "2025-10-01T00:00:00+10:00", "hours": 2147483584 }]`;
 
-    
-  
-    return <div className='dateselect_calendar_wrapper'>
-        <Calendar aria-label="Booking Date">
-            <header>
-                <Button slot="previous">
-                    <ChevronLeft size={20} />
-                </Button>
-                <Heading />
-                <Button slot="next">
-                    <ChevronRight size={20} />
-                </Button>
-            </header>
-            <CalendarGrid>
-                {(date) => <CalendarCell date={date} />}
-            </CalendarGrid>
-        </Calendar>
-        <h2></h2>
+function parseDates(datedata: string) {
+  const formattedDates: DateObj[] = [];
+  JSON.parse(datedata).forEach((item: { date: string; hours: number }) => {
+    formattedDates.push({ date: new Date(item.date), hours: item.hours });
+  });
+  return formattedDates;
+}
+
+const weekdayTitles = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+type DateObj = {
+  date: Date;
+  hours: number;
+};
+
+interface DateButtonProps {
+  dateObj: DateObj;
+  onSelect: (date: Date) => void;
+}
+
+function DateButton({ dateObj, onSelect }: DateButtonProps) {
+  const fullDate = dateObj;
+
+  return (
+    <div className="datebutton-wrapper">
+      <p>{weekdayTitles[fullDate.date.getDay()]}</p>
+      <button className="date-button" onClick={() => onSelect(fullDate.date)}>
+        {" "}
+        {fullDate.date.getDate()}{" "}
+      </button>
     </div>
+  );
+}
+
+export default function RouteComponent() {
+  const todaysDate = new Date();
+  const [selectedDate, setSelectedDate] = useState(todaysDate);
+  const [headCount, setHeadCount] = useState(1);
+
+  function headCountPlus() {
+    if (headCount < 4) {
+      setHeadCount(headCount + 1);
+    }
+  }
+  function headCountMinus() {
+    if (headCount > 1) {
+      setHeadCount(headCount - 1);
+    }
+  }
+
+  return (
+    <div className="booking-form">
+      <div className="booking-day-selector">
+        <h3>Select a day to book</h3>
+        <div className="booking-days">
+          {parseDates(datedummies).map((dateObj) => (
+            <DateButton
+              key={dateObj.date.toString()}
+              dateObj={dateObj}
+              onSelect={setSelectedDate}
+            />
+          ))}
+        </div>
+      </div>
+      <div className="people-count-selector">
+        <h3>how many fools you got</h3>
+        <div className="people-count-buttons">
+          <button onClick={headCountMinus} className="round-button">
+            <h2>&minus;</h2>
+          </button>
+          <h1>{headCount}</h1>
+          <button onClick={headCountPlus} className="round-button">
+            <h2>+</h2>
+          </button>
+        </div>
+      </div>
+
+      <h3>
+        showing tables for {headCount} on {selectedDate.toLocaleDateString()}
+      </h3>
+    </div>
+  );
 }

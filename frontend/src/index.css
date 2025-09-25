@@ -132,23 +132,50 @@ input[type="password"]:focus {
 }
 
 
-/*BUTTON STYLES*/
-
-/*CALENDAR STYLES*/
-
-.react-aria-Calendar {
-  width: 300px;
-
+.booking-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
 }
 
-.react-aria-CalendarCell {
+.booking-day-selector {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.booking-days {
+  display: flex;
+  gap: 2px;
+}
+
+.datebutton-wrapper {
+  height: 60px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.round-button {
   height: 30px;
   width: 30px;
+  background-color: #a4161a;
   display: flex;
   align-items: center;
   justify-content: center;
+  border: none;
+  border-radius: 50px;
+  vertical-align: center;
 }
 
-.react-aria-CalendarCell[data-selected] {
-  background-color: red;
+.round-button:hover {
+  background-color: #ca191f;
+}
+
+.people-count-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
 }
