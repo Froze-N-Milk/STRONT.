@@ -16,8 +16,10 @@ type Booking struct {
 	ContactID      uuid.UUID      `gorm:"not null"`
 	RestaurantID   uuid.UUID      `gorm:"not null"`
 	SeatingID      uuid.UUID      `gorm:"not null"`
+	HeadCount      int32          `gorm:"not null"`
 	StartTime      time.Time      `gorm:"type:timestamptz;not null"`
 	EndTime        time.Time      `gorm:"type:timestamptz;not null"`
+	Approved       bool           `gorm:"not null;default:false"`
 	CreationDate   time.Time      `gorm:"type:timestamptz;not null"`
 	CreationMethod CreationMethod `gorm:"type:text;not null"`
 	Attendance     Attendance     `gorm:"type:text"`
@@ -25,7 +27,6 @@ type Booking struct {
 	Paid           Monetary       `gorm:"type:numeric(12, 2)"`
 	Contact        *CustomerContact
 	Restaurant     *Restaurant
-	Seating        *SeatingZone
 }
 
 func (Booking) TableName() string {
@@ -35,7 +36,7 @@ func (Booking) TableName() string {
 /*
 CreationMethod is a type-safe wrapper around a string to ensure that only valid strings can be inserted into the database
 
-Valid values = { "online, "phone", "walk-in" }
+Valid values = { "online", "phone", "walk-in" }
 */
 type CreationMethod string
 
