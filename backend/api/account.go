@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"log/slog"
 	"net/http"
@@ -134,5 +135,76 @@ func (h *UpdateAccountHandler) ServeHTTP(ctx AuthedAppContext, w http.ResponseWr
 		// remove the old cookie re-issue if it exists
 		w.Header().Del("Set-Cookie")
 		setSessionToken(w, updatedAccount.Email, h.JWTKey)
+	}
+}
+
+// AccountManagedRestaurantsHandler fetches the the restaurants owned by the
+// currently authenticated user
+//
+// authed endpoint
+//
+// returns: {
+// 	id: string,
+//	name: string,
+//	description: string,
+//	locationText: string,
+//	locationUrl: string,
+//	frontpageMarkdown: string,
+// }[]
+//
+// bound to: GET /api/account/restaurants
+type AccountManagedRestaurantsHandler struct{}
+
+func (*AccountManagedRestaurantsHandler) handle(
+	ctx context.Context,
+	db *gorm.DB,
+	user User,
+) ([]restaurantDetails, error) {
+	restaurants, err := gorm.G[model.Restaurant](db).Raw(`
+SELECT
+	restaurant.id,
+	restaurant.name,
+	restaurant.description,
+	restaurant.location_text,
+	restaurant.location_url,
+	restaurant.frontpage_markdown
+FROM restaurant
+INNER JOIN account
+	ON account.email = ?
+	AND restaurant.account_id = account.id`,
+		user.Email).Find(ctx)
+
+	if err != nil {
+		return nil, err
+	}
+
+	res := make([]restaurantDetails, 0, len(restaurants))
+	for i, restaurant := range restaurants {
+		res[i] = restaurantDetails{
+			ID:                restaurant.ID,
+			Name:              restaurant.Name,
+			Description:       restaurant.Description,
+			LocationText:      restaurant.LocationText,
+			LocationUrl:       restaurant.LocationUrl,
+			FrontpageMarkdown: restaurant.FrontpageMarkdown,
+		}
+	}
+
+	return res, nil
+}
+
+func (h *AccountManagedRestaurantsHandler) ServeHTTP(ctx AuthedAppContext, w http.ResponseWriter, r *http.Request) {
+	restaurants, err := h.handle(r.Context(), ctx.DB, ctx.User)
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	err = json.NewEncoder(w).Encode(&restaurants)
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 }

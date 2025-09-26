@@ -139,6 +139,7 @@ func main() {
 	appMux.Handle("POST /api/account/register", &api.RegisterAccountHandler{JWTKey: &jwtKey})
 	authedAppMux.Handle("POST /api/account/delete", &api.DeleteAccountHandler{})
 	authedAppMux.Handle("POST /api/account/update", &api.UpdateAccountHandler{JWTKey: &jwtKey})
+	authedAppMux.Handle("GET /api/account/restuarants", &api.AccountManagedRestaurantsHandler{})
 
 	authedAppMux.HandleFunc("GET /api/account/name", func(ctx api.AuthedAppContext, w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(ctx.User.Email))
