@@ -139,6 +139,7 @@ func main() {
 	appMux.Handle("POST /api/account/register", &api.RegisterAccountHandler{JWTKey: &jwtKey})
 	authedAppMux.Handle("POST /api/account/delete", &api.DeleteAccountHandler{})
 	authedAppMux.Handle("POST /api/account/update", &api.UpdateAccountHandler{JWTKey: &jwtKey})
+	authedAppMux.Handle("GET /api/account/restuarants", &api.AccountManagedRestaurantsHandler{})
 
 	authedAppMux.HandleFunc("GET /api/account/name", func(ctx api.AuthedAppContext, w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(ctx.User.Email))
@@ -146,6 +147,12 @@ func main() {
 
 	appMux.Handle("GET /api/availability/{restaurant}", &api.GetAvailabilitiesHandler{})
 	authedAppMux.Handle("POST /api/availability/update", &api.UpdateAvailabilitiesHandler{})
+
+	appMux.Handle("GET /api/restaurants", &api.BrowseRestaurantsHandler{})
+	appMux.Handle("GET /api/restaurant/{restaurant}", &api.RestaurantDetailsHandler{})
+	authedAppMux.Handle("POST /api/restaurants/create", &api.CreateRestaurantHandler{})
+	authedAppMux.Handle("POST /api/restaurants/delete", &api.DeleteRestaurantHandler{})
+	authedAppMux.Handle("POST /api/restaurants/update", &api.UpdateRestaurantHandler{})
 
 	server := http.Server{
 		Addr:    hostString,
