@@ -154,6 +154,8 @@ func main() {
 	authedAppMux.Handle("POST /api/restaurant/delete", &api.DeleteRestaurantHandler{})
 	authedAppMux.Handle("POST /api/restaurant/update", &api.UpdateRestaurantHandler{})
 
+	authedAppMux.Handle("POST /api/restaurant/occasion/create", &api.CreateOccasionHandler{})
+
 	server := http.Server{
 		Addr:    hostString,
 		Handler: mux,
