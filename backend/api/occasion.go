@@ -108,3 +108,60 @@ func (h *CreateOccasionHandler) ServeHTTP(ctx AuthedAppContext, w http.ResponseW
 		return
 	}
 }
+
+// DeleteOccasionHandler deletes an occasion from the database for the
+// specified restaurant, on the specified date, and ensures that it is owned by
+// the currently authenticed user
+//
+// authed endpoint
+//
+// expects: { date: number, restaurant: string }
+//
+// bound to: POST /api/restaurant/occasion/delete
+type DeleteOccasionHandler struct{}
+
+func (*DeleteOccasionHandler) handle(
+	ctx context.Context,
+	db *gorm.DB,
+	user User,
+	request occasionRequest,
+) error {
+	return gorm.G[model.Occasion](db).Exec(ctx, `
+WITH a AS (
+	SELECT availability.id
+	FROM availability
+	INNER JOIN restaurant
+		ON restaurant.id = ?
+		AND restaurant.availability_id = availability.id
+	INNER JOIN account
+		ON account.email = ?
+		AND restaurant.account_id = account.id
+)
+DELETE FROM occasion
+WHERE availability_id = a.id
+	AND date = ?`,
+		request.Restaurant,
+		user.Email,
+		request.Date)
+}
+
+func (h *DeleteOccasionHandler) ServeHTTP(ctx AuthedAppContext, w http.ResponseWriter, r *http.Request) {
+	request := occasionRequest{}
+	err := json.NewDecoder(r.Body).Decode(&request)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	err = h.handle(
+		r.Context(),
+		ctx.DB,
+		ctx.User,
+		request,
+	)
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+}
