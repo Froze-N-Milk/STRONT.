@@ -66,6 +66,9 @@ const Layout = ({ account }: { account: Account | null }) => (
         </>
       ) : (
         <>
+          <Link className="navbar_button" to="/account">
+            account
+          </Link>
           <Link className="navbar_button" to="/login">
             login
           </Link>
