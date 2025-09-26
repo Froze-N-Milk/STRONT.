@@ -16,9 +16,10 @@ build:
 	$(CONTAINER_RUNTIME) compose -f compose.yaml -f compose.prod.yaml -f compose.dev.yaml build --no-cache
 
 # TODO: Containerise and update the test command
-#.PHONY: test
-#test:
-#	go test -v
+.PHONY: test
+test:
+	go test -v ./backend/api/... ./backend/lib/... ./backend/model/...
+	cd frontend; npm install && npm run test
 
 .PHONY: run
 run:
@@ -34,4 +35,3 @@ clean:
 	$(CONTAINER_RUNTIME) compose down
 	rm -rf frontend/dist
 	rm -rf frontend/node_modules
-
