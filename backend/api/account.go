@@ -15,7 +15,9 @@ import (
 //
 // expects: { email: string, password: string, }
 //
-// bound to: /api/account/register
+// redirects to /account on success
+//
+// bound to: POST /api/account/register
 type RegisterAccountHandler struct {
 	JWTKey *[32]byte // 32 byte signing key for jwt session tokens
 }
@@ -60,7 +62,7 @@ func (h *RegisterAccountHandler) ServeHTTP(ctx AppContext, w http.ResponseWriter
 //
 // authed endpoint
 //
-// bound to: /api/account/delete
+// bound to: POST /api/account/delete
 type DeleteAccountHandler struct{}
 
 func (h *DeleteAccountHandler) ServeHTTP(ctx AuthedAppContext, w http.ResponseWriter, r *http.Request) {
@@ -85,7 +87,7 @@ func (h *DeleteAccountHandler) ServeHTTP(ctx AuthedAppContext, w http.ResponseWr
 //
 // expects: { email: string?, password: string?, }
 //
-// bound to: /api/account/register
+// bound to: POST /api/account/register
 type UpdateAccountHandler struct {
 	JWTKey *[32]byte // 32 byte signing key for jwt session tokens
 }
