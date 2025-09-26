@@ -114,6 +114,54 @@ func (h *CreateRestaurantHandler) ServeHTTP(ctx AuthedAppContext, w http.Respons
 	w.WriteHeader(http.StatusSeeOther)
 }
 
+// DeleteRestaurantHandler removes a restaurant from the database for the
+// currently authenticated user
+//
+// authed endpoint
+//
+// expects: { id: string, }
+//
+// bound to: POST /api/restaurant/delete
+type DeleteRestaurantHandler struct{}
+
+func (*DeleteRestaurantHandler) handle(
+	ctx context.Context,
+	db *gorm.DB,
+	user User,
+	id uuid.UUID,
+) error {
+	return gorm.G[any](db).Exec(ctx, `
+DELETE FROM restaurant
+USING account
+WHERE restaurant.id = ?
+	AND account.email = ?
+	AND restaurant.account_id = account.id`,
+		id,
+		user.Email,
+	)
+}
+
+type restaurantRequest struct {
+	ID uuid.UUID `json:"id"`
+}
+
+func (h *DeleteRestaurantHandler) ServeHTTP(ctx AuthedAppContext, w http.ResponseWriter, r *http.Request) {
+	request := restaurantRequest{}
+	err := json.NewDecoder(r.Body).Decode(&request)
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	err = h.handle(r.Context(), ctx.DB, ctx.User, request.ID)
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+}
+
 // UpdateRestaurantHandler updates the details for a restaurant in the database
 // for the currently authenticated user
 //
