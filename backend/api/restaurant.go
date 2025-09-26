@@ -6,10 +6,21 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 
 	"plange/backend/model"
 )
+
+// common restaurant details transport struct
+type restaurantDetails struct {
+	ID                uuid.UUID `json:"id"`
+	Name              string    `json:"name"`
+	Description       string    `json:"description"`
+	LocationText      string    `json:"locationText"`
+	LocationUrl       string    `json:"locationUrl"`
+	FrontpageMarkdown string    `json:"frontpageMarkdown"`
+}
 
 // CreateRestaurantHandler creates a new restaurant in the database for the
 // currently authenticated user
@@ -101,4 +112,66 @@ func (h *CreateRestaurantHandler) ServeHTTP(ctx AuthedAppContext, w http.Respons
 
 	w.Header().Add("Location", fmt.Sprintf("/restaurant/%s", restaurant.ID))
 	w.WriteHeader(http.StatusSeeOther)
+}
+
+// UpdateRestaurantHandler updates the details for a restaurant in the database
+// for the currently authenticated user
+//
+// authed endpoint
+//
+//	expects: {
+//		id: string,
+//		name: string,
+//		description: string,
+//		locationText: string,
+//		locationUrl: string,
+//		frontpageMarkdown: string,
+//	}
+//
+// bound to: POST /api/restaurant/update
+type UpdateRestaurantHandler struct{}
+
+func (*UpdateRestaurantHandler) handle(
+	ctx context.Context,
+	db *gorm.DB,
+	user User,
+	restaurant restaurantDetails,
+) error {
+	return gorm.G[any](db).Exec(ctx, `
+UPDATE restaurant
+SET
+	name = ?,
+	description = ?,
+	location_text = ?,
+	location_url = ?,
+	frontpage_markdown = ?
+FROM account
+WHERE restaurant.id = ?
+	AND account.email = ?
+	AND restaurant.account_id = account.id`,
+		restaurant.Name,
+		restaurant.Description,
+		restaurant.LocationText,
+		restaurant.LocationUrl,
+		restaurant.FrontpageMarkdown,
+		restaurant.ID,
+		user.Email,
+	)
+}
+
+func (h *UpdateRestaurantHandler) ServeHTTP(ctx AuthedAppContext, w http.ResponseWriter, r *http.Request) {
+	request := restaurantDetails{}
+	err := json.NewDecoder(r.Body).Decode(&request)
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	err = h.handle(r.Context(), ctx.DB, ctx.User, request)
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 }

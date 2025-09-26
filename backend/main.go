@@ -149,6 +149,7 @@ func main() {
 	authedAppMux.Handle("POST /api/availability/update", &api.UpdateAvailabilitiesHandler{})
 
 	authedAppMux.Handle("POST /api/restaurants/create", &api.CreateRestaurantHandler{})
+	authedAppMux.Handle("POST /api/restaurants/update", &api.UpdateRestaurantHandler{})
 
 	server := http.Server{
 		Addr:    hostString,
