@@ -150,9 +150,9 @@ func main() {
 
 	appMux.Handle("GET /api/restaurants", &api.BrowseRestaurantsHandler{})
 	appMux.Handle("GET /api/restaurant/{restaurant}", &api.RestaurantDetailsHandler{})
-	authedAppMux.Handle("POST /api/restaurants/create", &api.CreateRestaurantHandler{})
-	authedAppMux.Handle("POST /api/restaurants/delete", &api.DeleteRestaurantHandler{})
-	authedAppMux.Handle("POST /api/restaurants/update", &api.UpdateRestaurantHandler{})
+	authedAppMux.Handle("POST /api/restaurant/create", &api.CreateRestaurantHandler{})
+	authedAppMux.Handle("POST /api/restaurant/delete", &api.DeleteRestaurantHandler{})
+	authedAppMux.Handle("POST /api/restaurant/update", &api.UpdateRestaurantHandler{})
 
 	server := http.Server{
 		Addr:    hostString,
