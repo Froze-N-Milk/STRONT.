@@ -12,40 +12,22 @@ endif
 all: build
 
 .PHONY: build
-build: main
+build:
+	$(CONTAINER_RUNTIME) compose -f compose.yaml -f compose.prod.yaml -f compose.dev.yaml build --no-cache
 
-.PHONY: frontend/dist
-frontend/dist:
-	cd frontend; npm install && npm run build
-
-main: frontend/dist
-	go build -o main backend/main.go
-
+# TODO: Containerise and update the test command
 .PHONY: test
 test:
-	go test -v ./...
+	go test -v ./backend/api/... ./backend/lib/... ./backend/model/...
 	cd frontend; npm install && npm run test
 
-.PHONY: frontend-dev
-frontend-dev:
-	cd frontend; npm install && npm run dev
+.PHONY: run
+run:
+	$(CONTAINER_RUNTIME) compose -f compose.yaml -f compose.prod.yaml up
 
 .PHONY: dev
-dev: db
-	go run -tags dev backend/main.go
-
-.PHONY: run
-run: build db
-	./main
-
-.PHONY: rebuild-db
-rebuild-db:
-	$(CONTAINER_RUNTIME) compose down
-	$(CONTAINER_RUNTIME) compose up --detach
-
-.PHONY: db
-db:
-	$(CONTAINER_RUNTIME) compose up --detach
+dev:
+	$(CONTAINER_RUNTIME) compose -f compose.yaml -f compose.dev.yaml up
 
 .PHONY: clean
 clean:
@@ -53,4 +35,3 @@ clean:
 	$(CONTAINER_RUNTIME) compose down
 	rm -rf frontend/dist
 	rm -rf frontend/node_modules
-

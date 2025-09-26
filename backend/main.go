@@ -3,10 +3,10 @@ package main
 import (
 	"context"
 	"flag"
-	"fmt"
 	"log"
 	"log/slog"
 	"net/http"
+	"os"
 	"plange/backend/model"
 	"time"
 
@@ -20,7 +20,10 @@ import (
 )
 
 func main() {
-	port := flag.Int("port", 3000, "http port")
+	hostString := os.Getenv("HOST_STRING")
+	if hostString == "" {
+		hostString = "localhost:3000"
+	}
 	jwtKeyFile := flag.String("jwt-key-file", ".jwt-key", "file that contains base64 encoded jwt signing key")
 	flag.Parse()
 
@@ -32,7 +35,11 @@ func main() {
 		panic(err)
 	}
 
-	connectionString := "host=localhost user=admin password=password dbname=restaurant_db port=5432 sslmode=disable TimeZone=Australia/Sydney"
+	connectionString := os.Getenv("DB_CONNECTION_STRING")
+	if connectionString == "" {
+		log.Panic("No connection string set in env variable DB_CONNECTION_STRING")
+	}
+
 	db, err := gorm.Open(postgres.Open(connectionString))
 	if err != nil {
 		log.Panic("failed to connect database", err)
@@ -141,7 +148,7 @@ func main() {
 	authedAppMux.Handle("POST /api/availability/update", &api.UpdateAvailabilitiesHandler{})
 
 	server := http.Server{
-		Addr:    fmt.Sprintf("localhost:%d", *port),
+		Addr:    hostString,
 		Handler: mux,
 	}
 
