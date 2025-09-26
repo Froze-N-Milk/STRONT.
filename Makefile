@@ -23,7 +23,7 @@ main: frontend/dist
 
 .PHONY: test
 test:
-	go test -v
+	go test -v ./...
 	cd frontend; npm install && npm run test
 
 .PHONY: frontend-dev

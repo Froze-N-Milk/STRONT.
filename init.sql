@@ -2,7 +2,7 @@ DROP TABLE IF EXISTS account CASCADE;
 DROP TABLE IF EXISTS session_tokens CASCADE;
 DROP TABLE IF EXISTS availability CASCADE;
 DROP TABLE IF EXISTS restaurant CASCADE;
-DROP TABLE IF EXISTS availability_exclusion CASCADE;
+DROP TABLE IF EXISTS occasion CASCADE;
 DROP TABLE IF EXISTS seating_zone CASCADE;
 DROP TABLE IF EXISTS restaurant_frontpage CASCADE;
 DROP TABLE IF EXISTS customer_contact CASCADE;
@@ -45,14 +45,14 @@ CREATE TABLE restaurant
     FOREIGN KEY (availability_id) REFERENCES availability (id) ON DELETE CASCADE
 );
 
-CREATE TABLE availability_exclusion
+CREATE TABLE occasion
 (
-    id               UUID PRIMARY KEY DEFAULT pg_catalog.gen_random_uuid(),
     availability_id  UUID   NOT NULL,
-    close_date       DATE   NOT NULL,
-    hour_mask        BIGINT NOT NULL CHECK (hour_mask > 0), -- Check that they've actually set some time off
-    yearly_recurring BOOL             DEFAULT false,
-    FOREIGN KEY (availability_id) REFERENCES availability (id) ON DELETE CASCADE
+    date             DATE   NOT NULL,
+    hour_mask        BIGINT NOT NULL,
+    yearly_recurring BOOL            DEFAULT false,
+    FOREIGN KEY (availability_id) REFERENCES availability (id) ON DELETE CASCADE,
+    UNIQUE (availability_id, date)
 );
 
 CREATE TABLE seating_zone
