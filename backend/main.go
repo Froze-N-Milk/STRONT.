@@ -148,6 +148,7 @@ func main() {
 	appMux.Handle("GET /api/availability/{restaurant}", &api.GetAvailabilitiesHandler{})
 	authedAppMux.Handle("POST /api/availability/update", &api.UpdateAvailabilitiesHandler{})
 
+	appMux.Handle("GET /api/restaurants", &api.BrowseRestaurantsHandler{})
 	authedAppMux.Handle("POST /api/restaurants/create", &api.CreateRestaurantHandler{})
 	authedAppMux.Handle("POST /api/restaurants/delete", &api.DeleteRestaurantHandler{})
 	authedAppMux.Handle("POST /api/restaurants/update", &api.UpdateRestaurantHandler{})

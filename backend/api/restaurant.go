@@ -223,3 +223,66 @@ func (h *UpdateRestaurantHandler) ServeHTTP(ctx AuthedAppContext, w http.Respons
 		return
 	}
 }
+
+// BrowseRestaurantsHandler fetches all restaurants
+//
+//	returns: {
+//		id: string,
+//		name: string,
+//		description: string,
+//		locationText: string,
+//		locationUrl: string,
+//		frontpageMarkdown: string,
+//	}[]
+//
+// bound to: GET /api/restaurants
+type BrowseRestaurantsHandler struct{}
+
+func (*BrowseRestaurantsHandler) handle(
+	ctx context.Context,
+	db *gorm.DB,
+) ([]restaurantDetails, error) {
+	restaurants, err := gorm.G[model.Restaurant](db).Raw(`
+SELECT
+	id,
+	name,
+	description,
+	location_text,
+	location_url,
+	frontpage_markdown
+FROM restaurant`).Find(ctx)
+
+	if err != nil {
+		return nil, err
+	}
+
+	res := make([]restaurantDetails, 0, len(restaurants))
+	for i, restaurant := range restaurants {
+		res[i] = restaurantDetails{
+			ID:                restaurant.ID,
+			Name:              restaurant.Name,
+			Description:       restaurant.Description,
+			LocationText:      restaurant.LocationText,
+			LocationUrl:       restaurant.LocationUrl,
+			FrontpageMarkdown: restaurant.FrontpageMarkdown,
+		}
+	}
+
+	return res, nil
+}
+
+func (h *BrowseRestaurantsHandler) ServeHTTP(ctx AppContext, w http.ResponseWriter, r *http.Request) {
+	restaurants, err := h.handle(r.Context(), ctx.DB)
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	err = json.NewEncoder(w).Encode(&restaurants)
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+}
