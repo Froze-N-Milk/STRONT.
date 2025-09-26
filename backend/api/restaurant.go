@@ -286,3 +286,70 @@ func (h *BrowseRestaurantsHandler) ServeHTTP(ctx AppContext, w http.ResponseWrit
 		return
 	}
 }
+
+// RestaurantsDetailsHandler fetches the details of a single restaurant
+//
+// expects: .../{restaurant}: restaurant id path-param
+//
+//	returns: {
+//		id: string,
+//		name: string,
+//		description: string,
+//		locationText: string,
+//		locationUrl: string,
+//		frontpageMarkdown: string,
+//	}
+//
+// bound to: GET /api/restaurant/{restaurant}
+type RestaurantDetailsHandler struct{}
+
+func (*RestaurantDetailsHandler) handle(
+	ctx context.Context,
+	db *gorm.DB,
+	id uuid.UUID,
+) (restaurantDetails, error) {
+	restaurant, err := gorm.G[model.Restaurant](db).Raw(`
+SELECT
+	id,
+	name,
+	description,
+	location_text,
+	location_url,
+	frontpage_markdown
+FROM restaurant
+WHERE id = ?`, id).First(ctx)
+
+	if err != nil {
+		return restaurantDetails{}, err
+	}
+
+	return restaurantDetails{
+		ID:                restaurant.ID,
+		Name:              restaurant.Name,
+		Description:       restaurant.Description,
+		LocationText:      restaurant.LocationText,
+		LocationUrl:       restaurant.LocationUrl,
+		FrontpageMarkdown: restaurant.FrontpageMarkdown,
+	}, nil
+}
+
+func (h *RestaurantDetailsHandler) ServeHTTP(ctx AppContext, w http.ResponseWriter, r *http.Request) {
+	restaurant, err := uuid.Parse(r.PathValue("restaurant"))
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	restaurants, err := h.handle(r.Context(), ctx.DB, restaurant)
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	err = json.NewEncoder(w).Encode(&restaurants)
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+}
