@@ -56,6 +56,25 @@ func (o OpeningHours) MarshalJSON() ([]byte, error) {
 	})
 }
 
+func (o *OpeningHours) UnmarshalJSON(data []byte) error {
+	raw := struct {
+		Date  int64 `json:"date"`
+		Hours int64 `json:"hours"`
+	}{}
+
+
+	err := json.Unmarshal(data, &raw)
+
+	if err != nil {
+		return err
+	}
+
+	o.Date = time.UnixMilli(raw.Date)
+	o.Hours = raw.Hours
+
+	return nil
+}
+
 // returns the next 7 days of restaurant openings in order
 //
 // weekday: 'current' day of the week
