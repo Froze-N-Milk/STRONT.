@@ -157,7 +157,7 @@ func (h *UpdateAvailabilitiesHandler) ServeHTTP(ctx AuthedAppContext, w http.Res
 		return
 	}
 
-	h.handle(r.Context(), ctx.DB, ctx.User, request)
+	err = h.handle(r.Context(), ctx.DB, ctx.User, request)
 
 	if errors.Is(err, invalidRestaurantRequestError{}) {
 		w.WriteHeader(http.StatusBadRequest)
