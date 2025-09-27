@@ -18,6 +18,7 @@ type Availability struct {
 	SaturdayHourMask  int64     `gorm:"not null"`
 	SundayHourMask    int64     `gorm:"not null"`
 	Occasions         []Occasion
+	Restaurant 		  *Restaurant
 }
 
 func (Availability) TableName() string {
