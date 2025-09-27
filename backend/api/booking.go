@@ -12,6 +12,13 @@ import (
 	"gorm.io/gorm"
 )
 
+// TODO: Check if booking time is during opening hours (CREATE, UPDATE)
+// TODO: Customer notes
+// TODO: Send booking confirmation email
+// TODO: Get list of all upcoming bookings for a restaurant
+// TODO: Get list of booking history for a restaurant
+// TODO: Update booking details like attendance, restaurant notes, bill, paid
+
 //region Customer Online Booking
 
 // CreateOnlineBookingHandler creates booking rows in the database for bookings made online by customers
