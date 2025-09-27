@@ -46,7 +46,7 @@ INSERT INTO availability (
 	thursday_hour_mask,
 	friday_hour_mask,
 	saturday_hour_mask,
-	sunday_hour_mask,
+	sunday_hour_mask
 )
 VALUES (
 	0,
@@ -74,7 +74,7 @@ INSERT INTO restaurant (
 VALUES (
 	(SELECT id FROM account WHERE email = ?),
 	?,
-	?,
+	?
 )
 RETURNING (id)`,
 		email,
