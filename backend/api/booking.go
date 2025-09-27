@@ -12,6 +12,8 @@ import (
 	"gorm.io/gorm"
 )
 
+//region Customer Online Booking
+
 // CreateOnlineBookingHandler creates booking rows in the database for bookings made online by customers
 //
 // # No auth required
@@ -96,6 +98,10 @@ func (h *CreateOnlineBookingHandler) ServeHTTP(ctx AppContext, w http.ResponseWr
 	w.Header().Add("Location", fmt.Sprintf("/booking/%s", booking.ID))
 	w.WriteHeader(http.StatusSeeOther)
 }
+
+//endregion
+
+//region Restaurant Booking Creation
 
 // CreateRestaurantBookingHandler creates a booking in the database for bookings made by restaurant staff for offline customers
 //
@@ -192,3 +198,74 @@ func (h *CreateRestaurantBookingHandler) ServeHTTP(ctx AuthedAppContext, w http.
 	w.WriteHeader(http.StatusOK)
 	return
 }
+
+//endregion
+
+// region Booking Update
+
+// UpdateBookingHandler updates the specified booking row in the database
+//
+// # No auth required
+//
+// expects:
+//
+//	{
+//		start_time: string,
+//		end_time: string,
+//		head_count: int
+//	}
+type UpdateBookingHandler struct{}
+type updateBookingRequest struct {
+	StartTime time.Time `json:"start_time"`
+	EndTime   time.Time `json:"end_time"`
+	HeadCount int       `json:"head_count"`
+}
+
+func (h *UpdateBookingHandler) handle(ctx context.Context, db *gorm.DB, request updateBookingRequest, bookingId uuid.UUID) error {
+	booking, err := gorm.G[model.Booking](db).Where("id = ?", bookingId).First(ctx)
+	if err != nil {
+		return err
+	}
+
+	booking.StartTime = request.StartTime
+	booking.EndTime = request.EndTime
+	// booking.HeadCount = request.HeadCount TODO: Update when schema update is merged
+
+	db.Save(&booking)
+
+	return nil
+}
+
+func (h *UpdateBookingHandler) ServeHTTP(ctx AppContext, w http.ResponseWriter, r *http.Request) {
+	bookingId, err := uuid.Parse(r.PathValue("booking"))
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	request := updateBookingRequest{}
+	err = json.NewDecoder(r.Body).Decode(&request)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	db := ctx.DB.Session(&gorm.Session{SkipDefaultTransaction: true}).Begin()
+	err = h.handle(r.Context(), db, request, bookingId)
+
+	if err != nil {
+		db.Rollback()
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	db.Commit()
+
+	w.WriteHeader(http.StatusOK)
+}
+
+//endregion
+
+//region Booking Delete
+// TODO: Implement booking delete endpoints
+//endregion
