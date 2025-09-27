@@ -9,10 +9,43 @@ const datedummies = `[{ "date": "2025-09-25T00:00:00+10:00", "hours": 0 }, { "da
 
 function parseDates(datedata: string) {
   const formattedDates: DateObj[] = [];
-  JSON.parse(datedata).forEach((item: { date: string; hours: number }) => {
+  JSON.parse(datedata).forEach((item: { date: number; hours: number }) => {
     formattedDates.push({ date: new Date(item.date), hours: item.hours });
   });
   return formattedDates;
+}
+
+const datesParsed = parseDates(datedummies);
+
+function* range(end: number) {
+  for (let i = 0; i < end; i++) yield i;
+}
+
+function listAvailableTimes(hourmask: number): number[] {
+  return Array.from(range(48)).filter((i) => checkTime(hourmask, i));
+}
+
+function checkTime(hourmask: number, periodIndex: number): boolean {
+  const mask = 0b1;
+  const x = 47 - periodIndex;
+  const shuffled = hourmask >> x;
+
+  return (shuffled & mask) === mask;
+}
+
+function timeFromMaskValue(maskvalue: number): string {
+  const mins = maskvalue % 2 == 0 ? "00 " : "30 ";
+  let hours = "";
+  let ampm = "";
+  if (maskvalue >= 24) {
+    hours =
+      maskvalue > 25 ? Math.floor(maskvalue / 2 - 12).toString() + ":" : "12:";
+    ampm = "PM";
+  } else {
+    hours += maskvalue > 1 ? Math.floor(maskvalue / 2).toString() + ":" : "00:";
+    ampm = "AM";
+  }
+  return hours + mins + ampm;
 }
 
 const maxTableSize = 5;
@@ -26,7 +59,7 @@ type DateObj = {
 
 interface DateButtonProps {
   dateObj: DateObj;
-  onSelect: (date: Date) => void;
+  onSelect: (date: DateObj) => void;
 }
 
 function DateButton({ dateObj, onSelect }: DateButtonProps) {
@@ -35,17 +68,15 @@ function DateButton({ dateObj, onSelect }: DateButtonProps) {
   return (
     <div className="datebutton-wrapper">
       <p>{weekdayTitles[fullDate.date.getDay()]}</p>
-      <button className="date-button" onClick={() => onSelect(fullDate.date)}>
-        {" "}
-        {fullDate.date.getDate()}{" "}
+      <button className="round-button" onClick={() => onSelect(fullDate)}>
+        {fullDate.date.getDate()}
       </button>
     </div>
   );
 }
 
 export default function RouteComponent() {
-  const todaysDate = new Date();
-  const [selectedDate, setSelectedDate] = useState(todaysDate);
+  const [selectedDate, setSelectedDate] = useState(datesParsed[0]);
   const [headCount, setHeadCount] = useState(1);
 
   function headCountPlus() {
@@ -64,7 +95,7 @@ export default function RouteComponent() {
       <div className="booking-day-selector">
         <h3>Select a day to book</h3>
         <div className="booking-days">
-          {parseDates(datedummies).map((dateObj) => (
+          {datesParsed.map((dateObj) => (
             <DateButton
               key={dateObj.date.toString()}
               dateObj={dateObj}
@@ -79,7 +110,7 @@ export default function RouteComponent() {
           <button
             onClick={headCountMinus}
             className={
-              !(headCount == 1) ? "round-button" : "round-button disabled"
+              headCount == 1 ? "round-button disabled" : "round-button"
             }
           >
             <h2>&minus;</h2>
@@ -88,9 +119,9 @@ export default function RouteComponent() {
           <button
             onClick={headCountPlus}
             className={
-              !(headCount == maxTableSize)
-                ? "round-button"
-                : "round-button disabled"
+              headCount == maxTableSize
+                ? "round-button disabled"
+                : "round-button"
             }
           >
             <h2>+</h2>
@@ -99,11 +130,20 @@ export default function RouteComponent() {
       </div>
 
       <h3>
-        what time u be wanting for your {headCount} fool/s on{" "}
-        {selectedDate.toLocaleDateString()}
+        what time u be wanting for your{" "}
+        {headCount == 1 ? "foolish ass" : headCount + " fools"} on{" "}
+        {selectedDate.date.toLocaleDateString()}
       </h3>
-      <div>
-        <p>no tables mate.</p>
+      <div className="seating-time-selection">
+        {listAvailableTimes(selectedDate.hours).map((i: number) => (
+          <button className="time-selector-button">
+            {timeFromMaskValue(i)}
+          </button>
+        ))}
+      </div>
+      <div className="contact-details">
+        <input type="text" name="booking-name" id="booking-name" />
+        <input type="email" name="booking-email" id="booking-email" />
       </div>
     </div>
   );
