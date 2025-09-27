@@ -17,6 +17,11 @@ type occasionRequest struct {
 	Restaurant uuid.UUID
 }
 
+// invoked by `(*json.Encoder) json.Encode(any)` in order to encode
+// `occasionRequest`
+//
+// encodes the `Date` to a millisecond unix timestamp, instead of a date time
+// string
 func (o occasionRequest) MarshalJSON() ([]byte, error) {
 	return json.Marshal(struct {
 		Date       int64     `json:"date"`
@@ -27,6 +32,11 @@ func (o occasionRequest) MarshalJSON() ([]byte, error) {
 	})
 }
 
+// invoked by `(*json.Decoder) json.Decode(any)` in order to decode
+// `occasionRequest`
+//
+// decodes the `Date` from a millisecond unix timestamp, instead of a date time
+// string
 func (o *occasionRequest) UnmarshalJSON(data []byte) error {
 	raw := struct {
 		Date       int64     `json:"date"`
