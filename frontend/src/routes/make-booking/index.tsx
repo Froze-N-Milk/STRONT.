@@ -68,7 +68,12 @@ function DateButton({ dateObj, onSelect }: DateButtonProps) {
   return (
     <div className="datebutton-wrapper">
       <p>{weekdayTitles[fullDate.date.getDay()]}</p>
-      <button className="round-button" onClick={() => onSelect(fullDate)}>
+      <button
+        className={
+          fullDate.hours == 0 ? "round-button disabled" : "round-button"
+        }
+        onClick={() => onSelect(fullDate)}
+      >
         {fullDate.date.getDate()}
       </button>
     </div>
@@ -77,16 +82,19 @@ function DateButton({ dateObj, onSelect }: DateButtonProps) {
 
 export default function RouteComponent() {
   const [selectedDate, setSelectedDate] = useState(datesParsed[0]);
-  const [headCount, setHeadCount] = useState(1);
+  const [partySize, setPartySize] = useState(1);
+  const [contactEmail, setContactEmail] = useState("");
+  const [contactName, setContactName] = useState("");
+  const [selectedTime, setSelectedTime] = useState("");
 
-  function headCountPlus() {
-    if (headCount < maxTableSize) {
-      setHeadCount(headCount + 1);
+  function partySizePlus() {
+    if (partySize < maxTableSize) {
+      setPartySize(partySize + 1);
     }
   }
-  function headCountMinus() {
-    if (headCount > 1) {
-      setHeadCount(headCount - 1);
+  function partySizeMinus() {
+    if (partySize > 1) {
+      setPartySize(partySize - 1);
     }
   }
 
@@ -108,18 +116,18 @@ export default function RouteComponent() {
         <h3>how many fools you got</h3>
         <div className="people-count-buttons">
           <button
-            onClick={headCountMinus}
+            onClick={partySizeMinus}
             className={
-              headCount == 1 ? "round-button disabled" : "round-button"
+              partySize == 1 ? "round-button disabled" : "round-button"
             }
           >
             <h2>&minus;</h2>
           </button>
-          <h1>{headCount}</h1>
+          <h1>{partySize}</h1>
           <button
-            onClick={headCountPlus}
+            onClick={partySizePlus}
             className={
-              headCount == maxTableSize
+              partySize == maxTableSize
                 ? "round-button disabled"
                 : "round-button"
             }
@@ -131,19 +139,57 @@ export default function RouteComponent() {
 
       <h3>
         what time u be wanting for your{" "}
-        {headCount == 1 ? "foolish ass" : headCount + " fools"} on{" "}
+        {partySize == 1 ? "foolish ass" : partySize + " fools"} on{" "}
         {selectedDate.date.toLocaleDateString()}
       </h3>
-      <div className="seating-time-selection">
-        {listAvailableTimes(selectedDate.hours).map((i: number) => (
-          <button className="time-selector-button">
-            {timeFromMaskValue(i)}
-          </button>
-        ))}
+      <div className="seating-time-wrapper">
+        <div
+          className={
+            selectedDate.hours == 0
+              ? "seating-time-selection closed"
+              : "seating-time-selection opened"
+          }
+        >
+          {listAvailableTimes(selectedDate.hours).map((i: number) => {
+            const timeFormatted = timeFromMaskValue(i);
+
+            return (
+              <button
+                className={
+                  selectedTime == timeFormatted
+                    ? "time-selector-button selected"
+                    : "time-selector-button"
+                }
+                key={"timeselector" + i}
+                onClick={() => setSelectedTime(timeFormatted)}
+              >
+                {timeFormatted}
+              </button>
+            );
+          })}
+        </div>
       </div>
       <div className="contact-details">
-        <input type="text" name="booking-name" id="booking-name" />
-        <input type="email" name="booking-email" id="booking-email" />
+        <h3>what your name</h3>
+        <input
+          type="text"
+          name="booking-name"
+          id="booking-name"
+          value={contactName}
+          onChange={(e) => setContactName(e.target.value)}
+        />
+        <h3>what your email</h3>
+        <input
+          type="email"
+          name="booking-email"
+          id="booking-email"
+          value={contactEmail}
+          onChange={(e) => setContactEmail(e.target.value)}
+        />
+      </div>
+
+      <div className="devpanel">
+        <p>{selectedTime}</p>
       </div>
     </div>
   );

@@ -180,10 +180,13 @@ input[type=text]:focus {
 
 .disabled {
   background-color: grey;
+  opacity: 40%;
+  user-select: none;
 }
 
 .disabled:hover {
   background-color: grey;
+  cursor: default;
 }
 
 .people-count-buttons {
@@ -191,4 +194,52 @@ input[type=text]:focus {
   align-items: center;
   justify-content: center;
   gap: 20px;
+}
+
+.seating-time-selection {
+  width: 400px;
+  max-height: 0px;
+  transition: max-height 0.5s ease;
+  display: flex;
+  overflow: scroll;
+  align-items: center;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.seating-time-selection.opened {
+  max-height: 400px;
+}
+
+.time-selector-button {
+  width: 8em;
+  padding: 0.8em;
+  color: #660708;
+  background-color: #FFFFFF;
+  border: 1px solid #E5383B;
+  filter:drop-shadow(1px 1px 1px #a4161a);
+  border-radius: 5px;
+  margin-bottom: 2px;
+}
+
+.time-selector-button.selected {
+  color: #E5383B;
+  opacity: 40%;
+}
+
+.time-selector-button.selected::after {
+  content: " (selected)";
+}
+
+.time-selector-button.selected:hover {
+  cursor: default;
+}
+
+.time-selector-button:hover {
+  background-color: #F5F3F4;
+  cursor: pointer;
+}
+
+input[type="email"]:invalid {
+  color: blue;
 }
