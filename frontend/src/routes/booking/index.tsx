@@ -17,7 +17,7 @@ function BookingPage() {
   function onRemove(id: number) {
     if (confirm("Remove this booking?")) {
       setItems((list) => list.filter((x) => x.id !== id));
-      // 预留后端对接：DELETE /api/booking/:id
+      // backend：DELETE /api/booking/:id
     }
   }
   function onClose() {
@@ -37,6 +37,9 @@ function BookingPage() {
         <nav className="bk-side-nav">
           <Link to="/account" className="bk-side-link">
             Account
+          </Link>
+          <Link to="/account-setting" className="acc-side-link">
+            Account Setting
           </Link>
           <Link to="/booking" className="bk-side-link bk-active">
             Booking

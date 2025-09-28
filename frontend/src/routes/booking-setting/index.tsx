@@ -65,6 +65,9 @@ function BookingSettingPage() {
           <Link to="/account" className="bks-side-link">
             Account
           </Link>
+          <Link to="/account-setting" className="acc-side-link">
+            Account Setting
+          </Link>
           <Link to="/booking" className="bks-side-link">
             Booking
           </Link>
