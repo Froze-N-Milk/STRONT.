@@ -108,20 +108,22 @@ func (h *GetBookingByIDHandler) ServeHTTP(ctx AppContext, w http.ResponseWriter,
 //		email: string,
 //		party_size: string,
 //		booking_date: string, (YYYY-MM-DDTHH:MM:ssZ)
-//		time_slot: int
+//		time_slot: int,
+//		customer_notes: string
 //	}
 type CreateOnlineBookingHandler struct{}
 
 // handles customer contact creation and booking creation
 type createBookingRequest struct {
-	RestaurantID uuid.UUID `json:"restaurant_id"`
-	GivenName    string    `json:"given_name"`
-	FamilyName   string    `json:"family_name"`
-	Phone        string    `json:"phone"`
-	Email        string    `json:"email"`
-	PartySize    int       `json:"party_size"`
-	BookingDate  time.Time `json:"booking_date"`
-	TimeSlot     int       `json:"time_slot"`
+	RestaurantID  uuid.UUID `json:"restaurant_id"`
+	GivenName     string    `json:"given_name"`
+	FamilyName    string    `json:"family_name"`
+	Phone         string    `json:"phone"`
+	Email         string    `json:"email"`
+	PartySize     int       `json:"party_size"`
+	BookingDate   time.Time `json:"booking_date"`
+	TimeSlot      int       `json:"time_slot"`
+	CustomerNotes string    `json:"customer_notes"`
 }
 
 func (h *CreateOnlineBookingHandler) handle(ctx context.Context, db *gorm.DB, request createBookingRequest) (model.Booking, error) {
@@ -143,6 +145,7 @@ func (h *CreateOnlineBookingHandler) handle(ctx context.Context, db *gorm.DB, re
 		PartySize:       request.PartySize,
 		BookingDate:     request.BookingDate,
 		TimeSlot:        request.TimeSlot,
+		CustomerNotes:   request.CustomerNotes,
 		CreationDate:    time.Now().UTC(),
 		CustomerCreated: true,
 	}
@@ -190,14 +193,15 @@ func (h *CreateOnlineBookingHandler) ServeHTTP(ctx AppContext, w http.ResponseWr
 // expects:
 //
 //	{
-//		start_time: string,
-//		end_time: string,
-//		party_size: int
+//		time_slot: int,
+//		party_size: int,
+//		customer_notes: string
 //	}
 type UpdateBookingHandler struct{}
 type updateBookingRequest struct {
-	TimeSlot  int `json:"time_slot"`
-	PartySize int `json:"party_size"`
+	TimeSlot      int    `json:"time_slot"`
+	PartySize     int    `json:"party_size"`
+	CustomerNotes string `json:"customer_notes"`
 }
 
 func (h *UpdateBookingHandler) handle(ctx context.Context, db *gorm.DB, request updateBookingRequest, bookingId uuid.UUID) error {
