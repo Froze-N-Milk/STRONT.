@@ -17,7 +17,7 @@ import (
 // TODO: Send booking confirmation email
 // TODO: Get list of all upcoming bookings for a restaurant
 // TODO: Get list of booking history for a restaurant
-// TODO: Update booking details like attendance, restaurant notes, bill, paid
+// TODO: Update booking details like attendance, restaurant notes
 
 //region Get Booking by ID
 
@@ -250,4 +250,50 @@ func (h *UpdateBookingHandler) ServeHTTP(ctx AppContext, w http.ResponseWriter, 
 
 //region Booking Delete
 // TODO: Implement booking delete endpoints
+//endregion
+
+//region Cancel Booking
+
+type CancelBookingHandler struct{}
+
+func (h *CancelBookingHandler) handle(ctx context.Context, db *gorm.DB, bookingID uuid.UUID) error {
+	booking, err := gorm.G[model.Booking](db).Where("id = ?", bookingID).First(ctx)
+	if err != nil {
+		return err
+	}
+
+	booking.Attendance = model.Cancelled
+
+	db.Save(&booking)
+
+	return nil
+}
+
+func (h *CancelBookingHandler) ServeHTTP(ctx AppContext, w http.ResponseWriter, r *http.Request) {
+	bookingID, err := uuid.Parse(r.PathValue("booking"))
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	db := ctx.DB.Session(&gorm.Session{SkipDefaultTransaction: true}).Begin()
+	err = h.handle(r.Context(), db, bookingID)
+
+	if err != nil {
+		db.Rollback()
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	db.Commit()
+
+	w.WriteHeader(http.StatusOK)
+}
+
+//endregion
+
+//region Get Upcoming Bookings
+//endregion
+
+//region Get Booking History
 //endregion

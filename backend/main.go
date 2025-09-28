@@ -186,6 +186,7 @@ func main() {
 
 	appMux.Handle("POST /api/booking/create", &api.CreateOnlineBookingHandler{})
 	appMux.Handle("POST /api/booking/edit/{booking}", &api.UpdateBookingHandler{})
+	appMux.Handle("GET /api/booking/cancel/{booking}", &api.CancelBookingHandler{})
 
 	server := http.Server{
 		Addr:    hostString,
