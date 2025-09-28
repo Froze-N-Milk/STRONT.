@@ -43,7 +43,7 @@ CREATE TABLE restaurant
     location_text        TEXT,
     location_url         TEXT,
     frontpage_markdown   TEXT,
-    max_people_per_table INT  NOT NULL CHECK (max_people_per_table > 0),
+    max_party_size INT  NOT NULL CHECK (max_party_size > 0),
     booking_capacity     INT  NOT NULL,
     booking_length       INT  NOT NULL,
     FOREIGN KEY (account_id) REFERENCES account (id) ON DELETE CASCADE,
