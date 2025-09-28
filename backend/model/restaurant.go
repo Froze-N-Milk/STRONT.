@@ -12,6 +12,8 @@ type Restaurant struct {
 	LocationUrl       string    `gorm:"type:text"`
 	FrontpageMarkdown string    `gorm:"type:text"`
 	MaxPeoplePerTable int       `gorm:"not null"`
+	BookingCapacity   int       `gorm:"not null"`
+	BookingLength     int       `gorm:"not null"`
 	Availability      *Availability
 	Bookings          []Booking
 }

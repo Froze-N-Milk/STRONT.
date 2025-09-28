@@ -44,6 +44,8 @@ CREATE TABLE restaurant
     location_url         TEXT,
     frontpage_markdown   TEXT,
     max_people_per_table INT  NOT NULL CHECK (max_people_per_table > 0),
+    booking_capacity     INT  NOT NULL,
+    booking_length       INT  NOT NULL,
     FOREIGN KEY (account_id) REFERENCES account (id) ON DELETE CASCADE,
     FOREIGN KEY (availability_id) REFERENCES availability (id) ON DELETE CASCADE
 );
@@ -53,7 +55,7 @@ CREATE TABLE occasion
     availability_id  UUID   NOT NULL,
     close_date       DATE   NOT NULL,
     hour_mask        BIGINT NOT NULL CHECK (hour_mask > 0), -- Check that they've actually set some time off
-    yearly_recurring BOOL             DEFAULT false,
+    yearly_recurring BOOL DEFAULT false,
     FOREIGN KEY (availability_id) REFERENCES availability (id) ON DELETE CASCADE
 );
 
@@ -71,23 +73,12 @@ CREATE TABLE booking
     id               UUID PRIMARY KEY                  DEFAULT pg_catalog.gen_random_uuid(),
     contact_id       UUID                     NOT NULL,
     restaurant_id    UUID                     NOT NULL,
-    head_count       INT                      NOT NULL CHECK (head_count > 0),
-    start_time       TIMESTAMP WITH TIME ZONE NOT NULL,
-    end_time         TIMESTAMP WITH TIME ZONE NOT NULL,
-    approved         BOOLEAN                  NOT NULL DEFAULT FALSE,
+    party_size       INT                      NOT NULL CHECK (party_size > 0),
+    booking_date     DATE                     NOT NULL,
+    time_slot        INT                      NOT NULL,
     creation_date    TIMESTAMP WITH TIME ZONE NOT NULL,
-
-    -- NOTE: may need to adjust contact reference if booking is walk-in
-    creation_method  TEXT                     NOT NULL CHECK (creation_method IN ('online', 'phone', 'walk-in')),
-
-    -- Ensure that attendance can't be set until their booking is actually due to begin
-    attendance       TEXT CHECK (attendance IN ('attended', 'late', 'cancelled', 'no-show') AND start_time > now()),
-
-    -- Total bill of the table
-    bill             NUMERIC(12, 2),
-
-    -- Amount paid towards the bill. Ensure that paid cannot be updated until they have been checked out of the booking
-    paid             NUMERIC(12, 2) CHECK (end_time <= now()),
+    customer_created BOOL                     NOT NULL DEFAULT TRUE,
+    attendance       TEXT CHECK (attendance IN ('attended', 'cancelled', 'no-show')),
     customer_notes   TEXT,
     restaurant_notes TEXT,
     FOREIGN KEY (contact_id) REFERENCES customer_contact (id) ON DELETE CASCADE,
