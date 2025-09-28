@@ -33,7 +33,10 @@ export const Route = createFileRoute(
 function parseDates(datedata: string) {
   const formattedDates: DateObj[] = [];
   JSON.parse(datedata).forEach((item: { date: number; hours: number }) => {
-    formattedDates.push({ date: new Date(item.date), hours: item.hours });
+    formattedDates.push({
+      date: new Date(item.date),
+      hours: BigInt(item.hours),
+    });
   });
   return formattedDates;
 }
@@ -42,13 +45,13 @@ function* range(end: number) {
   for (let i = 0; i < end; i++) yield i;
 }
 
-function listAvailableTimes(hourmask: number): number[] {
+function listAvailableTimes(hourmask: bigint): number[] {
   return Array.from(range(48)).filter((i) => checkTime(hourmask, i));
 }
 
-function checkTime(hourmask: number, periodIndex: number): boolean {
-  const mask = 0b1;
-  const x = 47 - periodIndex;
+function checkTime(hourmask: bigint, periodIndex: number): boolean {
+  const mask = BigInt(0b1);
+  const x = BigInt(47 - periodIndex);
   const shuffled = hourmask >> x;
 
   return (shuffled & mask) === mask;
@@ -75,7 +78,7 @@ const weekdayTitles = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 type DateObj = {
   date: Date;
-  hours: number;
+  hours: bigint;
 };
 
 interface DateButtonProps {
@@ -91,7 +94,7 @@ function DateButton({ dateObj, onSelect }: DateButtonProps) {
       <p>{weekdayTitles[fullDate.date.getDay()]}</p>
       <button
         className={
-          fullDate.hours == 0 ? "round-button disabled" : "round-button"
+          fullDate.hours == BigInt(0) ? "round-button disabled" : "round-button"
         }
         onClick={() => onSelect(fullDate)}
       >
@@ -187,7 +190,7 @@ function MakeBookingForm({ restaurantData }: { restaurantData: DateObj[] }) {
       <div className="seating-time-wrapper">
         <div
           className={
-            selectedDate.hours == 0
+            selectedDate.hours == BigInt(0)
               ? "seating-time-selection closed"
               : "seating-time-selection opened"
           }
