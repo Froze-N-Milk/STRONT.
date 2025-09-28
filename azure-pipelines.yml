@@ -1,0 +1,82 @@
+trigger:
+  branches:
+    include:
+      - master
+  paths:
+    exclude:
+      - README.md
+      - ./*.yaml
+
+pr:
+  branches:
+    include:
+      - master
+  paths:
+    exclude:
+      - README.md
+      - ./*.yaml
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  IMAGE_NAME: 'stront'
+  TEST_CONTAINER_NAME: 'test-artifacts'
+  VITE_TEST_XML: '/app/frontend/frontend-test-junit.xml'
+  GO_TEST_XML: '/app/go-test-junit.xml'
+
+stages:
+  - stage: BuildAndTest
+    jobs:
+      - job: BuildTestJob
+        steps:
+          - script: |
+              docker build -t $(IMAGE_NAME) --target backend-build --build-arg CACHE_BUSTER=$(date +%s) .
+            displayName: 'Build Backend Stage with Embedded Frontend'
+
+          - script: |
+              docker create --name $(TEST_CONTAINER_NAME) $(IMAGE_NAME)
+            displayName: 'Create Container for Test Artifacts'
+
+          - script: |
+              mkdir -p test-results
+              docker cp $(TEST_CONTAINER_NAME):$(GO_TEST_XML) test-results/backend-tests.xml
+              docker cp $(TEST_CONTAINER_NAME):$(VITE_TEST_XML) test-results/frontend-tests.xml
+            displayName: 'Extract Test Results from Container'
+
+          - script: |
+              docker rm $(TEST_CONTAINER_NAME)
+            displayName: 'Remove Test Container'
+
+          - task: PublishTestResults@2
+            inputs:
+              testResultsFormat: 'JUnit'
+              testResultsFiles: 'test-results/backend-tests.xml'
+              testRunTitle: 'Backend Test Results'
+
+          - task: PublishTestResults@2
+            inputs:
+              testResultsFormat: 'JUnit'
+              testResultsFiles: 'test-results/frontend-tests.xml'
+              testRunTitle: 'Frontend Test Results'
+
+  - stage: PublishImage
+    dependsOn: BuildAndTest
+    condition: succeeded()
+    jobs:
+      - job: PushImageJob
+        steps:
+          - task: Docker@2
+            inputs:
+              command: 'login'
+              containerRegistry: '' # TODO: Add container registry details here
+
+          - script: |
+              docker build -t $(IMAGE_NAME):latest --target runner .
+            displayName: 'Build Final Runner Image'
+
+          - task: Docker@2
+            inputs:
+              command: 'push'
+              repository: '' # TODO: Add container registry stuff here
+              tags: 'latest'
