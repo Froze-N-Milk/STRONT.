@@ -11,7 +11,11 @@ type Restaurant struct {
 	LocationText      string    `gorm:"type:text"`
 	LocationUrl       string    `gorm:"type:text"`
 	FrontpageMarkdown string    `gorm:"type:text"`
+	MaxPartySize      int       `gorm:"not null"`
+	BookingCapacity   int       `gorm:"not null"`
+	BookingLength     int       `gorm:"not null"`
 	Availability      *Availability
+	Bookings          []Booking
 }
 
 func (Restaurant) TableName() string {
