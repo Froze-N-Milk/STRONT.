@@ -73,7 +73,8 @@ func (h *DeleteAccountHandler) ServeHTTP(ctx AuthedAppContext, w http.ResponseWr
 		return
 	}
 	// clear all the site data to logout, doesn't matter if the account exists or not
-	w.Header().Add("Clear-Site-Data", "*")
+	setSessionTokenCookie(w, "")
+	w.Header().Add("Clear-Site-Data", "\"*\"")
 	if i == 0 {
 		slog.Error("attempt to delete non-existent account", "email", ctx.User.Email)
 		w.WriteHeader(http.StatusBadRequest)
@@ -127,7 +128,8 @@ func (h *UpdateAccountHandler) ServeHTTP(ctx AuthedAppContext, w http.ResponseWr
 	if i == 0 {
 		slog.Error("attempt to update non-existent account", "email", ctx.User.Email)
 		// remove site data
-		w.Header().Add("Clear-Site-Data", "*")
+		setSessionTokenCookie(w, "")
+		w.Header().Add("Clear-Site-Data", "\"*\"")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}

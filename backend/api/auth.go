@@ -65,6 +65,7 @@ type LogoutHandler struct{}
 
 func (h *LogoutHandler) ServeHTTP(ctx AppContext, w http.ResponseWriter, r *http.Request) {
 	// clear all the site data
-	w.Header().Add("Clear-Site-Data", "*")
+	setSessionTokenCookie(w, "")
+	w.Header().Add("Clear-Site-Data", "\"*\"")
 	w.WriteHeader(http.StatusOK)
 }

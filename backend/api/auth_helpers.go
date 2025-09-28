@@ -217,7 +217,8 @@ func authMiddleware(h lib.Handler[User], key *[32]byte, onErr func(http.Response
 		if err != nil {
 			slog.Error("Invalid session token", "url", r.URL, "error", err)
 			// remove all site data
-			w.Header().Add("Clear-Site-Data", "*")
+			setSessionTokenCookie(w, "")
+			w.Header().Add("Clear-Site-Data", "\"*\"")
 			onErr(w)
 			return
 		}
