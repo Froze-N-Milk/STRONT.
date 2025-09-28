@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Suspense, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 export const Route = createFileRoute(
   "/restaurants/$restaurantid/make-booking/",
@@ -7,28 +7,28 @@ export const Route = createFileRoute(
   component: BookingPageContent,
 });
 
-const fetchRestaurantData = (restaurantid: string) => {
-  let cache: DateObj[] | null = null;
-  let promise: Promise<void> | null = null;
-  const fetchData = () =>
-    fetch("/api/availability/" + restaurantid, {
-      method: "GET",
-    }).then(async (r) => {
-      promise = null;
-      if (r.status == 200) {
-        cache = parseDates(await r.text()); //TODO: Change this to use response.json later
-      } else {
-        cache = null;
-      }
-    });
-  promise = fetchData();
-  return {
-    read() {
-      if (promise) throw promise;
-      return cache;
-    },
-  };
-};
+//const fetchRestaurantData = (restaurantid: string) => {
+//  let cache: DateObj[] | null = null;
+//  let promise: Promise<void> | null = null;
+//  const fetchData = () =>
+//    fetch("/api/availability/" + restaurantid, {
+//      method: "GET",
+//    }).then(async (r) => {
+//      promise = null;
+//      if (r.status == 200) {
+//        cache = parseDates(await r.text()); //TODO: Change this to use response.json later
+//      } else {
+//        cache = null;
+//      }
+//    });
+//  promise = fetchData();
+//  return {
+//    read() {
+//      if (promise) throw promise;
+//      return cache;
+//    },
+//  };
+//};
 
 function parseDates(datedata: string) {
   const formattedDates: DateObj[] = [];
@@ -103,21 +103,23 @@ function DateButton({ dateObj, onSelect }: DateButtonProps) {
 
 function BookingPageContent() {
   const { restaurantid } = Route.useParams();
-  const [restaurantData, setRestaurantData] = useState({
-    read(): DateObj[] | null {
-      throw new Promise(() => {});
-    },
-  });
+  const [restaurantData, setRestaurantData] = useState<DateObj[] | null>(null);
+
   useEffect(() => {
-    console.log("ronaldfungus");
-    setRestaurantData(fetchRestaurantData(restaurantid));
+    fetch("/api/availability/" + restaurantid, {
+      method: "GET",
+    }).then(async (r) => {
+      if (r.status == 200) {
+        setRestaurantData(parseDates(await r.text())); //TODO: Change this to use response.json later
+      } else {
+        setRestaurantData(null);
+      }
+    });
   }, [restaurantid]);
 
-  return (
-    <Suspense fallback="waiting">
-      <MakeBookingForm restaurantData={restaurantData.read()!} />
-    </Suspense>
-  );
+  if (restaurantData == null) return <div>WAITING FOR DATUM</div>;
+
+  return <MakeBookingForm restaurantData={restaurantData} />;
 }
 
 function MakeBookingForm({ restaurantData }: { restaurantData: DateObj[] }) {
