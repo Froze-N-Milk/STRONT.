@@ -1,0 +1,21 @@
+services:
+  test-db:
+    image: postgres
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: test
+      POSTGRES_DB: stront_template
+    ports:
+      - "6543:5432" # Exposes to localhost:6543 so it won't collide with the other db container if that's running
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - test_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d stront_template"]
+      interval: 5s
+      retries: 5
+      start_period: 5s
+
+networks:
+  test_net:
