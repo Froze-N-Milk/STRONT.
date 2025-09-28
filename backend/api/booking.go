@@ -190,6 +190,8 @@ func (h *CreateOnlineBookingHandler) ServeHTTP(ctx AppContext, w http.ResponseWr
 //
 // # No auth required
 //
+// GET /api/booking/edit/{booking}
+//
 // expects:
 //
 //	{

@@ -185,7 +185,7 @@ func main() {
 	authedAppMux.Handle("POST /api/restaurant/occasion/update", &api.UpdateOccasionHandler{})
 
 	appMux.Handle("POST /api/booking/create", &api.CreateOnlineBookingHandler{})
-	appMux.Handle("POST /api/booking/edit/{booking}", &api.UpdateBookingHandler{})
+	appMux.Handle("GET /api/booking/edit/{booking}", &api.UpdateBookingHandler{})
 	appMux.Handle("GET /api/booking/cancel/{booking}", &api.CancelBookingHandler{})
 
 	server := http.Server{
