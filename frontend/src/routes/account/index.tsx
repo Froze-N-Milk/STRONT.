@@ -49,6 +49,9 @@ function Account() {
             <Link to="/account" className="acc-side-link acc-active">
               Account
             </Link>
+            <Link to="/account-setting" className="acc-side-link">
+              Account Setting
+            </Link>
             <Link to="/booking" className="acc-side-link">
               Booking
             </Link>
