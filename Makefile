@@ -18,8 +18,7 @@ build:
 # TODO: Containerise and update the test command
 .PHONY: test
 test:
-	go test -v ./backend/api/... ./backend/lib/... ./backend/model/...
-	cd frontend; npm install && npm run test
+	$(CONTAINER_RUNTIME) build -t stront --target backend-build --build-arg CACHE_BUSTER=$(date +%s) .
 
 .PHONY: db
 db:
