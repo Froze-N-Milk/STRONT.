@@ -14,6 +14,7 @@ import { Route as SignUpIndexRouteImport } from './routes/sign-up/index'
 import { Route as MakeBookingIndexRouteImport } from './routes/make-booking/index'
 import { Route as LoginIndexRouteImport } from './routes/login/index'
 import { Route as AccountIndexRouteImport } from './routes/account/index'
+import { Route as RestaurantsRestaurantidMakeBookingIndexRouteImport } from './routes/restaurants/$restaurantid/make-booking/index'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -40,6 +41,12 @@ const AccountIndexRoute = AccountIndexRouteImport.update({
   path: '/account/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RestaurantsRestaurantidMakeBookingIndexRoute =
+  RestaurantsRestaurantidMakeBookingIndexRouteImport.update({
+    id: '/restaurants/$restaurantid/make-booking/',
+    path: '/restaurants/$restaurantid/make-booking/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -47,6 +54,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginIndexRoute
   '/make-booking': typeof MakeBookingIndexRoute
   '/sign-up': typeof SignUpIndexRoute
+  '/restaurants/$restaurantid/make-booking': typeof RestaurantsRestaurantidMakeBookingIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -54,6 +62,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginIndexRoute
   '/make-booking': typeof MakeBookingIndexRoute
   '/sign-up': typeof SignUpIndexRoute
+  '/restaurants/$restaurantid/make-booking': typeof RestaurantsRestaurantidMakeBookingIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -62,12 +71,25 @@ export interface FileRoutesById {
   '/login/': typeof LoginIndexRoute
   '/make-booking/': typeof MakeBookingIndexRoute
   '/sign-up/': typeof SignUpIndexRoute
+  '/restaurants/$restaurantid/make-booking/': typeof RestaurantsRestaurantidMakeBookingIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/account' | '/login' | '/make-booking' | '/sign-up'
+  fullPaths:
+    | '/'
+    | '/account'
+    | '/login'
+    | '/make-booking'
+    | '/sign-up'
+    | '/restaurants/$restaurantid/make-booking'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/account' | '/login' | '/make-booking' | '/sign-up'
+  to:
+    | '/'
+    | '/account'
+    | '/login'
+    | '/make-booking'
+    | '/sign-up'
+    | '/restaurants/$restaurantid/make-booking'
   id:
     | '__root__'
     | '/'
@@ -75,6 +97,7 @@ export interface FileRouteTypes {
     | '/login/'
     | '/make-booking/'
     | '/sign-up/'
+    | '/restaurants/$restaurantid/make-booking/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -83,6 +106,7 @@ export interface RootRouteChildren {
   LoginIndexRoute: typeof LoginIndexRoute
   MakeBookingIndexRoute: typeof MakeBookingIndexRoute
   SignUpIndexRoute: typeof SignUpIndexRoute
+  RestaurantsRestaurantidMakeBookingIndexRoute: typeof RestaurantsRestaurantidMakeBookingIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -122,6 +146,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/restaurants/$restaurantid/make-booking/': {
+      id: '/restaurants/$restaurantid/make-booking/'
+      path: '/restaurants/$restaurantid/make-booking'
+      fullPath: '/restaurants/$restaurantid/make-booking'
+      preLoaderRoute: typeof RestaurantsRestaurantidMakeBookingIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -131,6 +162,8 @@ const rootRouteChildren: RootRouteChildren = {
   LoginIndexRoute: LoginIndexRoute,
   MakeBookingIndexRoute: MakeBookingIndexRoute,
   SignUpIndexRoute: SignUpIndexRoute,
+  RestaurantsRestaurantidMakeBookingIndexRoute:
+    RestaurantsRestaurantidMakeBookingIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
