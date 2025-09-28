@@ -192,12 +192,12 @@ func (h *CreateOnlineBookingHandler) ServeHTTP(ctx AppContext, w http.ResponseWr
 //	{
 //		start_time: string,
 //		end_time: string,
-//		head_count: int
+//		party_size: int
 //	}
 type UpdateBookingHandler struct{}
 type updateBookingRequest struct {
 	TimeSlot  int `json:"time_slot"`
-	HeadCount int `json:"head_count"`
+	PartySize int `json:"party_size"`
 }
 
 func (h *UpdateBookingHandler) handle(ctx context.Context, db *gorm.DB, request updateBookingRequest, bookingId uuid.UUID) error {
@@ -207,7 +207,7 @@ func (h *UpdateBookingHandler) handle(ctx context.Context, db *gorm.DB, request 
 	}
 
 	booking.TimeSlot = request.TimeSlot
-	// booking.HeadCount = request.HeadCount TODO: Update when schema update is merged
+	booking.PartySize = request.PartySize
 
 	db.Save(&booking)
 
