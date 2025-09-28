@@ -50,6 +50,14 @@ CREATE TABLE restaurant
     FOREIGN KEY (availability_id) REFERENCES availability (id) ON DELETE CASCADE
 );
 
+CREATE TABLE restaurant_tag
+(
+    search_tag    TEXT NOT NULL,
+    restaurant_id UUID NOT NULL,
+    PRIMARY KEY (search_tag, restaurant_id),
+    FOREIGN KEY (restaurant_id) REFERENCES restaurant (id)
+);
+
 CREATE TABLE occasion
 (
     availability_id  UUID   NOT NULL,
