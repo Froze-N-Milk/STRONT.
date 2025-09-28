@@ -37,6 +37,8 @@ CREATE TABLE restaurant
     account_id           UUID NOT NULL,
     availability_id      UUID NOT NULL,
     name                 TEXT NOT NULL,
+    email                TEXT,
+    phone                TEXT,
     description          TEXT,
     location_text        TEXT,
     location_url         TEXT,
