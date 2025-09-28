@@ -62,7 +62,7 @@ CREATE TABLE occasion
 (
     availability_id  UUID   NOT NULL,
     close_date       DATE   NOT NULL,
-    hour_mask        BIGINT NOT NULL CHECK (hour_mask > 0), -- Check that they've actually set some time off
+    hour_mask        BIGINT NOT NULL,
     yearly_recurring BOOL DEFAULT false,
     FOREIGN KEY (availability_id) REFERENCES availability (id) ON DELETE CASCADE
 );
