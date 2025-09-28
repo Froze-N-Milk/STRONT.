@@ -56,11 +56,11 @@ func main() {
 	}
 
 	mux := http.NewServeMux()
-	vite.Adapter.AddRoute("/")
-	vite.Adapter.AddRoute("/demo")
-	vite.Adapter.AddRoute("/login")
-	vite.Adapter.AddRoute("/sign-up")
-	vite.Adapter.AddAuthedRoute("/account")
+	vite.Adapter.AddRoute("STRONT.", "/")
+	vite.Adapter.AddRoute("Login - STRONT.", "/login")
+	vite.Adapter.AddRoute("Sign Up - STRONT.", "/sign-up")
+	vite.Adapter.AddRoute("Make Booking - STRONT.", "/restaurants/{restaurantid}/make-booking")
+	vite.Adapter.AddAuthedRoute("Account - STRONT.", "/account")
 	mux.Handle("/", vite.Adapter.IntoHandler(api.AuthMiddleware{
 		Mode: api.Frontend,
 		Key:  &jwtKey,
