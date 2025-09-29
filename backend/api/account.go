@@ -180,7 +180,7 @@ INNER JOIN account
 		return nil, err
 	}
 
-	res := make([]restaurantDetails, len(restaurants))
+	res := make([]restaurantDetails, 0, len(restaurants))
 	for i, restaurant := range restaurants {
 		res[i] = restaurantDetails{
 			ID:                restaurant.ID,
