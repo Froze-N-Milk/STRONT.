@@ -120,6 +120,7 @@ function Account() {
                 />
               </label>
               {/* Address */}
+              {/* Address */}
               <label className="acc-field acc-span-2">
                 <span>Restaurant Address:</span>
                 <input placeholder="Enter the restaurant address here" />
