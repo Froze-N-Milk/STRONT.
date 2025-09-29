@@ -295,6 +295,100 @@ func (h *CancelBookingHandler) ServeHTTP(ctx AppContext, w http.ResponseWriter, 
 //endregion
 
 //region Get Upcoming Bookings
+
+// GetUpcomingBookingsHandler retrieves a list of future bookings for the requested restaurant.
+// Auth required
+//
+// GET /api/booking/for/{restaurant}/upcoming
+//
+// expects: ID by URL
+//
+// returns:
+//
+//	{
+//		booking_id: string,
+//		given_name: string,
+//		family_name: string,
+//		phone: string,
+//		email: string,
+//		party_size: int,
+//		booking_date: string,
+//		time_slot: int,
+//		creation_date: string,
+//		customer_notes: string,
+//		restaurant_notes: string
+//	}
+type GetUpcomingBookingsHandler struct{}
+
+type getUpcomingBookingsResponse struct {
+	BookingID       uuid.UUID `json:"booking_id"`
+	GivenName       string    `json:"given_name"`
+	FamilyName      string    `json:"family_name"`
+	Phone           string    `json:"phone"`
+	Email           string    `json:"email"`
+	PartySize       int       `json:"party_size"`
+	BookingDate     time.Time `json:"booking_date"`
+	TimeSlot        int       `json:"time_slot"`
+	CreationDate    time.Time `json:"creation_date"`
+	CustomerNotes   string    `json:"customer_notes"`
+	RestaurantNotes string    `json:"restaurant_notes"`
+}
+
+func (h *GetUpcomingBookingsHandler) handle(ctx context.Context, db *gorm.DB, restaurantID uuid.UUID, user User) ([]getUpcomingBookingsResponse, error) {
+	bookings, err := gorm.G[getUpcomingBookingsResponse](db).Raw(`
+SELECT 
+	b.id AS booking_id,
+	c.given_name,
+	c.family_name,
+	c.phone,
+	c.email,
+	b.party_size,
+	b.booking_date,
+	b.time_slot,
+	b.creation_date,
+	b.customer_notes,
+	b.restaurant_notes
+FROM booking b
+JOIN customer_contact c ON c.id = b.contact_id
+JOIN restaurant r on r.id = $2
+JOIN account a ON a.id = r.account_id
+WHERE a.email = $1
+    AND b.restaurant_id = $2
+	AND b.booking_date >= CURRENT_DATE
+ORDER BY b.booking_date`,
+		user.Email,
+		restaurantID).Find(ctx)
+
+	if err != nil {
+		return []getUpcomingBookingsResponse{}, err
+	}
+
+	return bookings, nil
+}
+
+// Need to accept restaurant ID as URL param
+func (h *GetUpcomingBookingsHandler) ServeHTTP(ctx AuthedAppContext, w http.ResponseWriter, r *http.Request) {
+	restaurantID, err := uuid.Parse(r.PathValue("restaurant"))
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	response, err := h.handle(r.Context(), ctx.DB, restaurantID, ctx.User)
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	err = json.NewEncoder(w).Encode(response)
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+}
+
 //endregion
 
 //region Get Booking History
