@@ -302,14 +302,19 @@ input[type=text]:focus {
   cursor: pointer;
 }
 
-.invalid-email {
+.email-input {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  height: 3.9rem;
 }
 
-.invalid-email input[type=email] {
-  width: 40%;
-  transition: width 1s;
+.email-input input[type=email] {
+  margin-bottom: 0px;
+}
+
+.email-input h6 {
+  color: rgb(191, 6, 6);
+  animation: appear 1s ease forwards;
 }
 
 #confirm-popover {

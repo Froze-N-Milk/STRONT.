@@ -268,13 +268,7 @@ function MakeBookingForm({ restaurantData }: { restaurantData: DateObj[] }) {
           <label htmlFor="booking-email">
             <h3>Email Address:</h3>
           </label>
-          <div
-            className={
-              isValidEmail(contactEmail) || contactEmail == ""
-                ? ""
-                : "invalid-email"
-            }
-          >
+          <div className={"email-input"}>
             <input
               type="email"
               name="booking-email"
@@ -286,7 +280,7 @@ function MakeBookingForm({ restaurantData }: { restaurantData: DateObj[] }) {
             {isValidEmail(contactEmail) || contactEmail == "" ? (
               <></>
             ) : (
-              <h3>wrong email cuz</h3>
+              <h6>please enter a valid email</h6>
             )}
           </div>
           <label htmlFor="booking-phone">
