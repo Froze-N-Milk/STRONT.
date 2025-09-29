@@ -534,3 +534,71 @@ func (h *UpdateRestaurantNotesHandler) ServeHTTP(ctx AuthedAppContext, w http.Re
 }
 
 //endregion
+
+//region Update Attendance
+
+// UpdateAttendanceHandler updates the attendance for the specified booking in the database
+//
+// # No auth required
+//
+// POST /api/booking/attendance/{booking}
+//
+// expects:
+//
+//	{
+//		attendance: string
+//	}
+type UpdateAttendanceHandler struct{}
+type updateAttendanceRequest struct {
+	Attendance model.Attendance `json:"attendance"`
+}
+
+func (h *UpdateAttendanceHandler) handle(ctx context.Context, db *gorm.DB, request updateAttendanceRequest, bookingId uuid.UUID, user User) error {
+	booking, err := gorm.G[model.Booking](db).Raw(`
+SELECT * FROM booking b 
+    JOIN restaurant r ON r.id = b.restaurant_id 
+    JOIN account a ON a.id = r.account_id
+WHERE a.email = $2
+	AND b.id = $1
+`, bookingId, user.Email).Take(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	booking.Attendance = request.Attendance
+
+	db.Save(&booking)
+
+	return nil
+}
+
+func (h *UpdateAttendanceHandler) ServeHTTP(ctx AuthedAppContext, w http.ResponseWriter, r *http.Request) {
+	bookingId, err := uuid.Parse(r.PathValue("booking"))
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	request := updateAttendanceRequest{}
+	err = json.NewDecoder(r.Body).Decode(&request)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	db := ctx.DB.Session(&gorm.Session{SkipDefaultTransaction: true}).Begin()
+	err = h.handle(r.Context(), db, request, bookingId, ctx.User)
+
+	if err != nil {
+		db.Rollback()
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	db.Commit()
+
+	w.WriteHeader(http.StatusOK)
+}
+
+//endregion
