@@ -8,6 +8,7 @@ function Account() {
   const [newTag, setNewTag] = useState("");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [logo, setLogo] = useState<string | null>(null);
+  const [address, setAddress] = useState("");
 
   const canAdd = newTag.trim().length > 0 && !tags.includes(newTag.trim());
 
@@ -114,12 +115,38 @@ function Account() {
                   inputMode="tel"
                 />
               </label>
-
+              {/* Address */}
               <label className="acc-field acc-span-2">
                 <span>Restaurant Address:</span>
                 <input placeholder="Enter the restaurant address here" />
               </label>
+              {/* Maps Link */}
+              <label className="acc-field">
+                <span>Google Maps:</span>
+                <div
+                  style={{ display: "flex", gap: "8px", alignItems: "center" }}
+                >
+                  <input
+                    placeholder="Enter the restaurant address here"
+                    required
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                  />
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="Select on Google Maps"
+                    style={{ fontSize: "20px", textDecoration: "none" }}
+                  >
+                    📍
+                  </a>
+                </div>
+              </label>
+              <div />
 
+              {/* City, State, Postcode */}
+              {/* You can replace these with dynamic data from backend */}
               <label className="acc-field">
                 <span>City:</span>
                 <div className="acc-select" style={{ width: "100%" }}>
