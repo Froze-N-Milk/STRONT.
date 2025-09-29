@@ -2,6 +2,7 @@ package model
 
 import (
 	"database/sql/driver"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -68,4 +69,17 @@ func (a Attendance) IsValid() bool {
 		return true
 	}
 	return false
+}
+
+func (a *Attendance) UnmarshalJSON(data []byte) error {
+	var s string
+	if err := json.Unmarshal(data, &s); err != nil {
+		return err
+	}
+	val := Attendance(s)
+	if !val.IsValid() {
+		return fmt.Errorf("invalid Attendance value %s", val)
+	}
+	*a = val
+	return nil
 }
