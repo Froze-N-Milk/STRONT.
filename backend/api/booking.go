@@ -13,9 +13,7 @@ import (
 )
 
 // TODO: Check if booking time is during opening hours (CREATE, UPDATE)
-// TODO: Customer notes
 // TODO: Send booking confirmation email
-// TODO: Get list of booking history for a restaurant
 // TODO: Update booking details like attendance, restaurant notes
 
 //region Get Booking by ID
@@ -249,10 +247,6 @@ func (h *UpdateBookingHandler) ServeHTTP(ctx AppContext, w http.ResponseWriter, 
 
 //endregion
 
-//region Booking Delete
-// TODO: Implement booking delete endpoints
-//endregion
-
 //region Cancel Booking
 
 type CancelBookingHandler struct{}
@@ -299,7 +293,7 @@ func (h *CancelBookingHandler) ServeHTTP(ctx AppContext, w http.ResponseWriter, 
 //
 // # Auth required
 //
-// GET /api/booking/for/{restaurant}/upcoming
+// GET /api/booking/upcoming/{restaurant}
 //
 // expects: ID by URL
 //
@@ -396,7 +390,7 @@ func (h *GetUpcomingBookingsHandler) ServeHTTP(ctx AuthedAppContext, w http.Resp
 //
 // # Auth required
 //
-// GET /api/booking/for/{restaurant}/history
+// GET /api/booking/history/{restaurant}
 //
 // expects: ID by URL
 //
@@ -469,6 +463,76 @@ func (h *GetBookingHistoryHandler) ServeHTTP(ctx AuthedAppContext, w http.Respon
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+}
+
+//endregion
+
+//region Restaurant Notes
+
+// UpdateRestaurantNotesHandler updates the specified booking row in the database
+//
+// # No auth required
+//
+// POST /api/booking/restaurant-notes/{booking}
+//
+// expects:
+//
+//	{
+//		time_slot: int,
+//		party_size: int,
+//		customer_notes: string
+//	}
+type UpdateRestaurantNotesHandler struct{}
+type updateRestaurantNotesRequest struct {
+	RestaurantNotes string `json:"restaurant_notes"`
+}
+
+func (h *UpdateRestaurantNotesHandler) handle(ctx context.Context, db *gorm.DB, request updateRestaurantNotesRequest, bookingId uuid.UUID, user User) error {
+	booking, err := gorm.G[model.Booking](db).Raw(`
+SELECT * FROM booking b 
+    JOIN restaurant r ON r.id = b.restaurant_id 
+    JOIN account a ON a.id = r.account_id
+WHERE a.email = $2
+	AND b.id = $1
+`, bookingId, user.Email).Take(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	booking.RestaurantNotes = request.RestaurantNotes
+
+	db.Save(&booking)
+
+	return nil
+}
+
+func (h *UpdateRestaurantNotesHandler) ServeHTTP(ctx AuthedAppContext, w http.ResponseWriter, r *http.Request) {
+	bookingId, err := uuid.Parse(r.PathValue("booking"))
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	request := updateRestaurantNotesRequest{}
+	err = json.NewDecoder(r.Body).Decode(&request)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	db := ctx.DB.Session(&gorm.Session{SkipDefaultTransaction: true}).Begin()
+	err = h.handle(r.Context(), db, request, bookingId, ctx.User)
+
+	if err != nil {
+		db.Rollback()
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	db.Commit()
+
+	w.WriteHeader(http.StatusOK)
 }
 
 //endregion
