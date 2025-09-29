@@ -145,14 +145,14 @@ func (h *UpdateAccountHandler) ServeHTTP(ctx AuthedAppContext, w http.ResponseWr
 //
 // authed endpoint
 //
-// returns: {
-// 	id: string,
-//	name: string,
-//	description: string,
-//	locationText: string,
-//	locationUrl: string,
-//	frontpageMarkdown: string,
-// }[]
+//	returns: {
+//		id: string,
+//		name: string,
+//		description: string,
+//		locationText: string,
+//		locationUrl: string,
+//		frontpageMarkdown: string,
+//	}[]
 //
 // bound to: GET /api/account/restaurants
 type AccountManagedRestaurantsHandler struct{}
@@ -180,7 +180,7 @@ INNER JOIN account
 		return nil, err
 	}
 
-	res := make([]restaurantDetails, 0, len(restaurants))
+	res := make([]restaurantDetails, len(restaurants))
 	for i, restaurant := range restaurants {
 		res[i] = restaurantDetails{
 			ID:                restaurant.ID,
