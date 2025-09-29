@@ -43,6 +43,9 @@ const (
 
 // Value is a custom gorm serialisation method for the Attendance type.
 func (a Attendance) Value() (driver.Value, error) {
+	if !a.IsValid() {
+		return "", fmt.Errorf("invalid Attendance value %s", a)
+	}
 	return string(a), nil
 }
 
@@ -53,5 +56,16 @@ func (a *Attendance) Scan(value interface{}) error {
 		return fmt.Errorf("failed to deserialise Attendance value")
 	}
 	*a = Attendance(str)
+	if !a.IsValid() {
+		return fmt.Errorf("invalid Attendance value %s", str)
+	}
 	return nil
+}
+
+func (a Attendance) IsValid() bool {
+	switch a {
+	case Attended, Cancelled, NoShow:
+		return true
+	}
+	return false
 }
