@@ -157,7 +157,6 @@ function Account() {
                     <option>City A</option>
                     <option>City B</option>
                   </select>
-                  <span className="acc-caret">▾</span>
                 </div>
               </label>
               <label className="acc-field">
@@ -170,7 +169,6 @@ function Account() {
                     <option>State A</option>
                     <option>State B</option>
                   </select>
-                  <span className="acc-caret">▾</span>
                 </div>
               </label>
 
