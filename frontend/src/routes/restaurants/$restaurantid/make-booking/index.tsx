@@ -84,20 +84,16 @@ type DateObj = {
 interface DateButtonProps {
   dateObj: DateObj;
   onSelect: (date: DateObj) => void;
+  classList: string;
 }
 
-function DateButton({ dateObj, onSelect }: DateButtonProps) {
+function DateButton({ dateObj, onSelect, classList }: DateButtonProps) {
   const fullDate = dateObj;
 
   return (
     <div className="datebutton-wrapper">
       <p>{weekdayTitles[fullDate.date.getDay()]}</p>
-      <button
-        className={
-          fullDate.hours == BigInt(0) ? "round-button disabled" : "round-button"
-        }
-        onClick={() => onSelect(fullDate)}
-      >
+      <button className={classList} onClick={() => onSelect(fullDate)}>
         {fullDate.date.getDate()}
       </button>
     </div>
@@ -129,8 +125,20 @@ function MakeBookingForm({ restaurantData }: { restaurantData: DateObj[] }) {
   const [selectedDate, setSelectedDate] = useState(restaurantData[0]);
   const [partySize, setPartySize] = useState(1);
   const [contactEmail, setContactEmail] = useState("");
-  const [contactName, setContactName] = useState("");
+  const [contactFirstName, setContactFirstName] = useState("");
+  const [contactFamilyName, setContactFamilyName] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
+  const [contactNumber, setContactNumber] = useState("");
+
+  const detailsFilled =
+    selectedTime != "" &&
+    contactFirstName != "" &&
+    contactFamilyName != "" &&
+    isValidEmail(contactEmail);
+
+  function isValidEmail(email: string) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  }
 
   function partySizePlus() {
     if (partySize < maxTableSize) {
@@ -143,98 +151,194 @@ function MakeBookingForm({ restaurantData }: { restaurantData: DateObj[] }) {
     }
   }
 
+  function handleDateSelect(date: DateObj) {
+    setSelectedDate(date);
+    setSelectedTime("");
+  }
+
   return (
     <div className="booking-form">
-      <div className="booking-day-selector">
-        <h3>Select a day to book</h3>
-        <div className="booking-days">
-          {restaurantData.map((dateObj) => (
-            <DateButton
-              key={dateObj.date.toString()}
-              dateObj={dateObj}
-              onSelect={setSelectedDate}
-            />
-          ))}
-        </div>
-      </div>
-      <div className="people-count-selector">
-        <h3>how many fools you got</h3>
-        <div className="people-count-buttons">
-          <button
-            onClick={partySizeMinus}
-            className={
-              partySize == 1 ? "round-button disabled" : "round-button"
-            }
-          >
-            <h2>&minus;</h2>
-          </button>
-          <h1>{partySize}</h1>
-          <button
-            onClick={partySizePlus}
-            className={
-              partySize == maxTableSize
-                ? "round-button disabled"
-                : "round-button"
-            }
-          >
-            <h2>+</h2>
-          </button>
-        </div>
-      </div>
+      <div className="booking-form-datetime-select appearing">
+        <h1>1. Select a Date & Time</h1>
 
-      <h3>
-        what time u be wanting for your{" "}
-        {partySize == 1 ? "foolish ass" : partySize + " fools"} on{" "}
-        {selectedDate.date.toLocaleDateString()}
-      </h3>
-      <div className="seating-time-wrapper">
-        <div
-          className={
-            selectedDate.hours == BigInt(0)
-              ? "seating-time-selection closed"
-              : "seating-time-selection opened"
-          }
-        >
-          {listAvailableTimes(selectedDate.hours).map((i: number) => {
-            const timeFormatted = timeFromMaskValue(i);
-
-            return (
-              <button
-                className={
-                  selectedTime == timeFormatted
-                    ? "time-selector-button selected"
-                    : "time-selector-button"
+        <div className="booking-day-selector">
+          <h3>Select a day to book</h3>
+          <div className="booking-days">
+            {restaurantData.map((dateObj) => (
+              <DateButton
+                key={dateObj.date.toString()}
+                dateObj={dateObj}
+                onSelect={handleDateSelect}
+                classList={
+                  dateObj == selectedDate
+                    ? "round-button disabled active-button"
+                    : "round-button"
                 }
-                key={"timeselector" + i}
-                onClick={() => setSelectedTime(timeFormatted)}
-              >
-                {timeFormatted}
-              </button>
-            );
-          })}
+              />
+            ))}
+          </div>
+        </div>
+
+        <div className="people-count-selector">
+          <h3>How many people are coming?</h3>
+          <div className="people-count-buttons">
+            <button
+              onClick={partySizeMinus}
+              className={
+                partySize == 1 ? "round-button disabled" : "round-button"
+              }
+            >
+              <h2>&minus;</h2>
+            </button>
+            <div
+              style={{
+                width: "10px",
+                display: "flex",
+                justifyContent: "center",
+                userSelect: "none",
+              }}
+            >
+              <h1>{partySize}</h1>
+            </div>
+            <button
+              onClick={partySizePlus}
+              className={
+                partySize == maxTableSize
+                  ? "round-button disabled"
+                  : "round-button"
+              }
+            >
+              <h2>+</h2>
+            </button>
+          </div>
+        </div>
+
+        <h3>Available seating times:</h3>
+        <div className="seating-time-wrapper">
+          <div className="seating-time-selection">
+            {selectedDate.hours != BigInt(0) ? (
+              listAvailableTimes(selectedDate.hours).map((i: number) => {
+                const timeFormatted = timeFromMaskValue(i);
+                return (
+                  <button
+                    className={
+                      selectedTime == timeFormatted
+                        ? "time-selector-button selected"
+                        : "time-selector-button"
+                    }
+                    key={"timeselector" + i}
+                    onClick={() => setSelectedTime(timeFormatted)}
+                  >
+                    {timeFormatted}
+                  </button>
+                );
+              })
+            ) : (
+              <div>
+                no booking times available for this day, please check another
+                day!
+              </div>
+            )}
+          </div>
         </div>
       </div>
-      <div className="contact-details">
-        <h3>what your name</h3>
-        <input
-          type="text"
-          name="booking-name"
-          id="booking-name"
-          value={contactName}
-          onChange={(e) => setContactName(e.target.value)}
-        />
-        <h3>what your email</h3>
-        <input
-          type="email"
-          name="booking-email"
-          id="booking-email"
-          value={contactEmail}
-          onChange={(e) => setContactEmail(e.target.value)}
-        />
-      </div>
-
-      <div className="devpanel">
-        <p>{selectedTime}</p>
+      <div className={"booking-form-details-entry appearing"}>
+        <h1>2. Enter Contact Details</h1>
+        <div className="personal-details">
+          <label htmlFor="booking-first-name">
+            <h3>First Name:</h3>
+          </label>
+          <input
+            type="text"
+            name="booking-first-name"
+            id="booking-first-name"
+            value={contactFirstName}
+            onChange={(e) => setContactFirstName(e.target.value)}
+          />
+          <label htmlFor="booking-family-name">
+            <h3>Family Name:</h3>
+          </label>
+          <input
+            type="text"
+            name="booking-family-name"
+            id="booking-family-name"
+            value={contactFamilyName}
+            onChange={(e) => setContactFamilyName(e.target.value)}
+          />
+          <label htmlFor="booking-email">
+            <h3>Email Address:</h3>
+          </label>
+          <div
+            className={
+              isValidEmail(contactEmail) || contactEmail == ""
+                ? ""
+                : "invalid-email"
+            }
+          >
+            <input
+              type="email"
+              name="booking-email"
+              id="booking-email"
+              value={contactEmail}
+              onChange={(e) => setContactEmail(e.target.value)}
+              required
+            />
+            {isValidEmail(contactEmail) || contactEmail == "" ? (
+              <></>
+            ) : (
+              <h3>wrong email cuz</h3>
+            )}
+          </div>
+          <label htmlFor="booking-phone">
+            <h3>
+              Phone Number <span style={{ fontWeight: "300" }}>(optional)</span>
+              :
+            </h3>
+          </label>
+          <input
+            type="number"
+            name="booking-phone"
+            id="booking-phone"
+            value={contactNumber}
+            onChange={(e) => setContactNumber(e.target.value)}
+          />
+        </div>
+        <div className="booking-form-confirm">
+          <button
+            className={
+              !detailsFilled ? "submit_button disabled" : "submit_button"
+            }
+            popoverTarget="confirm-popover"
+            disabled={!detailsFilled}
+          >
+            Place Booking
+          </button>
+        </div>
+        <div id="confirm-popover" popover="">
+          <div className="confirm-popover-contents">
+            <h2>Confirm Booking</h2>
+            <p>
+              Please confirm your details below before we submit your booking
+              request.
+            </p>
+            <div className="confirm-popover-subdivision">
+              <h4>Name:</h4>{" "}
+              <p>&nbsp;{contactFirstName + " " + contactFamilyName}</p>
+            </div>
+            <div className="confirm-popover-subdivision">
+              <h4>Date:</h4> <p>&nbsp;{selectedDate.date.toDateString()}</p>
+            </div>
+            <div className="confirm-popover-subdivision">
+              <h4>Time:</h4> <p>&nbsp;{selectedTime}</p>
+            </div>
+            <div className="confirm-popover-subdivision">
+              <h4>Email:</h4> <p>&nbsp;{contactEmail}</p>
+            </div>
+            <h4>Any additional notes:</h4>
+            <input type="textarea" name="" id="" />
+            <button className="submit_button">Submit Booking</button>
+          </div>
+        </div>
       </div>
     </div>
   );

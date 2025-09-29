@@ -73,8 +73,9 @@
 
 input[type=email],
 input[type=password],
-input[type=text] {
-  width: 100%;
+input[type=text],
+input[type=number] {
+  width: 95%;
   height: 2rem;
   border: 1px solid #a4161a;
   background-color: white;
@@ -86,7 +87,8 @@ input[type=text] {
 
 input[type="email"]:hover,
 input[type="password"]:hover,
-input[type=text]:hover {
+input[type=text]:hover,
+input[type=number]:hover {
   padding-inline: 5px;
 }
 
@@ -137,9 +139,46 @@ input[type=text]:focus {
 
 .booking-form {
   display: flex;
+  align-items: center;
+}
+
+.booking-form-datetime-select {
+  display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
+  width: 50%;
+  height: 80vh;
+  border-radius: 20px;
+  margin: 10px;
+  gap: 20px;
+}
+
+.booking-form-details-entry {
+  display: flex;
+  opacity: 0%;
+  flex-direction: column;
+  align-items: center;
+  width: 50%;
+  height: 80vh;
+  border-radius: 20px;
+  margin: 10px;
+  gap: 20px;
+}
+
+.booking-form-confirm {
+  width: 100%;
+  height: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.personal-details {
+  width: 60%;
+}
+
+.personal-details input {
+  margin-bottom: 20px;
 }
 
 .booking-day-selector {
@@ -150,7 +189,7 @@ input[type=text]:focus {
 
 .booking-days {
   display: flex;
-  gap: 2px;
+  gap: 10px;
 }
 
 .datebutton-wrapper {
@@ -189,6 +228,10 @@ input[type=text]:focus {
   cursor: default;
 }
 
+.active-button {
+  border: 1px solid #ff0000;
+}
+
 .people-count-buttons {
   display: flex;
   align-items: center;
@@ -196,23 +239,32 @@ input[type=text]:focus {
   gap: 20px;
 }
 
-.seating-time-selection {
-  width: 400px;
-  max-height: 0px;
-  transition: max-height 0.5s ease;
+.seating-time-wrapper {
   display: flex;
-  overflow: scroll;
+  height: 24em;
+  width: 95%;
   align-items: center;
-  flex-direction: column;
-  gap: 5px;
+  justify-content: center;
+  overflow: scroll;
 }
 
-.seating-time-selection.opened {
-  max-height: 400px;
+.seating-time-selection {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  animation: appear 0.5s ease forwards;
+}
+
+.appearing {
+  animation: appear 0.5s ease forwards;
 }
 
 .time-selector-button {
-  width: 8em;
+  width: 6.5em;
   padding: 0.8em;
   color: #660708;
   background-color: #FFFFFF;
@@ -220,6 +272,16 @@ input[type=text]:focus {
   filter:drop-shadow(1px 1px 1px #a4161a);
   border-radius: 5px;
   margin-bottom: 2px;
+}
+
+@keyframes appear {
+  0% {
+    opacity: 0%;
+  }
+
+  100% {
+    opacity: 100%;
+  }
 }
 
 .time-selector-button.selected {
@@ -240,6 +302,51 @@ input[type=text]:focus {
   cursor: pointer;
 }
 
-input[type="email"]:invalid {
-  color: blue;
+.invalid-email {
+  display: flex;
+  align-items: center;
+}
+
+.invalid-email input[type=email] {
+  width: 40%;
+  transition: width 1s;
+}
+
+#confirm-popover {
+  height: 60%;
+  width: 40%;
+  color: black;
+  background-color: white;
+  border: 1px solid black;
+  border-radius: 20px;
+  width: 400px;
+  position: fixed;
+  top: 20%;
+  left: 35%;
+}
+
+.confirm-popover-contents {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.confirm-popover-subdivision {
+  display: flex;
+  padding: 10px 0 10px 0;
+  width: 95%;
+}
+
+#confirm-popover::backdrop {
+  backdrop-filter: blur(3px);
+}
+
+.confirm-popover-contents input[type="textarea"] {
+  height: 8em;
+  width: 90%;
+  color: black;
+  background-color: white;
+  border-radius: 5px;
+  margin: 10px;
 }
