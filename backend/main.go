@@ -188,6 +188,7 @@ func main() {
 	appMux.Handle("GET /api/booking/edit/{booking}", &api.UpdateBookingHandler{})
 	appMux.Handle("GET /api/booking/cancel/{booking}", &api.CancelBookingHandler{})
 	authedAppMux.Handle("GET /api/booking/for/{restaurant}/upcoming", &api.GetUpcomingBookingsHandler{})
+	authedAppMux.Handle("GET /api/booking/for/{restaurant}/history", &api.GetBookingHistoryHandler{})
 
 	server := http.Server{
 		Addr:    hostString,
