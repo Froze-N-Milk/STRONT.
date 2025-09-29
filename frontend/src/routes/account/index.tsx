@@ -139,22 +139,6 @@ function Account() {
                 <input placeholder="Postcode" />
               </label>
               <div />
-
-              <label className="acc-field">
-                <span>New Password:</span>
-                <input
-                  type="password"
-                  placeholder="Enter your new password here"
-                />
-              </label>
-              <label className="acc-field">
-                <span>Confirm Password:</span>
-                <input
-                  type="password"
-                  placeholder="Enter your new password again"
-                />
-              </label>
-              <div className="acc-divider acc-span-2" />
             </div>
 
             <div className="acc-section">
