@@ -84,22 +84,35 @@ function Account() {
             </div>
 
             <div className="acc-grid">
+              {/* Restaurant Name */}
               <label className="acc-field">
                 <span>Restaurant Name:</span>
-                <input placeholder="Enter the restaurant name here" />
+                <input
+                  placeholder="Enter the restaurant name here"
+                  required
+                  maxLength={80}
+                />
               </label>
               <label className="acc-field">
                 <span>Owner Name:</span>
                 <input placeholder="Enter the Owner name here" />
               </label>
-
+              {/* Email Address */}
               <label className="acc-field">
                 <span>E-mail Address:</span>
-                <input placeholder="Enter the e-mail address here" />
+                <input
+                  type="email"
+                  required
+                  placeholder="Enter the e-mail address here"
+                />
               </label>
+              {/* Phone Number */}
               <label className="acc-field">
-                <span>Contact Number:</span>
-                <input placeholder="Enter the Contact Number here" />
+                <span>Phone Number:</span>
+                <input
+                  placeholder="Enter the Contact Number here"
+                  inputMode="tel"
+                />
               </label>
 
               <label className="acc-field acc-span-2">
