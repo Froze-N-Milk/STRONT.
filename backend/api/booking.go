@@ -478,9 +478,7 @@ func (h *GetBookingHistoryHandler) ServeHTTP(ctx AuthedAppContext, w http.Respon
 // expects:
 //
 //	{
-//		time_slot: int,
-//		party_size: int,
-//		customer_notes: string
+//		restaurant_notes: string
 //	}
 type UpdateRestaurantNotesHandler struct{}
 type updateRestaurantNotesRequest struct {
