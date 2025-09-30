@@ -98,6 +98,13 @@
   line-height: 1;
 }
 
+.acc-tag-add button:hover {
+  background: #b32121;
+  color: #fff;
+  transform: scale(1.2);
+  transition: all 0.2s ease;
+}
+
 .acc-logo-sub {
   position: static;
   margin-top: 6px;
@@ -171,6 +178,16 @@
   margin-top: 24px;
 }
 
+
+.acc-section textarea {
+  display: block;
+  margin: 0 auto;
+  width:95%;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 10px;
+}
+
 .acc-section-title {
   font-weight: 700;
   color: #b32121;
@@ -237,13 +254,6 @@
   color: #b32121;
   background: #fff;
   cursor: pointer;
-}
-
-textarea {
-  width: 100%;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  padding: 10px;
 }
 
 .acc-divider {
