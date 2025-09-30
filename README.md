@@ -12,7 +12,9 @@
 `make run` -- runs the production compose configuration (embedded web app)
 
 ## Development
-`make dev` -- runs the dev compose configuration (separate front-end and back-end containers)
+`make db` -- run db container
+`make frontend-dev` -- run frontend vite dev server
+`make dev` -- runs backend go dev server
 
 This will host the server locally at http://localhost:3000 by default. You
 should not access the vite (frontend) dev server directly, the go server will
