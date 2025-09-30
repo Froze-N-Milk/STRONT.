@@ -8,9 +8,65 @@ function Account() {
   const [newTag, setNewTag] = useState("");
   const [logo, setLogo] = useState<string | null>(null);
   const [address, setAddress] = useState("");
+  // State -> City mapping
+  const stateCityMap: Record<string, string[]> = {
+    "Australian Capital Territory": ["Belconnen", "Canberra", "Queanbeyan"],
+    "New South Wales": [
+      "Bathurst",
+      "Coffs Harbour",
+      "Newcastle",
+      "Parramatta",
+      "Sydney",
+      "Tamworth",
+      "Wollongong",
+    ],
+    "Northern Territory": [
+      "Alice Springs",
+      "Darwin",
+      "Katherine",
+      "Palmerston",
+    ],
+    Queensland: [
+      "Brisbane",
+      "Cairns",
+      "Gold Coast",
+      "Mackay",
+      "Rockhampton",
+      "Sunshine Coast",
+      "Toowoomba",
+      "Townsville",
+    ],
+    "South Australia": ["Adelaide", "Mount Gambier", "Port Augusta", "Whyalla"],
+    Tasmania: ["Burnie", "Devonport", "Hobart", "Launceston"],
+    Victoria: [
+      "Ballarat",
+      "Bendigo",
+      "Geelong",
+      "Melbourne",
+      "Mildura",
+      "Shepparton",
+    ],
+    "Western Australia": [
+      "Bunbury",
+      "Fremantle",
+      "Geraldton",
+      "Kalgoorlie",
+      "Perth",
+    ],
+  };
+
+  const [selectedState, setSelectedState] = useState("");
+  const [cities, setCities] = useState<string[]>([]);
+  const [selectedCity, setSelectedCity] = useState("");
 
   const canAdd = newTag.trim().length > 0 && !tags.includes(newTag.trim());
 
+  function onStateChange(e: React.ChangeEvent<HTMLSelectElement>) {
+    const state = e.target.value;
+    setSelectedState(state);
+    setCities(stateCityMap[state] || []);
+    setSelectedCity("");
+  }
   function addTag() {
     if (!canAdd) return;
     setTags((list) => [...list, newTag.trim()]);
