@@ -18,7 +18,7 @@ type Availability struct {
 	SaturdayHourMask  int64     `gorm:"not null"`
 	SundayHourMask    int64     `gorm:"not null"`
 	Occasions         []Occasion
-	Restaurant 		  *Restaurant
+	Restaurant        *Restaurant
 }
 
 func (Availability) TableName() string {
@@ -62,7 +62,6 @@ func (o *OpeningHours) UnmarshalJSON(data []byte) error {
 		Date  int64 `json:"date"`
 		Hours int64 `json:"hours"`
 	}{}
-
 
 	err := json.Unmarshal(data, &raw)
 
