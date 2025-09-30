@@ -8,7 +8,7 @@ import (
 
 type Occasion struct {
 	AvailabilityID  uuid.UUID `gorm:"not null"`
-	Date            time.Time `gorm:"type:date;not null"`
+	CloseDate       time.Time `gorm:"type:date;not null"`
 	HourMask        int64     `gorm:"not null"`
 	YearlyRecurring bool      `gorm:"default:false;not null"`
 }

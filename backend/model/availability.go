@@ -31,14 +31,14 @@ func (a *Availability) ApplyOccasions(today time.Time, nextWeek time.Time) {
 	for _, occasion := range a.Occasions {
 		// check if a yearly recurring occasion should be included
 		if occasion.YearlyRecurring {
-			newDate := time.Date(today.Year(), occasion.Date.Month(), occasion.Date.Day(), 0, 0, 0, 0, time.Local)
+			newDate := time.Date(today.Year(), occasion.CloseDate.Month(), occasion.CloseDate.Day(), 0, 0, 0, 0, time.Local)
 			if newDate.Before(today) || newDate.After(nextWeek) {
 				continue
 			}
 		}
 		// all other occasions are assumed to be applied for this
 		// current week
-		*a.WeekdayMask(occasion.Date.Weekday()) = occasion.HourMask
+		*a.WeekdayMask(occasion.CloseDate.Weekday()) = occasion.HourMask
 	}
 }
 

@@ -110,7 +110,7 @@ func main() {
 
 		occasion := model.Occasion{
 			AvailabilityID:  availability.ID,
-			Date:            time.Now(),
+			CloseDate:       time.Now(),
 			HourMask:        0,
 			YearlyRecurring: false,
 		}
