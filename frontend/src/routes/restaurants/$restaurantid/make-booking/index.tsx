@@ -72,6 +72,10 @@ function timeFromMaskValue(maskvalue: number): string {
   return hours + mins + ampm;
 }
 
+function isValidEmail(email: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
 const maxTableSize = 5;
 
 const weekdayTitles = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -134,15 +138,13 @@ function MakeBookingForm({ restaurantData }: { restaurantData: DateObj[] }) {
   const [loading, setLoading] = useState(false);
   const restaurantid = Route.useParams().restaurantid;
 
+  console.log(restaurantData);
+
   const detailsFilled =
     selectedTime != "" &&
     contactFirstName != "" &&
     contactFamilyName != "" &&
     isValidEmail(contactEmail);
-
-  function isValidEmail(email: string) {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  }
 
   function partySizePlus() {
     if (partySize < maxTableSize) {
@@ -156,8 +158,10 @@ function MakeBookingForm({ restaurantData }: { restaurantData: DateObj[] }) {
   }
 
   function handleDateSelect(date: DateObj) {
-    setSelectedDate(date);
-    setSelectedTime("");
+    if (date != selectedDate) {
+      setSelectedDate(date);
+      setSelectedTime("");
+    }
   }
 
   function handleTimeSelect(timeFormatted: string, timeValue: number) {
