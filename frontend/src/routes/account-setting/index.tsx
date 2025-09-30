@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import "../account/index.css";
+import "../account-setting/index.css";
 
 function AccountSetting() {
   const [newPwd, setNewPwd] = useState("");
@@ -26,7 +26,7 @@ function AccountSetting() {
   }
 
   return (
-    <div className="acc-page">
+    <div className="acc-page setting-page">
       <div className="acc-shell">
         <aside className="acc-side">
           <nav className="acc-side-nav">
@@ -82,13 +82,13 @@ function AccountSetting() {
               )}
             </div>
 
-            <div className="acc-actions">
+            <div className="set-actions">
               <button
                 type="button"
                 className="acc-delete"
                 onClick={() => setShowDeleteConfirm(true)}
               >
-                Delete Account
+                Delete Restaurant
               </button>
               <button
                 type="submit"
@@ -106,10 +106,10 @@ function AccountSetting() {
         <div className="acc-modal" role="dialog" aria-modal>
           <div className="acc-modal-card">
             <div className="acc-modal-title">
-              Are you sure to delete the Account?
+              Are you sure to delete the Restaurant?
             </div>
             <p className="acc-modal-desc">
-              Once deleted, your account and all related booking records will be
+              Once deleted, your Restaurant and all related records will be
               permanently removed.
             </p>
             <div className="acc-modal-actions">

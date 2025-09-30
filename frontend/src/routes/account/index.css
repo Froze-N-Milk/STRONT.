@@ -288,16 +288,8 @@
 
 .acc-actions {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   margin-top: 18px;
-}
-
-.acc-delete {
-  background: #b32121;
-  color: #fff;
-  border: 0;
-  padding: 8px 18px;
-  border-radius: 6px;
 }
 
 .acc-save {
