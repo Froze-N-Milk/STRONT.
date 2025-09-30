@@ -86,7 +86,7 @@ CREATE TABLE booking
     time_slot        INT                      NOT NULL,
     creation_date    TIMESTAMP WITH TIME ZONE NOT NULL,
     customer_created BOOL                     NOT NULL DEFAULT TRUE,
-    attendance       TEXT CHECK (attendance IN ('attended', 'cancelled', 'no-show')),
+    attendance       TEXT CHECK (attendance IN ('attended', 'cancelled', 'no-show', 'pending')) DEFAULT 'pending',
     customer_notes   TEXT,
     restaurant_notes TEXT,
     FOREIGN KEY (contact_id) REFERENCES customer_contact (id) ON DELETE CASCADE,

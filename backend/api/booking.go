@@ -142,6 +142,7 @@ func (h *CreateOnlineBookingHandler) handle(ctx context.Context, db *gorm.DB, re
 		BookingDate:     request.BookingDate,
 		TimeSlot:        request.TimeSlot,
 		CustomerNotes:   request.CustomerNotes,
+		Attendance:      model.Pending,
 		CreationDate:    time.Now().UTC(),
 		CustomerCreated: true,
 	}

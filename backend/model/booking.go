@@ -18,7 +18,7 @@ type Booking struct {
 	TimeSlot        int        `gorm:"not null"`
 	CreationDate    time.Time  `gorm:"type:timestamptz;not null"`
 	CustomerCreated bool       `gorm:"default:false;not null"`
-	Attendance      Attendance `gorm:"type:text"`
+	Attendance      Attendance `gorm:"type:text;default:'pending'"`
 	CustomerNotes   string     `gorm:"type:text"`
 	RestaurantNotes string     `gorm:"type:text"`
 	Contact         *CustomerContact
@@ -40,6 +40,7 @@ const (
 	Attended  Attendance = "attended"
 	Cancelled Attendance = "cancelled"
 	NoShow    Attendance = "no-show"
+	Pending   Attendance = "pending"
 )
 
 // Value is a custom gorm serialisation method for the Attendance type.
@@ -65,7 +66,7 @@ func (a *Attendance) Scan(value interface{}) error {
 
 func (a Attendance) IsValid() bool {
 	switch a {
-	case Attended, Cancelled, NoShow:
+	case Attended, Cancelled, NoShow, Pending:
 		return true
 	}
 	return false
