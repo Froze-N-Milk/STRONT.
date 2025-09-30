@@ -15,6 +15,74 @@ import (
 // TODO: Check if booking time is during opening hours (CREATE, UPDATE)
 // TODO: Send booking confirmation email
 
+type bookingRequest struct {
+	RestaurantID  uuid.UUID
+	GivenName     string
+	FamilyName    string
+	Phone         string
+	Email         string
+	PartySize     int
+	BookingDate   time.Time
+	TimeSlot      int
+	CustomerNotes string
+}
+
+func (b bookingRequest) MarshalJSON() ([]byte, error) {
+	return json.Marshal(struct {
+		RestaurantID  uuid.UUID `json:"restaurant_id"`
+		GivenName     string    `json:"given_name"`
+		FamilyName    string    `json:"family_name"`
+		Phone         string    `json:"phone"`
+		Email         string    `json:"email"`
+		PartySize     int       `json:"party_size"`
+		BookingDate   int64     `json:"booking_date"`
+		TimeSlot      int       `json:"time_slot"`
+		CustomerNotes string    `json:"customer_notes"`
+	}{
+		RestaurantID:  b.RestaurantID,
+		GivenName:     b.GivenName,
+		FamilyName:    b.FamilyName,
+		Phone:         b.Phone,
+		Email:         b.Email,
+		PartySize:     b.PartySize,
+		BookingDate:   b.BookingDate.UnixMilli(),
+		TimeSlot:      b.TimeSlot,
+		CustomerNotes: b.CustomerNotes,
+	})
+}
+
+func (b *bookingRequest) UnmarshalJSON(data []byte) error {
+	raw := struct {
+		RestaurantID  uuid.UUID `json:"restaurant_id"`
+		GivenName     string    `json:"given_name"`
+		FamilyName    string    `json:"family_name"`
+		Phone         string    `json:"phone"`
+		Email         string    `json:"email"`
+		PartySize     int       `json:"party_size"`
+		BookingDate   int64     `json:"booking_date"`
+		TimeSlot      int       `json:"time_slot"`
+		CustomerNotes string    `json:"customer_notes"`
+	}{}
+
+	err := json.Unmarshal(data, &raw)
+
+	if err != nil {
+		return err
+	}
+
+	b.RestaurantID = raw.RestaurantID
+	b.GivenName = raw.GivenName
+	b.FamilyName = raw.FamilyName
+	b.Phone = raw.Phone
+	b.Email = raw.Email
+	b.PartySize = raw.PartySize
+	b.BookingDate = time.UnixMilli(raw.BookingDate)
+	b.TimeSlot = raw.TimeSlot
+	b.CustomerNotes = raw.CustomerNotes
+
+	return nil
+}
+
 //region Get Booking by ID
 
 // GetBookingByIDHandler retrieves the booking row from the database by its ID and returns a JSON object
@@ -28,33 +96,35 @@ import (
 // returns:
 //
 //	{
-//		contact_id: string,
-//		restaurant_id: string,
+//		restaurant_id: uuid,
+//		given_name: string,
+//		family_name: string,
+//		phone: string,
+//		email: string,
 //		party_size: int,
-//		booking_date: string,
+//		booking_date: int, (unix millis)
 //		time_slot: int,
 //		customer_notes: string
 //	}
 type GetBookingByIDHandler struct{}
 
-type getBookingByIDResponse struct {
-	ContactID     uuid.UUID `json:"contact_id"`
-	RestaurantID  uuid.UUID `json:"restaurant_id"`
-	PartySize     int       `json:"party_size"`
-	BookingDate   time.Time `json:"booking_date"`
-	TimeSlot      int       `json:"time_slot"`
-	CustomerNotes string    `json:"customer_notes"`
-}
-
-func (h *GetBookingByIDHandler) handle(ctx context.Context, db *gorm.DB, bookingId uuid.UUID) (getBookingByIDResponse, error) {
+func (h *GetBookingByIDHandler) handle(ctx context.Context, db *gorm.DB, bookingId uuid.UUID) (bookingRequest, error) {
 	booking, err := gorm.G[model.Booking](db).Where("id = ?", bookingId).First(ctx)
 	if err != nil {
-		return getBookingByIDResponse{}, err
+		return bookingRequest{}, err
 	}
 
-	return getBookingByIDResponse{
-		ContactID:     booking.ContactID,
+	contact, err := gorm.G[model.CustomerContact](db).Where("id = ?", booking.ContactID).First(ctx)
+	if err != nil {
+		return bookingRequest{}, err
+	}
+
+	return bookingRequest{
 		RestaurantID:  booking.RestaurantID,
+		GivenName:     contact.GivenName,
+		FamilyName:    contact.FamilyName,
+		Phone:         contact.Phone,
+		Email:         contact.Email,
 		PartySize:     booking.PartySize,
 		BookingDate:   booking.BookingDate,
 		TimeSlot:      booking.TimeSlot,
@@ -109,20 +179,7 @@ func (h *GetBookingByIDHandler) ServeHTTP(ctx AppContext, w http.ResponseWriter,
 //	}
 type CreateOnlineBookingHandler struct{}
 
-// handles customer contact creation and booking creation
-type createBookingRequest struct {
-	RestaurantID  uuid.UUID `json:"restaurant_id"`
-	GivenName     string    `json:"given_name"`
-	FamilyName    string    `json:"family_name"`
-	Phone         string    `json:"phone"`
-	Email         string    `json:"email"`
-	PartySize     int       `json:"party_size"`
-	BookingDate   time.Time `json:"booking_date"`
-	TimeSlot      int       `json:"time_slot"`
-	CustomerNotes string    `json:"customer_notes"`
-}
-
-func (h *CreateOnlineBookingHandler) handle(ctx context.Context, db *gorm.DB, request createBookingRequest) (model.Booking, error) {
+func (h *CreateOnlineBookingHandler) handle(ctx context.Context, db *gorm.DB, request bookingRequest) (model.Booking, error) {
 	customerContact := model.CustomerContact{
 		GivenName:  request.GivenName,
 		FamilyName: request.FamilyName,
@@ -155,7 +212,7 @@ func (h *CreateOnlineBookingHandler) handle(ctx context.Context, db *gorm.DB, re
 }
 
 func (h *CreateOnlineBookingHandler) ServeHTTP(ctx AppContext, w http.ResponseWriter, r *http.Request) {
-	request := createBookingRequest{}
+	request := bookingRequest{}
 	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -314,22 +371,53 @@ func (h *CancelBookingHandler) ServeHTTP(ctx AppContext, w http.ResponseWriter, 
 //	}
 type GetUpcomingBookingsHandler struct{}
 
-type flatBookingResponse struct {
-	BookingID       uuid.UUID `json:"booking_id"`
-	GivenName       string    `json:"given_name"`
-	FamilyName      string    `json:"family_name"`
-	Phone           string    `json:"phone"`
-	Email           string    `json:"email"`
-	PartySize       int       `json:"party_size"`
-	BookingDate     time.Time `json:"booking_date"`
-	TimeSlot        int       `json:"time_slot"`
-	CreationDate    time.Time `json:"creation_date"`
-	CustomerNotes   string    `json:"customer_notes"`
-	RestaurantNotes string    `json:"restaurant_notes"`
+type restaurantBookingResponse struct {
+	bookingRequest
+	RestaurantNotes string `json:"restaurant_notes"`
 }
 
-func (h *GetUpcomingBookingsHandler) handle(ctx context.Context, db *gorm.DB, restaurantID uuid.UUID, user User) ([]flatBookingResponse, error) {
-	bookings, err := gorm.G[flatBookingResponse](db).Raw(`
+func (r restaurantBookingResponse) MarshalJSON() ([]byte, error) {
+	// marshal the compose bookingRequest first
+	bookingJSON, err := r.bookingRequest.MarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+
+	// unmarshal it into a map so that we can edit the JSON kv pairs directly
+	var baseMap map[string]interface{}
+	if err := json.Unmarshal(bookingJSON, &baseMap); err != nil {
+		return nil, err
+	}
+
+	// add a restaurant_notes kv pair
+	baseMap["restaurant_notes"] = r.RestaurantNotes
+
+	// re-marshal everything and ship it
+	return json.Marshal(baseMap)
+}
+
+func (r *restaurantBookingResponse) UnmarshalJSON(b []byte) error {
+	// unmarshal the json and let bookingRequest sort itself out
+	if err := r.bookingRequest.UnmarshalJSON(b); err != nil {
+		return err
+	}
+
+	// unmarshal *just* the restaurant_notes field into the struct
+	notes := struct {
+		RestaurantNotes string `json:"restaurant_notes"`
+	}{}
+	if err := json.Unmarshal(b, &notes); err != nil {
+		return err
+	}
+
+	// add the field into the struct
+	r.RestaurantNotes = notes.RestaurantNotes
+
+	return nil
+}
+
+func (h *GetUpcomingBookingsHandler) handle(ctx context.Context, db *gorm.DB, restaurantID uuid.UUID, user User) ([]restaurantBookingResponse, error) {
+	bookings, err := gorm.G[restaurantBookingResponse](db).Raw(`
 SELECT 
 	b.id AS booking_id,
 	c.given_name,
@@ -354,7 +442,7 @@ ORDER BY b.booking_date`,
 		restaurantID).Find(ctx)
 
 	if err != nil {
-		return []flatBookingResponse{}, err
+		return []restaurantBookingResponse{}, err
 	}
 
 	return bookings, nil
@@ -411,8 +499,8 @@ func (h *GetUpcomingBookingsHandler) ServeHTTP(ctx AuthedAppContext, w http.Resp
 //	}
 type GetBookingHistoryHandler struct{}
 
-func (h *GetBookingHistoryHandler) handle(ctx context.Context, db *gorm.DB, restaurantID uuid.UUID, user User) ([]flatBookingResponse, error) {
-	bookings, err := gorm.G[flatBookingResponse](db).Raw(`
+func (h *GetBookingHistoryHandler) handle(ctx context.Context, db *gorm.DB, restaurantID uuid.UUID, user User) ([]restaurantBookingResponse, error) {
+	bookings, err := gorm.G[restaurantBookingResponse](db).Raw(`
 SELECT 
 	b.id AS booking_id,
 	c.given_name,
@@ -437,7 +525,7 @@ ORDER BY b.booking_date`,
 		restaurantID).Find(ctx)
 
 	if err != nil {
-		return []flatBookingResponse{}, err
+		return []restaurantBookingResponse{}, err
 	}
 
 	return bookings, nil
