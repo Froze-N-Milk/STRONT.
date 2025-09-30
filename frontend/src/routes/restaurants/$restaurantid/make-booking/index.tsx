@@ -128,7 +128,11 @@ function MakeBookingForm({ restaurantData }: { restaurantData: DateObj[] }) {
   const [contactFirstName, setContactFirstName] = useState("");
   const [contactFamilyName, setContactFamilyName] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState(0);
   const [contactNumber, setContactNumber] = useState("");
+  const [customerNotes, setCustomerNotes] = useState("");
+  const [loading, setLoading] = useState(false);
+  const restaurantid = Route.useParams().restaurantid;
 
   const detailsFilled =
     selectedTime != "" &&
@@ -154,6 +158,49 @@ function MakeBookingForm({ restaurantData }: { restaurantData: DateObj[] }) {
   function handleDateSelect(date: DateObj) {
     setSelectedDate(date);
     setSelectedTime("");
+  }
+
+  function handleTimeSelect(timeFormatted: string, timeValue: number) {
+    setSelectedTime(timeFormatted);
+    setSelectedTimeSlot(timeValue);
+  }
+
+  function preparePostData(): string {
+    const postData = {
+      restaurant_id: restaurantid,
+      given_name: contactFirstName,
+      family_name: contactFamilyName,
+      phone: contactNumber,
+      email: contactEmail,
+      party_size: partySize,
+      booking_date: selectedDate.date.toISOString(),
+      time_slot: selectedTimeSlot,
+      customer_notes: customerNotes,
+    };
+    return JSON.stringify(postData, null, 2);
+  }
+
+  async function placeBookingRequest(bookingdata: string) {
+    const res = await fetch("/api/booking/create", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: bookingdata,
+    });
+    return res;
+  }
+
+  async function handleSubmit() {
+    console.log(preparePostData());
+    setLoading(true);
+    try {
+      const res = await placeBookingRequest(preparePostData());
+      if (res.redirected) {
+        window.location.assign(res.url);
+        return;
+      }
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -219,6 +266,7 @@ function MakeBookingForm({ restaurantData }: { restaurantData: DateObj[] }) {
             {selectedDate.hours != BigInt(0) ? (
               listAvailableTimes(selectedDate.hours).map((i: number) => {
                 const timeFormatted = timeFromMaskValue(i);
+                const timeValue = i;
                 return (
                   <button
                     className={
@@ -226,8 +274,8 @@ function MakeBookingForm({ restaurantData }: { restaurantData: DateObj[] }) {
                         ? "time-selector-button selected"
                         : "time-selector-button"
                     }
-                    key={"timeselector" + i}
-                    onClick={() => setSelectedTime(timeFormatted)}
+                    key={i}
+                    onClick={() => handleTimeSelect(timeFormatted, timeValue)}
                   >
                     {timeFormatted}
                   </button>
@@ -329,8 +377,19 @@ function MakeBookingForm({ restaurantData }: { restaurantData: DateObj[] }) {
               <h4>Email:</h4> <p>&nbsp;{contactEmail}</p>
             </div>
             <h4>Any additional notes:</h4>
-            <input type="textarea" name="" id="" />
-            <button className="submit_button">Submit Booking</button>
+            <input
+              type="textarea"
+              name="customer-notes"
+              id="customer-notes"
+              value={customerNotes}
+              onChange={(e) => setCustomerNotes(e.target.value)}
+            />
+            <button
+              className={loading ? "submit_button disabled" : "submit_button"}
+              onClick={handleSubmit}
+            >
+              Submit Booking
+            </button>
           </div>
         </div>
       </div>
