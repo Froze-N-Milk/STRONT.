@@ -18,11 +18,6 @@
   height: 100vh;
 }
 
-.bks-side-title {
-  padding: 12px 24px;
-  font-weight: 700;
-}
-
 .bks-side-nav {
   display: flex;
   flex-direction: column;
@@ -65,9 +60,7 @@
   overflow: hidden;
 }
 
-.bks-section {
-  margin-bottom: 22px;
-}
+.bks-section { margin-bottom: 22px; }
 
 .bks-title {
   font-weight: 700;
@@ -75,6 +68,12 @@
   text-align: center;
   margin: 20px 0;
   position: relative;
+}
+
+.bks-grid label > span {
+  font-size: 12px;
+  color: #333;
+  font-weight: 700;
 }
 
 .bks-title::before {
@@ -86,9 +85,7 @@
   margin: 14px 0 20px 0;
 }
 
-.bks-title.no-line::before {
-  display: none;
-}
+.bks-title.no-line::before { display: none; }
 
 .bks-grid {
   display: grid;
@@ -103,42 +100,36 @@
   flex-direction: row;
   align-items: center;
   gap: 8px;
-  min-width: 0;
+  min-width: unset;
 }
 
 .bks-grid label > span {
   font-weight: 700;
-  min-width: 280px;
+}
+.bks-grid select {
+  padding: 6px 10px;
+  border: 1px #ddd;
 }
 
-.bks-grid .bks-inline {
-  flex: 1;
-}
+.bks-grid .bks-inline { flex: 1; }
 
 .bks-grid input,
 .bks-grid textarea {
   flex: 1;
   min-width: 0;
   max-width: 100%;
-}
-
-.bks-grid input,
-.bks-grid textarea {
   border: 1px solid #ddd;
   border-radius: 6px;
   padding: 8px 10px;
 }
 
 .bks-inline {
-  flex: 1;
-  min-width: 0;
-  flex-wrap: wrap;
-}
-
-.bks-inline {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex: 1;
+  min-width: 0;
+  flex-wrap: wrap;
 }
 
 .bks-dash {
@@ -170,82 +161,7 @@
   border-color: #b32121;
 }
 
-.bks-span-2 {
-  grid-column: span 2;
-}
-
-.bks-checks {
-  display: flex;
-  gap: 24px;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.bks-checks label {
-  display: inline-flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 6px;
-  line-height: 1.2;
-  white-space: nowrap;
-}
-
-.bks-checks input[type="checkbox"] {
-  margin-right: 6px;
-}
-
-.bks-grid input[type="checkbox"],
-.bks-page input[type="checkbox"] {
-  vertical-align: middle;
-  accent-color: #b32121;
-}
-
-.bks-page input[type="checkbox"] {
-  vertical-align: middle;
-  accent-color: #b32121;
-}
-
-.bks-checklines {
-  display: flex;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-
-.bks-checklines label {
-  display: inline-flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 6px;
-}
-
-.bks-checklines input[type="checkbox"] {
-  margin-right: 6px;
-}
-
-.bks-tags {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  flex: 1;
-  min-width: 0;
-}
-
-.bks-tag {
-  border: 1px solid #b32121;
-  color: #b32121;
-  background: #fff;
-  padding: 6px 10px;
-  border-radius: 6px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  cursor: pointer;
-}
-
-.bks-tag.active {
-  background: #b32121;
-  color: #fff;
-}
+.bks-span-2 { grid-column: span 2; }
 
 .bks-mini {
   border: 0;
@@ -256,27 +172,6 @@
   font-size: 12px;
   line-height: 1;
   cursor: pointer;
-}
-
-.bks-tag-add {
-  display: flex;
-  gap: 8px;
-  margin-top: 8px;
-}
-
-.bks-tag-add input {
-  flex: 1;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  padding: 6px 10px;
-}
-
-.bks-tag-add button {
-  width: 36px;
-  border-radius: 6px;
-  border: 1px solid #b32121;
-  color: #b32121;
-  background: #fff;
 }
 
 .bks-actions {
@@ -293,19 +188,12 @@
 }
 
 @media (max-width: 900px) {
-  .bks-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .bks-span-2 {
-    grid-column: auto;
-  }
+  .bks-grid { grid-template-columns: 1fr; }
+  .bks-span-2 { grid-column: auto; }
 }
 
 @media (max-width: 800px) {
-  .bks-page {
-    flex-direction: column;
-  }
+  .bks-page { flex-direction: column; }
 
   .bks-side {
     width: 100%;
@@ -326,13 +214,8 @@
     display: inline-block;
   }
 
-  .bks-main {
-    padding: 12px;
-  }
-
-  .bks-card {
-    padding: 16px;
-  }
+  .bks-main { padding: 12px; }
+  .bks-card { padding: 16px; }
 
   .bks-grid label {
     flex-direction: column;
@@ -345,12 +228,5 @@
   }
 
   .bks-grid input,
-  .bks-grid textarea {
-    width: 100%;
-  }
-
-  .bks-side-link {
-    padding: 10px 12px;
-    display: inline-block;
-  }
+  .bks-grid textarea { width: 100%; }
 }

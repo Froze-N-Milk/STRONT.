@@ -89,7 +89,7 @@ function BookingPage() {
                 <strong>Customer Name:</strong>{" "}
               </div>
               <div className="bk-card-line">
-                <strong>Contact Info:</strong>{" "}
+                <strong>Email:</strong>{" "}
               </div>
               <div className="bk-card-line">
                 <strong>Number of Guests:</strong>{" "}
@@ -134,7 +134,7 @@ function BookingPage() {
                   <input placeholder="" />
                 </label>
                 <label>
-                  <span>Contact Info:</span>
+                  <span>E-mail:</span>
                   <input placeholder="" />
                 </label>
                 <label>
