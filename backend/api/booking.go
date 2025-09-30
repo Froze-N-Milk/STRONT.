@@ -14,7 +14,6 @@ import (
 
 // TODO: Check if booking time is during opening hours (CREATE, UPDATE)
 // TODO: Send booking confirmation email
-// TODO: Update booking details like attendance, restaurant notes
 
 //region Get Booking by ID
 
@@ -103,7 +102,7 @@ func (h *GetBookingByIDHandler) ServeHTTP(ctx AppContext, w http.ResponseWriter,
 //		family_name: string,
 //		phone: string,
 //		email: string,
-//		party_size: string,
+//		party_size: int,
 //		booking_date: string, (YYYY-MM-DDTHH:MM:ssZ)
 //		time_slot: int,
 //		customer_notes: string
