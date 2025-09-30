@@ -18,7 +18,7 @@ type Availability struct {
 	SaturdayHourMask  int64     `gorm:"not null"`
 	SundayHourMask    int64     `gorm:"not null"`
 	Occasions         []Occasion
-	Restaurant 		  *Restaurant
+	Restaurant        *Restaurant
 }
 
 func (Availability) TableName() string {
@@ -31,14 +31,14 @@ func (a *Availability) ApplyOccasions(today time.Time, nextWeek time.Time) {
 	for _, occasion := range a.Occasions {
 		// check if a yearly recurring occasion should be included
 		if occasion.YearlyRecurring {
-			newDate := time.Date(today.Year(), occasion.Date.Month(), occasion.Date.Day(), 0, 0, 0, 0, time.Local)
+			newDate := time.Date(today.Year(), occasion.CloseDate.Month(), occasion.CloseDate.Day(), 0, 0, 0, 0, time.Local)
 			if newDate.Before(today) || newDate.After(nextWeek) {
 				continue
 			}
 		}
 		// all other occasions are assumed to be applied for this
 		// current week
-		*a.WeekdayMask(occasion.Date.Weekday()) = occasion.HourMask
+		*a.WeekdayMask(occasion.CloseDate.Weekday()) = occasion.HourMask
 	}
 }
 
@@ -62,7 +62,6 @@ func (o *OpeningHours) UnmarshalJSON(data []byte) error {
 		Date  int64 `json:"date"`
 		Hours int64 `json:"hours"`
 	}{}
-
 
 	err := json.Unmarshal(data, &raw)
 

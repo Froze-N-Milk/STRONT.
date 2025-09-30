@@ -110,7 +110,7 @@ func main() {
 
 		occasion := model.Occasion{
 			AvailabilityID:  availability.ID,
-			Date:            time.Now(),
+			CloseDate:       time.Now(),
 			HourMask:        0,
 			YearlyRecurring: false,
 		}
@@ -118,11 +118,14 @@ func main() {
 		gorm.G[model.Occasion](db.Clauses(clause.OnConflict{DoNothing: true}, result)).Create(ctx, &occasion)
 
 		restaurant := model.Restaurant{
-			AccountID:      account.ID,
-			AvailabilityID: availability.ID,
-			Name:           "My Restaurant",
-			Description:    "This is a restaurant",
-			LocationText:   "123 Apple St, Sydney NSW 2000",
+			AccountID:       account.ID,
+			AvailabilityID:  availability.ID,
+			Name:            "My Restaurant",
+			Description:     "This is a restaurant",
+			LocationText:    "123 Apple St, Sydney NSW 2000",
+			MaxPartySize:    5,
+			BookingCapacity: 100,
+			BookingLength:   2,
 		}
 
 		gorm.G[model.Restaurant](db.Clauses(clause.OnConflict{DoNothing: true}, result)).Create(ctx, &restaurant)
@@ -139,7 +142,7 @@ func main() {
 	appMux.Handle("POST /api/account/register", &api.RegisterAccountHandler{JWTKey: &jwtKey})
 	authedAppMux.Handle("POST /api/account/delete", &api.DeleteAccountHandler{})
 	authedAppMux.Handle("POST /api/account/update", &api.UpdateAccountHandler{JWTKey: &jwtKey})
-	authedAppMux.Handle("GET /api/account/restuarants", &api.AccountManagedRestaurantsHandler{})
+	authedAppMux.Handle("GET /api/account/restaurants", &api.AccountManagedRestaurantsHandler{})
 
 	authedAppMux.HandleFunc("GET /api/account/name", func(ctx api.AuthedAppContext, w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(ctx.User.Email))

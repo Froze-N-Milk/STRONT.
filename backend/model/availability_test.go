@@ -64,8 +64,8 @@ func TestOccasions(t *testing.T) {
 				SundayHourMask:    0,
 				Occasions: []Occasion{
 					{
-						Date:     occasionDate,
-						HourMask: 1,
+						CloseDate: occasionDate,
+						HourMask:  1,
 					},
 				},
 			}
@@ -99,7 +99,7 @@ func TestOccasions(t *testing.T) {
 				SundayHourMask:    0,
 				Occasions: []Occasion{
 					{
-						Date:            occasionDate,
+						CloseDate:       occasionDate,
 						HourMask:        1,
 						YearlyRecurring: true,
 					},
@@ -119,7 +119,7 @@ func TestOccasions(t *testing.T) {
 
 	recurringDontApply := func(weekday time.Weekday) func(*testing.T) {
 		return func(t *testing.T) {
-			occasionDate := adjustToWeekday(time.Date(0, now.Month() + 1, now.Day(), 0, 0, 0, 0, time.Local), weekday)
+			occasionDate := adjustToWeekday(time.Date(0, now.Month()+1, now.Day(), 0, 0, 0, 0, time.Local), weekday)
 			if occasionDate.Weekday() != weekday {
 				t.Errorf(`test logic incorrect: occasionDate.Weekday() = %#v, want %#v`, occasionDate.Weekday(), weekday)
 				return
@@ -134,7 +134,7 @@ func TestOccasions(t *testing.T) {
 				SundayHourMask:    0,
 				Occasions: []Occasion{
 					{
-						Date:            occasionDate,
+						CloseDate:       occasionDate,
 						HourMask:        1,
 						YearlyRecurring: true,
 					},
