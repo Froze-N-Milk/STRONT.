@@ -4,12 +4,18 @@ import { useState } from "react";
 
 function BookingSettingPage() {
   const [selectedDays, setSelectedDays] = useState<Set<string>>(new Set());
-  const [tags, setTags] = useState(
-    ["Vegetarian", "Vegan", "Gluten - Free", "Birthday", "Allergy"].map(
-      (t, i) => ({ id: i + 1, label: t, selected: false }),
-    ),
-  );
-  const [newTag, setNewTag] = useState("");
+  const [timeSlot, setTimeSlot] = useState<number | null>(null);
+  const HOURS = Array.from({ length: 24 }, (_, i) =>
+    String(i).padStart(2, "0"),
+  ); // 00-23
+  const MINUTES = Array.from({ length: 60 }, (_, i) =>
+    String(i).padStart(2, "0"),
+  ); // 00-59
+
+  const [startHour, setStartHour] = useState("09");
+  const [startMinute, setStartMinute] = useState("00");
+  const [endHour, setEndHour] = useState("21");
+  const [endMinute, setEndMinute] = useState("00");
 
   function toggleDay(day: string) {
     setSelectedDays((prev) => {
@@ -20,42 +26,9 @@ function BookingSettingPage() {
     });
   }
 
-  function addTag() {
-    const label = newTag.trim();
-    if (
-      !label ||
-      tags.find((t) => t.label.toLowerCase() === label.toLowerCase())
-    )
-      return;
-    setTags((list) => [...list, { id: Date.now(), label, selected: false }]);
-    setNewTag("");
-  }
-  function toggleTag(id: number) {
-    setTags((list) =>
-      list.map((t) => (t.id === id ? { ...t, selected: !t.selected } : t)),
-    );
-  }
-  function editTag(id: number) {
-    const curr = tags.find((t) => t.id === id);
-    if (!curr) return;
-    const next = prompt("Rename tag", curr.label);
-    if (next && next.trim()) {
-      setTags((list) =>
-        list.map((t) => (t.id === id ? { ...t, label: next.trim() } : t)),
-      );
-    }
-  }
-  function removeTag(id: number) {
-    setTags((list) => list.filter((t) => t.id !== id));
-  }
-
   function onSaveSettings(e: React.FormEvent) {
     e.preventDefault();
-    // 预留后端对接：提交设置，如 /api/settings/update
-    // 建议提交字段：timeSlot, cutoff, openingHours, openingDates, guestsMinMax,
-    // tableCapacity, depositRequirement, cancellationPolicy, noShowPolicy,
-    // notifyEmail, notifySms, notifyTargets, reminderHours, messageTemplate,
-    // specialRequests(tags)
+    //const payload = { timeSlot };
   }
 
   return (
@@ -79,22 +52,74 @@ function BookingSettingPage() {
 
       <main className="bks-main">
         <form className="bks-card" onSubmit={onSaveSettings}>
+          {/* Time */}
           <section className="bks-section">
             <div className="bks-title no-line">Time:</div>
             <div className="bks-grid">
               <label>
-                <span>Booking Time Slot:</span>
-                <input placeholder="e.g. 60 or 90 (mins)" />
-              </label>
-              <label>
-                <span>Cut-off Time:</span>
-                <input placeholder="Mins | Hours" />
+                <span>Booking Duration:</span>
+                <div className="bks-days">
+                  {[60, 90, 120].map((m) => (
+                    <button
+                      key={m}
+                      type="button"
+                      className={`bks-day ${timeSlot === m ? "active" : ""}`}
+                      aria-pressed={timeSlot === m}
+                      onClick={() => setTimeSlot(m)}
+                    >
+                      {m} min
+                    </button>
+                  ))}
+                </div>
               </label>
               <label>
                 <span>Opening Hours:</span>
                 <div className="bks-inline">
-                  <input placeholder="00:00" />
-                  <span className="bks-dash" /> <input placeholder="00:00" />
+                  {/* Start time */}
+                  <select
+                    value={startHour}
+                    onChange={(e) => setStartHour(e.target.value)}
+                  >
+                    {HOURS.map((h) => (
+                      <option key={h} value={h}>
+                        {h}
+                      </option>
+                    ))}
+                  </select>
+                  :
+                  <select
+                    value={startMinute}
+                    onChange={(e) => setStartMinute(e.target.value)}
+                  >
+                    {MINUTES.map((m) => (
+                      <option key={m} value={m}>
+                        {m}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="bks-dash" />
+                  {/* End time */}
+                  <select
+                    value={endHour}
+                    onChange={(e) => setEndHour(e.target.value)}
+                  >
+                    {HOURS.map((h) => (
+                      <option key={h} value={h}>
+                        {h}
+                      </option>
+                    ))}
+                  </select>
+                  :
+                  <select
+                    value={endMinute}
+                    onChange={(e) => setEndMinute(e.target.value)}
+                  >
+                    {MINUTES.map((m) => (
+                      <option key={m} value={m}>
+                        {m}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </label>
               <label className="bks-span-2">
@@ -114,131 +139,20 @@ function BookingSettingPage() {
                   )}
                 </div>
               </label>
-              <label>
-                <span>Max Advance Booking:</span>
-                <input placeholder="Enter the e-mail address here" />
-              </label>
-              <label>
-                <span>Contact Number:</span>
-                <input placeholder="Enter the Contact Number here" />
-              </label>
             </div>
           </section>
 
           <section className="bks-section">
-            <div className="bks-title">People & Table:</div>
+            <div className="bks-title">People & Tasble:</div>
             <div className="bks-grid">
               <label>
-                <span>Min / Max Guests per Booking:</span>
+                <span>Maximum Party Size:</span>
                 <input placeholder="" />
               </label>
               <label>
-                <span>Table Capacity:</span>
+                <span>Maximum Number of Tables:</span>
                 <input placeholder="" />
               </label>
-            </div>
-          </section>
-
-          <section className="bks-section">
-            <div className="bks-title">Payment & Policy:</div>
-            <div className="bks-grid">
-              <label className="bks-span-2">
-                <span>Deposit Requirement:</span>
-                <input placeholder="" />
-              </label>
-              <label className="bks-span-2">
-                <span>Cancellation Policy:</span>
-                <input placeholder="" />
-              </label>
-              <label className="bks-span-2">
-                <span>No-show Policy:</span>
-                <input placeholder="" />
-              </label>
-            </div>
-          </section>
-
-          <section className="bks-section">
-            <div className="bks-title">Notification:</div>
-            <div className="bks-grid">
-              <div className="bks-span-2 bks-checklines">
-                <label>
-                  <input type="checkbox" /> Send Email Notification
-                </label>
-                <label>
-                  <input type="checkbox" /> Send SMS Notification
-                </label>
-              </div>
-              <div className="bks-span-2">
-                <span>Notify:</span>
-                <div className="bks-checks">
-                  <label>
-                    <input type="checkbox" /> Customer
-                  </label>
-                  <label>
-                    <input type="checkbox" /> Owner/Staff
-                  </label>
-                </div>
-              </div>
-              <label className="bks-span-2">
-                <span>Reminder:</span>
-                <div className="bks-inline">
-                  <span>Send reminder</span>
-                  <input style={{ width: 80 }} placeholder="" />
-                  <span>hours before booking</span>
-                </div>
-              </label>
-              <label className="bks-span-2">
-                <span>Message Template:</span>
-                <textarea
-                  rows={4}
-                  placeholder="Booking confirmation message box..."
-                />
-              </label>
-            </div>
-          </section>
-
-          <section className="bks-section">
-            <div className="bks-title">Special Requests</div>
-            <div className="bks-tags">
-              {tags.map((t) => (
-                <span
-                  key={t.id}
-                  className={`bks-tag ${t.selected ? "active" : ""}`}
-                  onClick={() => toggleTag(t.id)}
-                >
-                  {t.label}
-                  <button
-                    type="button"
-                    className="bks-mini"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      editTag(t.id);
-                    }}
-                  >
-                    ✎
-                  </button>
-                  <button
-                    type="button"
-                    className="bks-mini"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      removeTag(t.id);
-                    }}
-                  >
-                    ×
-                  </button>
-                </span>
-              ))}
-            </div>
-            <div className="bks-tag-add">
-              <input
-                value={newTag}
-                onChange={(e) => setNewTag(e.target.value)}
-                placeholder="Add tag"
-              />
-              <button type="button" onClick={addTag}>
-                +
-              </button>
             </div>
           </section>
 
@@ -247,7 +161,6 @@ function BookingSettingPage() {
               Save
             </button>
           </div>
-          {/* backend */}
         </form>
       </main>
     </div>
