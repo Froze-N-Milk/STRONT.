@@ -23,7 +23,7 @@ test:
 
 .PHONY: db
 db:
-	$(CONTAINER_RUNTIME) compose -f compose.yaml up
+	$(CONTAINER_RUNTIME) compose -f compose.yaml up --detach
 
 .PHONY: run
 run:
@@ -34,7 +34,7 @@ frontend-dev:
 	cd frontend; npm run dev
 
 .PHONY: dev
-dev:
+dev: db
 	DB_CONNECTION_STRING="host=localhost user=admin password=password dbname=restaurant_db port=5432 sslmode=disable TimeZone=Australia/Sydney" \
 	HOST_STRING="localhost:3000" \
 	go run -tags dev ./backend/main.go
