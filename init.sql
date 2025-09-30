@@ -95,4 +95,4 @@ CREATE TABLE booking
 -- Create binary tree indexes to optimise searches filtered by restaurants, restaurants & contacts (compound), and start times.
 CREATE INDEX idx_booking_restaurant ON booking (restaurant_id);
 CREATE INDEX idx_booking_restaurant_contact ON booking (restaurant_id, contact_id);
-CREATE INDEX idx_booking_start_time ON booking (start_time);
+CREATE INDEX idx_booking_start_time ON booking (booking_date);
