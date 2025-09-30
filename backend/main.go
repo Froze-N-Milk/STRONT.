@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"log"
 	"log/slog"
 	"net/http"
@@ -18,6 +19,27 @@ import (
 	"plange/backend/lib"
 	"plange/backend/vite"
 )
+
+func connectWithRetry(dsn string, maxRetries int, delay time.Duration) (*gorm.DB, error) {
+	var db *gorm.DB
+	var err error
+
+	for i := 0; i < maxRetries; i++ {
+		db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+		if err == nil {
+			sqlDB, errPing := db.DB()
+			if errPing == nil && sqlDB.Ping() == nil {
+				log.Println("Connected to Postgres!")
+				return db, nil
+			}
+		}
+
+		log.Printf("Database not ready (attempt %d/%d): %v", i+1, maxRetries, err)
+		time.Sleep(delay)
+	}
+
+	return nil, fmt.Errorf("could not connect to database after %d attempts: %w", maxRetries, err)
+}
 
 func main() {
 	hostString := os.Getenv("HOST_STRING")
@@ -40,9 +62,10 @@ func main() {
 		log.Panic("No connection string set in env variable DB_CONNECTION_STRING")
 	}
 
-	db, err := gorm.Open(postgres.Open(connectionString))
+	// Try connecting to the DB 8 times, with a 5 second delay between each, before giving up.
+	db, err := connectWithRetry(connectionString, 8, 5*time.Second)
 	if err != nil {
-		log.Panic("failed to connect database", err)
+		log.Fatalf("Failed to connect: %v", err)
 	}
 
 	appMiddleware := api.AppMiddleware{
