@@ -25,8 +25,8 @@ function BookingPage() {
   }
   function onSave(e: React.FormEvent) {
     e.preventDefault();
-    // 预留后端对接：POST/PUT /api/booking
-    // 建议提交字段：date, time, customerName, guests, contact, confirmStatus,
+    // Backend: POST/PUT /api/booking
+    // date, time, customerName, guests, contact, confirmStatus,
     // tableInfo, specialRequests, notes
     setModalOpen(false);
   }
@@ -137,27 +137,6 @@ function BookingPage() {
                   <span>Confirm Status:</span>
                   <input placeholder="" />
                 </label>
-                <label className="bk-span-2">
-                  <span>Table Info:</span>
-                  <input placeholder="" />
-                </label>
-
-                <div className="bk-span-2">
-                  <span>Special Requests:</span>
-                  <div className="bk-checks">
-                    {[
-                      "Vegetarian",
-                      "Vegan",
-                      "Gluten-Free",
-                      "Birthday",
-                      "Allergy",
-                    ].map((t) => (
-                      <label key={t}>
-                        <input type="checkbox" /> {t}
-                      </label>
-                    ))}
-                  </div>
-                </div>
 
                 <label className="bk-span-2">
                   <span>Notes:</span>
