@@ -256,7 +256,7 @@ FROM restaurant`).Find(ctx)
 		return nil, err
 	}
 
-	res := make([]restaurantDetails, 0, len(restaurants))
+	res := make([]restaurantDetails, len(restaurants))
 	for i, restaurant := range restaurants {
 		res[i] = restaurantDetails{
 			ID:                restaurant.ID,
