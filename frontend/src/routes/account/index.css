@@ -197,8 +197,23 @@
 .acc-tag button {
   border: 0;
   background: transparent;
+  display: flex;  
+  align-items: center;
+  justify-content: center;
   color: #b32121;
   cursor: pointer;
+}
+
+.acc-tag:hover {
+  background: #f8dcdc; 
+  transform: scale(1.05); 
+  transition: all 0.2s ease;
+}
+
+.acc-tag button:hover {
+  color: #ff0000;
+  transform: scale(1.8);
+  transition: all 0.2s ease;
 }
 
 .acc-tag-add {
