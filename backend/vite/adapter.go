@@ -9,37 +9,57 @@ import (
 var Adapter ViteAdapter
 var IsDev bool
 
-type ViteAdapter struct {
-	paths             []string
-	authedPaths       []string
-	assets            http.Handler
-	make_vite_handler func(path string) http.Handler
+type titleAndPath struct {
+	title string
+	path  string
 }
 
-func MakeViteAdapter(assets http.Handler, make_vite_handler func(path string) http.Handler) ViteAdapter {
+type ViteAdapter struct {
+	paths                  []titleAndPath
+	authedPaths            []titleAndPath
+	publicAssetPaths       []string
+	assets                 http.Handler
+	makeViteHandler        func(title string, path string) http.Handler
+	makePublicAssetHandler func(path string) http.Handler
+}
+
+func MakeViteAdapter(
+	assets http.Handler,
+	makeViteHandler func(title string, path string) http.Handler,
+	makePublicAssetHandler func(path string) http.Handler,
+) ViteAdapter {
 	return ViteAdapter{
-		assets:            assets,
-		make_vite_handler: make_vite_handler,
+		assets:                 assets,
+		makeViteHandler:        makeViteHandler,
+		makePublicAssetHandler: makePublicAssetHandler,
 	}
 }
 
-func (self *ViteAdapter) AddRoute(path string) {
-	self.paths = append(self.paths, path)
+func (self *ViteAdapter) AddRoute(title string, path string) {
+	self.paths = append(self.paths, titleAndPath{title, path})
 }
 
-func (self *ViteAdapter) AddAuthedRoute(path string) {
-	self.authedPaths = append(self.authedPaths, path)
+func (self *ViteAdapter) AddAuthedRoute(title string, path string) {
+	self.authedPaths = append(self.authedPaths, titleAndPath{title, path})
+}
+
+// register file in /public
+func (self *ViteAdapter) AddPublicAsset(path string) {
+	self.publicAssetPaths = append(self.publicAssetPaths, path)
 }
 
 func (self ViteAdapter) IntoHandler(middleware api.AuthMiddleware) *http.ServeMux {
 	res := http.NewServeMux()
 	res.Handle("/assets/", self.assets)
-	for _, path := range self.paths {
-		res.Handle(path, self.make_vite_handler(path))
+	for _, path := range self.publicAssetPaths {
+		res.Handle(path, self.makePublicAssetHandler(path))
 	}
-	for _, path := range self.authedPaths {
-		h := self.make_vite_handler(path)
-		res.Handle(path, middleware.Service(lib.HandlerFunc[api.User](func(ctx api.User, w http.ResponseWriter, r *http.Request) {
+	for _, titleAndPath := range self.paths {
+		res.Handle(titleAndPath.path, self.makeViteHandler(titleAndPath.title, titleAndPath.path))
+	}
+	for _, titleAndPath := range self.authedPaths {
+		h := self.makeViteHandler(titleAndPath.title, titleAndPath.path)
+		res.Handle(titleAndPath.path, middleware.Service(lib.HandlerFunc[api.User](func(ctx api.User, w http.ResponseWriter, r *http.Request) {
 			h.ServeHTTP(w, r)
 		})))
 	}
