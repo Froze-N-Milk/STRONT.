@@ -118,11 +118,14 @@ func main() {
 		gorm.G[model.Occasion](db.Clauses(clause.OnConflict{DoNothing: true}, result)).Create(ctx, &occasion)
 
 		restaurant := model.Restaurant{
-			AccountID:      account.ID,
-			AvailabilityID: availability.ID,
-			Name:           "My Restaurant",
-			Description:    "This is a restaurant",
-			LocationText:   "123 Apple St, Sydney NSW 2000",
+			AccountID:       account.ID,
+			AvailabilityID:  availability.ID,
+			Name:            "My Restaurant",
+			Description:     "This is a restaurant",
+			LocationText:    "123 Apple St, Sydney NSW 2000",
+			MaxPartySize:    5,
+			BookingCapacity: 100,
+			BookingLength:   2,
 		}
 
 		gorm.G[model.Restaurant](db.Clauses(clause.OnConflict{DoNothing: true}, result)).Create(ctx, &restaurant)
