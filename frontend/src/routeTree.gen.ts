@@ -8,170 +8,170 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from "./routes/__root";
-import { Route as IndexRouteImport } from "./routes/index";
-import { Route as SignUpIndexRouteImport } from "./routes/sign-up/index";
-import { Route as LoginIndexRouteImport } from "./routes/login/index";
-import { Route as BookingIndexRouteImport } from "./routes/booking/index";
-import { Route as BookingSettingIndexRouteImport } from "./routes/booking-setting/index";
-import { Route as AccountIndexRouteImport } from "./routes/account/index";
-import { Route as AccountSettingIndexRouteImport } from "./routes/account-setting/index";
+import { Route as rootRouteImport } from './routes/__root'
+import { Route as IndexRouteImport } from './routes/index'
+import { Route as SignUpIndexRouteImport } from './routes/sign-up/index'
+import { Route as LoginIndexRouteImport } from './routes/login/index'
+import { Route as BookingIndexRouteImport } from './routes/booking/index'
+import { Route as BookingSettingIndexRouteImport } from './routes/booking-setting/index'
+import { Route as AccountIndexRouteImport } from './routes/account/index'
+import { Route as AccountSettingIndexRouteImport } from './routes/account-setting/index'
 
 const IndexRoute = IndexRouteImport.update({
-  id: "/",
-  path: "/",
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const SignUpIndexRoute = SignUpIndexRouteImport.update({
-  id: "/sign-up/",
-  path: "/sign-up/",
+  id: '/sign-up/',
+  path: '/sign-up/',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const LoginIndexRoute = LoginIndexRouteImport.update({
-  id: "/login/",
-  path: "/login/",
+  id: '/login/',
+  path: '/login/',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const BookingIndexRoute = BookingIndexRouteImport.update({
-  id: "/booking/",
-  path: "/booking/",
+  id: '/booking/',
+  path: '/booking/',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const BookingSettingIndexRoute = BookingSettingIndexRouteImport.update({
-  id: "/booking-setting/",
-  path: "/booking-setting/",
+  id: '/booking-setting/',
+  path: '/booking-setting/',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const AccountIndexRoute = AccountIndexRouteImport.update({
-  id: "/account/",
-  path: "/account/",
+  id: '/account/',
+  path: '/account/',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const AccountSettingIndexRoute = AccountSettingIndexRouteImport.update({
-  id: "/account-setting/",
-  path: "/account-setting/",
+  id: '/account-setting/',
+  path: '/account-setting/',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 
 export interface FileRoutesByFullPath {
-  "/": typeof IndexRoute;
-  "/account-setting": typeof AccountSettingIndexRoute;
-  "/account": typeof AccountIndexRoute;
-  "/booking-setting": typeof BookingSettingIndexRoute;
-  "/booking": typeof BookingIndexRoute;
-  "/login": typeof LoginIndexRoute;
-  "/sign-up": typeof SignUpIndexRoute;
+  '/': typeof IndexRoute
+  '/account-setting': typeof AccountSettingIndexRoute
+  '/account': typeof AccountIndexRoute
+  '/booking-setting': typeof BookingSettingIndexRoute
+  '/booking': typeof BookingIndexRoute
+  '/login': typeof LoginIndexRoute
+  '/sign-up': typeof SignUpIndexRoute
 }
 export interface FileRoutesByTo {
-  "/": typeof IndexRoute;
-  "/account-setting": typeof AccountSettingIndexRoute;
-  "/account": typeof AccountIndexRoute;
-  "/booking-setting": typeof BookingSettingIndexRoute;
-  "/booking": typeof BookingIndexRoute;
-  "/login": typeof LoginIndexRoute;
-  "/sign-up": typeof SignUpIndexRoute;
+  '/': typeof IndexRoute
+  '/account-setting': typeof AccountSettingIndexRoute
+  '/account': typeof AccountIndexRoute
+  '/booking-setting': typeof BookingSettingIndexRoute
+  '/booking': typeof BookingIndexRoute
+  '/login': typeof LoginIndexRoute
+  '/sign-up': typeof SignUpIndexRoute
 }
 export interface FileRoutesById {
-  __root__: typeof rootRouteImport;
-  "/": typeof IndexRoute;
-  "/account-setting/": typeof AccountSettingIndexRoute;
-  "/account/": typeof AccountIndexRoute;
-  "/booking-setting/": typeof BookingSettingIndexRoute;
-  "/booking/": typeof BookingIndexRoute;
-  "/login/": typeof LoginIndexRoute;
-  "/sign-up/": typeof SignUpIndexRoute;
+  __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
+  '/account-setting/': typeof AccountSettingIndexRoute
+  '/account/': typeof AccountIndexRoute
+  '/booking-setting/': typeof BookingSettingIndexRoute
+  '/booking/': typeof BookingIndexRoute
+  '/login/': typeof LoginIndexRoute
+  '/sign-up/': typeof SignUpIndexRoute
 }
 export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath;
+  fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | "/"
-    | "/account-setting"
-    | "/account"
-    | "/booking-setting"
-    | "/booking"
-    | "/login"
-    | "/sign-up";
-  fileRoutesByTo: FileRoutesByTo;
+    | '/'
+    | '/account-setting'
+    | '/account'
+    | '/booking-setting'
+    | '/booking'
+    | '/login'
+    | '/sign-up'
+  fileRoutesByTo: FileRoutesByTo
   to:
-    | "/"
-    | "/account-setting"
-    | "/account"
-    | "/booking-setting"
-    | "/booking"
-    | "/login"
-    | "/sign-up";
+    | '/'
+    | '/account-setting'
+    | '/account'
+    | '/booking-setting'
+    | '/booking'
+    | '/login'
+    | '/sign-up'
   id:
-    | "__root__"
-    | "/"
-    | "/account-setting/"
-    | "/account/"
-    | "/booking-setting/"
-    | "/booking/"
-    | "/login/"
-    | "/sign-up/";
-  fileRoutesById: FileRoutesById;
+    | '__root__'
+    | '/'
+    | '/account-setting/'
+    | '/account/'
+    | '/booking-setting/'
+    | '/booking/'
+    | '/login/'
+    | '/sign-up/'
+  fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute;
-  AccountSettingIndexRoute: typeof AccountSettingIndexRoute;
-  AccountIndexRoute: typeof AccountIndexRoute;
-  BookingSettingIndexRoute: typeof BookingSettingIndexRoute;
-  BookingIndexRoute: typeof BookingIndexRoute;
-  LoginIndexRoute: typeof LoginIndexRoute;
-  SignUpIndexRoute: typeof SignUpIndexRoute;
+  IndexRoute: typeof IndexRoute
+  AccountSettingIndexRoute: typeof AccountSettingIndexRoute
+  AccountIndexRoute: typeof AccountIndexRoute
+  BookingSettingIndexRoute: typeof BookingSettingIndexRoute
+  BookingIndexRoute: typeof BookingIndexRoute
+  LoginIndexRoute: typeof LoginIndexRoute
+  SignUpIndexRoute: typeof SignUpIndexRoute
 }
 
-declare module "@tanstack/react-router" {
+declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    "/": {
-      id: "/";
-      path: "/";
-      fullPath: "/";
-      preLoaderRoute: typeof IndexRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/sign-up/": {
-      id: "/sign-up/";
-      path: "/sign-up";
-      fullPath: "/sign-up";
-      preLoaderRoute: typeof SignUpIndexRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/login/": {
-      id: "/login/";
-      path: "/login";
-      fullPath: "/login";
-      preLoaderRoute: typeof LoginIndexRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/booking/": {
-      id: "/booking/";
-      path: "/booking";
-      fullPath: "/booking";
-      preLoaderRoute: typeof BookingIndexRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/booking-setting/": {
-      id: "/booking-setting/";
-      path: "/booking-setting";
-      fullPath: "/booking-setting";
-      preLoaderRoute: typeof BookingSettingIndexRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/account/": {
-      id: "/account/";
-      path: "/account";
-      fullPath: "/account";
-      preLoaderRoute: typeof AccountIndexRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/account-setting/": {
-      id: "/account-setting/";
-      path: "/account-setting";
-      fullPath: "/account-setting";
-      preLoaderRoute: typeof AccountSettingIndexRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sign-up/': {
+      id: '/sign-up/'
+      path: '/sign-up'
+      fullPath: '/sign-up'
+      preLoaderRoute: typeof SignUpIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login/': {
+      id: '/login/'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/booking/': {
+      id: '/booking/'
+      path: '/booking'
+      fullPath: '/booking'
+      preLoaderRoute: typeof BookingIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/booking-setting/': {
+      id: '/booking-setting/'
+      path: '/booking-setting'
+      fullPath: '/booking-setting'
+      preLoaderRoute: typeof BookingSettingIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/account/': {
+      id: '/account/'
+      path: '/account'
+      fullPath: '/account'
+      preLoaderRoute: typeof AccountIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/account-setting/': {
+      id: '/account-setting/'
+      path: '/account-setting'
+      fullPath: '/account-setting'
+      preLoaderRoute: typeof AccountSettingIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -183,7 +183,7 @@ const rootRouteChildren: RootRouteChildren = {
   BookingIndexRoute: BookingIndexRoute,
   LoginIndexRoute: LoginIndexRoute,
   SignUpIndexRoute: SignUpIndexRoute,
-};
+}
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
-  ._addFileTypes<FileRouteTypes>();
+  ._addFileTypes<FileRouteTypes>()

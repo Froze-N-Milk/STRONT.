@@ -8,65 +8,9 @@ function Account() {
   const [newTag, setNewTag] = useState("");
   const [logo, setLogo] = useState<string | null>(null);
   const [address, setAddress] = useState("");
-  // State -> City mapping
-  const stateCityMap: Record<string, string[]> = {
-    "Australian Capital Territory": ["Belconnen", "Canberra", "Queanbeyan"],
-    "New South Wales": [
-      "Bathurst",
-      "Coffs Harbour",
-      "Newcastle",
-      "Parramatta",
-      "Sydney",
-      "Tamworth",
-      "Wollongong",
-    ],
-    "Northern Territory": [
-      "Alice Springs",
-      "Darwin",
-      "Katherine",
-      "Palmerston",
-    ],
-    Queensland: [
-      "Brisbane",
-      "Cairns",
-      "Gold Coast",
-      "Mackay",
-      "Rockhampton",
-      "Sunshine Coast",
-      "Toowoomba",
-      "Townsville",
-    ],
-    "South Australia": ["Adelaide", "Mount Gambier", "Port Augusta", "Whyalla"],
-    Tasmania: ["Burnie", "Devonport", "Hobart", "Launceston"],
-    Victoria: [
-      "Ballarat",
-      "Bendigo",
-      "Geelong",
-      "Melbourne",
-      "Mildura",
-      "Shepparton",
-    ],
-    "Western Australia": [
-      "Bunbury",
-      "Fremantle",
-      "Geraldton",
-      "Kalgoorlie",
-      "Perth",
-    ],
-  };
-
-  const [selectedState, setSelectedState] = useState("");
-  const [cities, setCities] = useState<string[]>([]);
-  const [selectedCity, setSelectedCity] = useState("");
 
   const canAdd = newTag.trim().length > 0 && !tags.includes(newTag.trim());
 
-  function onStateChange(e: React.ChangeEvent<HTMLSelectElement>) {
-    const state = e.target.value;
-    setSelectedState(state);
-    setCities(stateCityMap[state] || []);
-    setSelectedCity("");
-  }
   function addTag() {
     if (!canAdd) return;
     setTags((list) => [...list, newTag.trim()]);
@@ -81,7 +25,6 @@ function Account() {
     e.preventDefault();
     // Backend：Submit /api/account/update
     // Input：name, ownerName, email, contactNumber, address,
-    // city, state, postcode, newPassword, tags, bio
   }
 
   function onLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -144,10 +87,6 @@ function Account() {
                   maxLength={80}
                 />
               </label>
-              <label className="acc-field">
-                <span>Owner Name:</span>
-                <input placeholder="Enter the Owner name here" />
-              </label>
               {/* Email Address */}
               <label className="acc-field">
                 <span>E-mail Address:</span>
@@ -177,7 +116,7 @@ function Account() {
                   style={{ display: "flex", gap: "8px", alignItems: "center" }}
                 >
                   <input
-                    placeholder="Enter the restaurant address here"
+                    placeholder="Enter google maps link for your restaurant."
                     required
                     value={address}
                     onChange={(e) => setAddress(e.target.value)}
@@ -193,62 +132,10 @@ function Account() {
                   </a>
                 </div>
               </label>
-              <div />
-
-              {/* City, State, Postcode */}
-              {/* You can replace these with dynamic data from backend */}
-              <label className="acc-field">
-                <span>State:</span>
-                <div className="acc-select" style={{ width: "100%" }}>
-                  <select
-                    value={selectedState}
-                    onChange={onStateChange}
-                    style={{ width: "100%" }}
-                  >
-                    <option value="" disabled>
-                      Select a State
-                    </option>
-                    {Object.keys(stateCityMap).map((state) => (
-                      <option key={state} value={state}>
-                        {state}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </label>
-              {/* City */}
-              <label className="acc-field">
-                <span>City:</span>
-                <div className="acc-select" style={{ width: "100%" }}>
-                  <select
-                    value={selectedCity}
-                    onChange={(e) => setSelectedCity(e.target.value)}
-                    disabled={!selectedState}
-                    style={{ width: "100%" }}
-                  >
-                    <option value="" disabled>
-                      {selectedState
-                        ? "Select a City"
-                        : "Please select a State first"}
-                    </option>
-                    {cities.map((city) => (
-                      <option key={city} value={city}>
-                        {city}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </label>
-
-              <label className="acc-field">
-                <span>Postcode:</span>
-                <input placeholder="Postcode" />
-              </label>
-              <div />
             </div>
 
             <div className="acc-section">
-              <div className="acc-section-title">Cuisine Type</div>
+              <div className="acc-section-title">Add Search Tags</div>
               <div className="acc-tags">
                 {tags.map((t) => (
                   <span key={t} className="acc-tag">
