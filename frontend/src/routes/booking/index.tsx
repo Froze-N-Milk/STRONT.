@@ -158,7 +158,7 @@ function BookingPage() {
 
                 <label className="bk-span-2">
                   <span>Notes / Additional Info:</span>
-                  <textarea rows={4} />
+                  <textarea rows={5} />
                 </label>
               </div>
               <div className="bk-actions">
