@@ -122,11 +122,15 @@ function BookingPage() {
                   <input placeholder="" />
                 </label>
                 <label>
-                  <span>Customer Name:</span>
+                  <span>First Name:</span>
                   <input placeholder="" />
                 </label>
                 <label>
-                  <span>Number of Guests:</span>
+                  <span>Last Name:</span>
+                  <input placeholder="" />
+                </label>
+                <label>
+                  <span>Party size (number of guests):</span>
                   <input placeholder="" />
                 </label>
                 <label>
@@ -134,12 +138,26 @@ function BookingPage() {
                   <input placeholder="" />
                 </label>
                 <label>
-                  <span>Confirm Status:</span>
+                  <span>Phone number (optional):</span>
                   <input placeholder="" />
+                </label>
+                <label>
+                  <span>Booking Status:</span>
+                  <select defaultValue="">
+                    <option value="" disabled>
+                      Select status
+                    </option>
+                    <option value="pending">Pending</option>
+                    <option value="confirmed">Confirmed</option>
+                    <option value="seated">Seated</option>
+                    <option value="completed">Completed</option>
+                    <option value="cancelled">Cancelled</option>
+                    <option value="no-show">No-show</option>
+                  </select>
                 </label>
 
                 <label className="bk-span-2">
-                  <span>Notes:</span>
+                  <span>Notes / Additional Info:</span>
                   <textarea rows={4} />
                 </label>
               </div>
