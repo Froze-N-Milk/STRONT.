@@ -11,7 +11,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// request type for selecing a specific occasion
+// request type for selecting a specific occasion
 type occasionRequest struct {
 	Date       time.Time
 	Restaurant uuid.UUID
@@ -186,7 +186,7 @@ func (h *DeleteOccasionHandler) ServeHTTP(ctx AuthedAppContext, w http.ResponseW
 //
 //		restaurant: string
 //		hours: number
-//		reccuring: bool
+//		recurring: bool
 //	}
 //
 // bound to: POST /api/restaurant/occasion/update
@@ -194,7 +194,7 @@ type UpdateOccasionHandler struct{}
 
 type occasionDetails struct {
 	Hours     int64 `json:"hours"`
-	Recurring bool  `json:"reccuring"`
+	Recurring bool  `json:"recurring"`
 	occasionRequest
 }
 
