@@ -6,7 +6,6 @@ import { Link } from "@tanstack/react-router";
 function Account() {
   const [tags, setTags] = useState<string[]>(["Tag", "Vegan"]);
   const [newTag, setNewTag] = useState("");
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [logo, setLogo] = useState<string | null>(null);
   const [address, setAddress] = useState("");
   // State -> City mapping
@@ -83,11 +82,6 @@ function Account() {
     // Backend：Submit /api/account/update
     // Input：name, ownerName, email, contactNumber, address,
     // city, state, postcode, newPassword, tags, bio
-  }
-
-  async function onConfirmDelete() {
-    setShowDeleteConfirm(false);
-    // Backend：Submit /api/account/delete
   }
 
   function onLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -306,13 +300,6 @@ function Account() {
             </div>
 
             <div className="acc-actions">
-              <button
-                type="button"
-                className="acc-delete"
-                onClick={() => setShowDeleteConfirm(true)}
-              >
-                Delete
-              </button>
               <button type="submit" className="acc-save">
                 Save
               </button>
@@ -320,31 +307,6 @@ function Account() {
           </form>
         </main>
       </div>
-
-      {showDeleteConfirm && (
-        <div className="acc-modal" role="dialog" aria-modal>
-          <div className="acc-modal-card">
-            <div className="acc-modal-title">
-              Are you sure to delete the Restaurant?
-            </div>
-            <p className="acc-modal-desc">
-              Once deleted, your restaurant info and all related booking records
-              will be permanently removed.
-            </p>
-            <div className="acc-modal-actions">
-              <button
-                className="acc-btn-light"
-                onClick={() => setShowDeleteConfirm(false)}
-              >
-                No
-              </button>
-              <button className="acc-btn-danger" onClick={onConfirmDelete}>
-                Yes
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
