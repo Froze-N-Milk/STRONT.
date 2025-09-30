@@ -267,7 +267,7 @@ function Account() {
                 <input
                   value={newTag}
                   onChange={(e) => setNewTag(e.target.value)}
-                  placeholder="Tag"
+                  placeholder="Enter your restaurant's type and add it as a tag."
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
                       e.preventDefault();
