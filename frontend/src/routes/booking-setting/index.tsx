@@ -170,3 +170,5 @@ function BookingSettingPage() {
 export const Route = createFileRoute("/booking-setting/")({
   component: BookingSettingPage,
 });
+
+export default BookingSettingPage;
