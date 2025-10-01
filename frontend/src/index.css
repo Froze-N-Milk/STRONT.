@@ -355,3 +355,24 @@ input[type=text]:focus {
   border-radius: 5px;
   margin: 10px;
 }
+
+.softertext {
+  font-weight: 300;
+}
+
+.booking-summary {
+  padding: 20px 90px 20px 90px;
+  width: max-content;
+  border: 1px solid red;
+  border-radius: 50px;
+}
+
+.booking-summary textarea {
+  background-color: white;
+  height: 4em;
+  width: 100%;
+  color: black;
+  padding: 10px;
+  border-radius: 10px;
+  resize: none;
+}

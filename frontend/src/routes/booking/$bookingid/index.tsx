@@ -1,21 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import BookingSummary from "../../-components/bookingSummary";
+import type { BookingObj } from "../../restaurants/$restaurantid/make-booking/-utils";
 
 export const Route = createFileRoute("/booking/$bookingid/")({
   component: BookingConfirmContent,
 });
-
-type BookingObj = {
-  restaurant_id: string;
-  given_name: string;
-  family_name: string;
-  phone: string;
-  email: string;
-  party_size: number;
-  booking_date: number;
-  time_slot: number;
-  customer_notes: string;
-};
 
 function BookingConfirmContent() {
   const bookingid = Route.useParams().bookingid;
@@ -27,8 +17,8 @@ function BookingConfirmContent() {
     }).then(async (r) => {
       if (r.status == 200) {
         const result = (await r.json()) as BookingObj;
-        console.log(result);
-        setBookingData(result); //TODO: Change this to use response.json later
+        result.booking_id = bookingid;
+        setBookingData(result);
       } else {
         setBookingData(null);
       }
@@ -38,12 +28,10 @@ function BookingConfirmContent() {
   if (bookingData == null) return <div>Something has gone wrong!</div>;
 
   return (
-    <div>
-      <BookingConfirmation bookingData={bookingData} />
+    <div
+      style={{ display: "flex", flexDirection: "column", alignItems: "center" }}
+    >
+      <BookingSummary bookingData={bookingData} />
     </div>
   );
-}
-
-function BookingConfirmation({ bookingData }: { bookingData: BookingObj }) {
-  return <p>shaft {bookingData.booking_date}</p>;
 }
