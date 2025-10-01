@@ -13,21 +13,21 @@ import (
 
 // request type for selecting a specific occasion
 type occasionRequest struct {
-	Date       time.Time
+	CloseDate  time.Time
 	Restaurant uuid.UUID
 }
 
 // invoked by `(*json.Encoder) json.Encode(any)` in order to encode
 // `occasionRequest`
 //
-// encodes the `Date` to a millisecond unix timestamp, instead of a date time
+// encodes the `CloseDate` to a millisecond unix timestamp, instead of a date time
 // string
 func (o occasionRequest) MarshalJSON() ([]byte, error) {
 	return json.Marshal(struct {
-		Date       int64     `json:"date"`
+		CloseDate  int64     `json:"close_date"`
 		Restaurant uuid.UUID `json:"restaurant"`
 	}{
-		Date:       o.Date.UnixMilli(),
+		CloseDate:  o.CloseDate.UnixMilli(),
 		Restaurant: o.Restaurant,
 	})
 }
@@ -35,11 +35,11 @@ func (o occasionRequest) MarshalJSON() ([]byte, error) {
 // invoked by `(*json.Decoder) json.Decode(any)` in order to decode
 // `occasionRequest`
 //
-// decodes the `Date` from a millisecond unix timestamp, instead of a date time
+// decodes the `CloseDate` from a millisecond unix timestamp, instead of a date time
 // string
 func (o *occasionRequest) UnmarshalJSON(data []byte) error {
 	raw := struct {
-		Date       int64     `json:"date"`
+		CloseDate  int64     `json:"close_date"`
 		Restaurant uuid.UUID `json:"restaurant"`
 	}{}
 
@@ -49,7 +49,7 @@ func (o *occasionRequest) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	o.Date = time.UnixMilli(raw.Date)
+	o.CloseDate = time.UnixMilli(raw.CloseDate)
 	o.Restaurant = raw.Restaurant
 
 	return nil
@@ -85,7 +85,7 @@ WITH a AS (
 )
 INSERT INTO occasion (
 	availability_id,
-	date,
+	close_date,
 	hour_mask
 )
 VALUES (
@@ -95,7 +95,7 @@ VALUES (
 )`,
 		request.Restaurant,
 		user.Email,
-		request.Date)
+		request.CloseDate)
 }
 
 func (h *CreateOccasionHandler) ServeHTTP(ctx AuthedAppContext, w http.ResponseWriter, r *http.Request) {
@@ -149,10 +149,10 @@ WITH a AS (
 )
 DELETE FROM occasion
 WHERE availability_id = a.id
-	AND date = ?`,
+	AND close_date = ?`,
 		request.Restaurant,
 		user.Email,
-		request.Date)
+		request.CloseDate)
 }
 
 func (h *DeleteOccasionHandler) ServeHTTP(ctx AuthedAppContext, w http.ResponseWriter, r *http.Request) {
@@ -219,12 +219,12 @@ UPDATE occasion
 SET
 	hour_mask = ?,
 	yearly_recurring = ?
-WHERE occasion.availability_id = a.id AND date = ?`,
+WHERE occasion.availability_id = a.id AND close_date = ?`,
 		occasion.Restaurant,
 		user.Email,
 		occasion.Hours,
 		occasion.Recurring,
-		occasion.Date,
+		occasion.CloseDate,
 	)
 }
 

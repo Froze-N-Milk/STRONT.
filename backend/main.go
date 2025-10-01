@@ -184,6 +184,14 @@ func main() {
 	authedAppMux.Handle("POST /api/restaurant/occasion/delete", &api.DeleteOccasionHandler{})
 	authedAppMux.Handle("POST /api/restaurant/occasion/update", &api.UpdateOccasionHandler{})
 
+	appMux.Handle("POST /api/booking/create", &api.CreateOnlineBookingHandler{})
+	appMux.Handle("GET /api/booking/edit/{booking}", &api.UpdateBookingHandler{})
+	appMux.Handle("GET /api/booking/cancel/{booking}", &api.CancelBookingHandler{})
+	authedAppMux.Handle("GET /api/booking/upcoming/{restaurant}", &api.GetUpcomingBookingsHandler{})
+	authedAppMux.Handle("GET /api/booking/history/{restaurant}", &api.GetBookingHistoryHandler{})
+	authedAppMux.Handle("POST /api/booking/restaurant-notes/{booking}", &api.UpdateRestaurantNotesHandler{})
+	authedAppMux.Handle("POST /api/booking/attendance/{booking}", &api.UpdateAttendanceHandler{})
+
 	server := http.Server{
 		Addr:    hostString,
 		Handler: mux,

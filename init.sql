@@ -86,7 +86,7 @@ CREATE TABLE booking
     time_slot        INT                      NOT NULL,
     creation_date    TIMESTAMP WITH TIME ZONE NOT NULL,
     customer_created BOOL                     NOT NULL DEFAULT TRUE,
-    attendance       TEXT CHECK (attendance IN ('attended', 'cancelled', 'no-show')),
+    attendance       TEXT CHECK (attendance IN ('attended', 'cancelled', 'no-show', 'pending')) DEFAULT 'pending',
     customer_notes   TEXT,
     restaurant_notes TEXT,
     FOREIGN KEY (contact_id) REFERENCES customer_contact (id) ON DELETE CASCADE,
@@ -95,4 +95,4 @@ CREATE TABLE booking
 -- Create binary tree indexes to optimise searches filtered by restaurants, restaurants & contacts (compound), and start times.
 CREATE INDEX idx_booking_restaurant ON booking (restaurant_id);
 CREATE INDEX idx_booking_restaurant_contact ON booking (restaurant_id, contact_id);
-CREATE INDEX idx_booking_start_time ON booking (booking_date);
+CREATE INDEX idx_booking_booking_date ON booking (booking_date);
