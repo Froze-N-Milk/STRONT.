@@ -19,7 +19,9 @@ build:
 .PHONY: test
 test:
 	go run gotest.tools/gotestsum@latest --format=testname --junitfile test-results.xml --packages="./backend/api/... ./backend/lib/... ./backend/model/..."
-	cd frontend; npm run test
+	cd frontend
+	npm i
+	npm run test
 
 .PHONY: db
 db:
