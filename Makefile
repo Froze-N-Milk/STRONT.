@@ -23,7 +23,7 @@ test:
 
 .PHONY: db
 db:
-	$(CONTAINER_RUNTIME) compose up --detach
+	$(CONTAINER_RUNTIME) compose up db --detach
 
 .PHONY: run
 run:
