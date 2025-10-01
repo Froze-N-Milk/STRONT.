@@ -79,7 +79,6 @@ function Account() {
 
             <div className="acc-grid">
               {/* Restaurant Name */}
-              {/* Restaurant Name */}
               <label className="acc-field">
                 <span>Restaurant Name:</span>
                 <input
@@ -98,20 +97,13 @@ function Account() {
                 />
               </label>
               {/* Phone Number */}
-              {/* Phone Number */}
               <label className="acc-field">
                 <span>Phone Number:</span>
                 <input
                   placeholder="Enter the Contact Number here"
                   inputMode="tel"
                 />
-                <span>Phone Number:</span>
-                <input
-                  placeholder="Enter the Contact Number here"
-                  inputMode="tel"
-                />
               </label>
-              {/* Address */}
               {/* Address */}
               <label className="acc-field acc-span-2">
                 <span>Restaurant Address:</span>
