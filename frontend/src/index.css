@@ -21,68 +21,61 @@
   width: 100vw;
 }
 
-.stront {
-  color: #161a1d;
-  font-weight: 800;
-}
+/*ROOT PAGE STYLES: NAVBAR, FOOTER*/
 
-.navbar_wrapper {
-  width: 100%;
-  height: 70px;
-  display: flex;
-  align-items: center;
+.stront * {
+  font-weight: 800;
+  color: black;
+  text-decoration: none;
 }
 
 #navbar_container {
   width: 100%;
   background-color: white;
-  padding: 20px;
   display: flex;
   justify-content: space-between;
 }
 
-.navbar_items {
+.navbar_wrapper {
+  padding: 20px 10px 20px 10px;
+}
+
+.navbar_items_container {
   display: flex;
   gap: 10px;
 }
 
-.navbar_button {
-  text-decoration: none;
-  color: black;
-  font-weight: 600;
-}
-
-.navbar_true_button {
-  font-weight: 600;
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  background-color: white;
-  color: black;
-  outline: none;
-  border: none;
-  font-size: 16px;
-  padding: 0;
-  margin: 0;
-}
-
-.navbar_true_button:hover {
-  color: #a4161a;
-  cursor: pointer;
-}
-
-.navbar_button:hover {
-  color: #a4161a;
-}
-
-#pagebody_wrapper {
-  min-height: 100vh;
+.navbar_item * {
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 16px;
+  color: black;
+  background: none;
+  border: none;
+  padding: 0px;
+  width: 4em;
+  height: 1.5em;
 }
 
-input[type="email"],
-input[type="password"] {
-  width: 100%;
+.navbar_item *:hover {
+  color: #a4161a;
+}
+
+.navbar_toggle_button {
+  display: none;
+}
+
+#footer {}
+
+/*INPUT STYLES*/
+
+input[type=email],
+input[type=password],
+input[type=text],
+input[type=number] {
+  width: 95%;
   height: 2rem;
   border: 1px solid #a4161a;
   background-color: white;
@@ -93,12 +86,15 @@ input[type="password"] {
 }
 
 input[type="email"]:hover,
-input[type="password"]:hover {
+input[type="password"]:hover,
+input[type=text]:hover,
+input[type=number]:hover {
   padding-inline: 5px;
 }
 
 input[type="email"]:focus,
-input[type="password"]:focus {
+input[type="password"]:focus
+input[type=text]:focus {
   outline: 1px solid rgba(255, 0, 0, 0.346);
   padding-inline: 5px;
 }
@@ -115,9 +111,6 @@ input[type="password"]:focus {
   border-radius: 15px;
 }
 
-#footer {
-}
-
 .submit_button {
   width: 10rem;
   height: 2.5rem;
@@ -131,13 +124,234 @@ input[type="password"]:focus {
   background-color: #e5383b;
 }
 
-.signup_form {
-  display: flex;
-  flex-direction: column;
+.submit_button.saving {
+  cursor: wait;
 }
+
+/*SUBPAGE STYLES: POPOVERS, SIDE PANELS*/
 
 .side_panel {
 }
 
 .side_panel_option {
+}
+
+
+.booking-form {
+  display: flex;
+  align-items: center;
+}
+
+.booking-form-datetime-select {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 50%;
+  height: 80vh;
+  border-radius: 20px;
+  margin: 10px;
+  gap: 20px;
+}
+
+.booking-form-details-entry {
+  display: flex;
+  opacity: 0%;
+  flex-direction: column;
+  align-items: center;
+  width: 50%;
+  height: 80vh;
+  border-radius: 20px;
+  margin: 10px;
+  gap: 20px;
+}
+
+.booking-form-confirm {
+  width: 100%;
+  height: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.personal-details {
+  width: 60%;
+}
+
+.personal-details input {
+  margin-bottom: 20px;
+}
+
+.booking-day-selector {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.booking-days {
+  display: flex;
+  gap: 10px;
+}
+
+.datebutton-wrapper {
+  height: 60px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.round-button {
+  height: 30px;
+  width: 30px;
+  background-color: #a4161a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50px;
+  vertical-align: center;
+  user-select: none;
+}
+
+.round-button:hover {
+  background-color: #ca191f;
+  cursor: pointer;
+}
+
+.disabled {
+  background-color: grey;
+  opacity: 40%;
+  user-select: none;
+}
+
+.disabled:hover {
+  background-color: grey;
+  cursor: default;
+}
+
+.active-button {
+  border: 1px solid #ff0000;
+}
+
+.people-count-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+}
+
+.seating-time-wrapper {
+  display: flex;
+  height: 24em;
+  width: 95%;
+  align-items: center;
+  justify-content: center;
+  overflow: scroll;
+}
+
+.seating-time-selection {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  animation: appear 0.5s ease forwards;
+}
+
+.appearing {
+  animation: appear 0.5s ease forwards;
+}
+
+.time-selector-button {
+  width: 6.5em;
+  padding: 0.8em;
+  color: #660708;
+  background-color: #FFFFFF;
+  border: 1px solid #E5383B;
+  filter:drop-shadow(1px 1px 1px #a4161a);
+  border-radius: 5px;
+  margin-bottom: 2px;
+}
+
+@keyframes appear {
+  0% {
+    opacity: 0%;
+  }
+
+  100% {
+    opacity: 100%;
+  }
+}
+
+.time-selector-button.selected {
+  color: #E5383B;
+  opacity: 40%;
+}
+
+.time-selector-button.selected::after {
+  content: " (selected)";
+}
+
+.time-selector-button.selected:hover {
+  cursor: default;
+}
+
+.time-selector-button:hover {
+  background-color: #F5F3F4;
+  cursor: pointer;
+}
+
+.email-input {
+  display: flex;
+  flex-direction: column;
+  height: 3.9rem;
+}
+
+.email-input input[type=email] {
+  margin-bottom: 0px;
+}
+
+.email-input h6 {
+  color: rgb(191, 6, 6);
+  animation: appear 1s ease forwards;
+}
+
+#confirm-popover {
+  height: 60%;
+  width: 40%;
+  color: black;
+  background-color: white;
+  border: 1px solid black;
+  border-radius: 20px;
+  width: 400px;
+  position: fixed;
+  top: 20%;
+  left: 35%;
+}
+
+.confirm-popover-contents {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.confirm-popover-subdivision {
+  display: flex;
+  padding: 10px 0 10px 0;
+  width: 95%;
+}
+
+#confirm-popover::backdrop {
+  backdrop-filter: blur(3px);
+}
+
+.confirm-popover-contents input[type="textarea"] {
+  height: 8em;
+  width: 90%;
+  color: black;
+  background-color: white;
+  border-radius: 5px;
+  margin: 10px;
 }
