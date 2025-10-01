@@ -154,6 +154,18 @@ func main() {
 		gorm.G[model.Restaurant](db.Clauses(clause.OnConflict{DoNothing: true}, result)).Create(ctx, &restaurant)
 	}
 
+	emailHelper := api.EmailHelper{
+		// NOTE: if you are testing sending email, fill in this variable
+		// to ensure that it only sends to the listed addresses, leaving
+		// it empty will send to any address
+		AllowedAddresses: []string{"oscar@fuck.mychungus.life"},
+		// NOTE: set these environment variables in order to enable setting email
+		Username: os.Getenv("STRONT_MAIL_USERNAME"),
+		Password: os.Getenv("STRONT_MAIL_PASSWORD"),
+	}
+
+	slog.Debug(fmt.Sprintf("%#v", emailHelper))
+
 	// bind endpoints
 
 	appMux := lib.BindServeMux(mux, &appMiddleware)
@@ -184,7 +196,7 @@ func main() {
 	authedAppMux.Handle("POST /api/restaurant/occasion/delete", &api.DeleteOccasionHandler{})
 	authedAppMux.Handle("POST /api/restaurant/occasion/update", &api.UpdateOccasionHandler{})
 
-	appMux.Handle("POST /api/booking/create", &api.CreateOnlineBookingHandler{})
+	appMux.Handle("POST /api/booking/create", &api.CreateOnlineBookingHandler{EmailHelper: emailHelper})
 	appMux.Handle("GET /api/booking/{booking}", &api.GetBookingByIDHandler{})
 	appMux.Handle("GET /api/booking/edit/{booking}", &api.UpdateBookingHandler{})
 	appMux.Handle("GET /api/booking/cancel/{booking}", &api.CancelBookingHandler{})

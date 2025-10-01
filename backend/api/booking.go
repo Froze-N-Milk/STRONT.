@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"plange/backend/model"
 	"time"
@@ -177,7 +178,9 @@ func (h *GetBookingByIDHandler) ServeHTTP(ctx AppContext, w http.ResponseWriter,
 //		time_slot: int,
 //		customer_notes: string
 //	}
-type CreateOnlineBookingHandler struct{}
+type CreateOnlineBookingHandler struct {
+	EmailHelper EmailHelper
+}
 
 func (h *CreateOnlineBookingHandler) handle(ctx context.Context, db *gorm.DB, request bookingRequest) (model.Booking, error) {
 	customerContact := model.CustomerContact{
@@ -208,6 +211,10 @@ func (h *CreateOnlineBookingHandler) handle(ctx context.Context, db *gorm.DB, re
 	if err != nil {
 		return model.Booking{}, err
 	}
+
+	// populate contact field
+	booking.Contact = &customerContact
+
 	return booking, nil
 }
 
@@ -228,12 +235,56 @@ func (h *CreateOnlineBookingHandler) ServeHTTP(ctx AppContext, w http.ResponseWr
 		return
 	}
 
+	meta, err := gorm.G[struct{ Email, Name string }](db).Raw(`
+SELECT account.email, restaurant.name
+FROM account
+INNER JOIN restaurant
+ON restaurant.id = ?
+AND account.id = restaurant.account_id`,
+		request.RestaurantID).First(r.Context())
+
+	if err != nil {
+		db.Rollback()
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
 	// Transaction had no errors, so commit to database
 	db.Commit()
 
 	// Redirect to booking page once created
 	w.Header().Add("Location", fmt.Sprintf("/booking/%s", booking.ID))
 	w.WriteHeader(http.StatusSeeOther)
+
+	// send notification emails
+	date := booking.BookingDate.Add(time.Duration(booking.TimeSlot*30) * time.Minute)
+
+	// run in go routines to not block each other, or blocking this handler
+	go slog.Debug("customer email", "error", h.EmailHelper.NotifyCustomer(BookingNotification{
+		Mailbox: Mailbox{
+			name:    booking.Contact.GivenName,
+			address: booking.Contact.Email,
+		},
+		ID:             booking.ID,
+		RestaurantName: meta.Name,
+		Attendance:     booking.Attendance,
+		CustomerName:   booking.Contact.GivenName,
+		Date:           date,
+		PartySize:      booking.PartySize,
+		Notes:          booking.CustomerNotes,
+	}))
+	go slog.Debug("restaurant email", "error", h.EmailHelper.NotifyRestaurant(BookingNotification{
+		Mailbox: Mailbox{
+			address: meta.Email,
+		},
+		ID:             booking.ID,
+		RestaurantName: meta.Name,
+		Attendance:     booking.Attendance,
+		CustomerName:   booking.Contact.GivenName,
+		Date:           date,
+		PartySize:      booking.PartySize,
+		Notes:          booking.CustomerNotes,
+	}))
 }
 
 //endregion
@@ -384,7 +435,7 @@ func (r restaurantBookingResponse) MarshalJSON() ([]byte, error) {
 	}
 
 	// unmarshal it into a map so that we can edit the JSON kv pairs directly
-	var baseMap map[string]interface{}
+	var baseMap map[string]any
 	if err := json.Unmarshal(bookingJSON, &baseMap); err != nil {
 		return nil, err
 	}
@@ -418,7 +469,7 @@ func (r *restaurantBookingResponse) UnmarshalJSON(b []byte) error {
 
 func (h *GetUpcomingBookingsHandler) handle(ctx context.Context, db *gorm.DB, restaurantID uuid.UUID, user User) ([]restaurantBookingResponse, error) {
 	bookings, err := gorm.G[restaurantBookingResponse](db).Raw(`
-SELECT 
+SELECT
 	b.id AS booking_id,
 	c.given_name,
 	c.family_name,
@@ -501,7 +552,7 @@ type GetBookingHistoryHandler struct{}
 
 func (h *GetBookingHistoryHandler) handle(ctx context.Context, db *gorm.DB, restaurantID uuid.UUID, user User) ([]restaurantBookingResponse, error) {
 	bookings, err := gorm.G[restaurantBookingResponse](db).Raw(`
-SELECT 
+SELECT
 	b.id AS booking_id,
 	c.given_name,
 	c.family_name,
@@ -575,8 +626,8 @@ type updateRestaurantNotesRequest struct {
 
 func (h *UpdateRestaurantNotesHandler) handle(ctx context.Context, db *gorm.DB, request updateRestaurantNotesRequest, bookingId uuid.UUID, user User) error {
 	booking, err := gorm.G[model.Booking](db).Raw(`
-SELECT * FROM booking b 
-    JOIN restaurant r ON r.id = b.restaurant_id 
+SELECT * FROM booking b
+    JOIN restaurant r ON r.id = b.restaurant_id
     JOIN account a ON a.id = r.account_id
 WHERE a.email = $2
 	AND b.id = $1
@@ -643,8 +694,8 @@ type updateAttendanceRequest struct {
 
 func (h *UpdateAttendanceHandler) handle(ctx context.Context, db *gorm.DB, request updateAttendanceRequest, bookingId uuid.UUID, user User) error {
 	booking, err := gorm.G[model.Booking](db).Raw(`
-SELECT * FROM booking b 
-    JOIN restaurant r ON r.id = b.restaurant_id 
+SELECT * FROM booking b
+    JOIN restaurant r ON r.id = b.restaurant_id
     JOIN account a ON a.id = r.account_id
 WHERE a.email = $2
 	AND b.id = $1
