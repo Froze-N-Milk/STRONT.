@@ -15,11 +15,31 @@ all: build
 build:
 	$(CONTAINER_RUNTIME) compose build --no-cache
 
+.PHONY: test-db
+test-db:
+	$(CONTAINER_RUNTIME) run --rm -d --name test-db \
+    	-v ./init.sql:/docker-entrypoint-initdb.d/init.sql \
+    	-e POSTGRES_DB=stront_template \
+    	-e POSTGRES_USER=admin \
+    	-e POSTGRES_PASSWORD=test \
+    	-p 6543:5432 postgres:latest
+
+.PHONY: wait-test-db
+wait-test-db:
+	@until $(CONTAINER_RUNTIME) exec test-db pg_isready -U admin -d postgres; do \
+		sleep 1; \
+	done
+
 # TODO: Containerise and update the test command
 .PHONY: test
-test:
+test: test-db wait-test-db
+	DB_HOST="localhost" \
+	DB_USER="admin" \
+	DB_PASSWORD="test" \
+	DB_PORT="6543" \
 	go run gotest.tools/gotestsum@latest --format=testname --junitfile test-results.xml --packages="./backend/api/... ./backend/lib/... ./backend/model/..."
 	cd frontend; npm i && npm run test
+	$(CONTAINER_RUNTIME) stop test-db
 
 .PHONY: db
 db:
