@@ -83,11 +83,7 @@ function Account() {
               <label className="acc-field">
                 <span>Restaurant Name:</span>
                 <input
-                 
                   placeholder="Enter the restaurant name here"
-                  required
-                  maxLength={80}
-               
                   required
                   maxLength={80}
                 />
@@ -98,11 +94,7 @@ function Account() {
                 <input
                   type="email"
                   required
-                 
-                  type="email"
-                  required
                   placeholder="Enter the e-mail address here"
-               
                 />
               </label>
               {/* Phone Number */}
