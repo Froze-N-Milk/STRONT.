@@ -199,7 +199,7 @@ func (h *CreateOnlineBookingHandler) handle(ctx context.Context, db *gorm.DB, re
 		BookingDate:     request.BookingDate,
 		TimeSlot:        request.TimeSlot,
 		CustomerNotes:   request.CustomerNotes,
-		Attendance:      model.Pending,
+		Attendance:      "pending",
 		CreationDate:    time.Now().UTC(),
 		CustomerCreated: true,
 	}
@@ -314,7 +314,7 @@ func (h *CancelBookingHandler) handle(ctx context.Context, db *gorm.DB, bookingI
 		return err
 	}
 
-	booking.Attendance = model.Cancelled
+	booking.Attendance = "cancelled"
 
 	db.Save(&booking)
 
@@ -638,7 +638,7 @@ func (h *UpdateRestaurantNotesHandler) ServeHTTP(ctx AuthedAppContext, w http.Re
 //	}
 type UpdateAttendanceHandler struct{}
 type updateAttendanceRequest struct {
-	Attendance model.Attendance `json:"attendance"`
+	Attendance string `json:"attendance"`
 }
 
 func (h *UpdateAttendanceHandler) handle(ctx context.Context, db *gorm.DB, request updateAttendanceRequest, bookingId uuid.UUID, user User) error {

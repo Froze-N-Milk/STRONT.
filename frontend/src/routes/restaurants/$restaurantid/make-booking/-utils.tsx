@@ -1,3 +1,16 @@
+export type BookingObj = {
+  booking_id: string;
+  restaurant_id: string;
+  given_name: string;
+  family_name: string;
+  phone: string;
+  email: string;
+  party_size: number;
+  booking_date: number;
+  time_slot: number;
+  customer_notes: string;
+};
+
 export function timeFromMaskValue(maskvalue: number): string {
   const mins = maskvalue % 2 == 0 ? "00 " : "30 ";
   let hours = "";
