@@ -15,6 +15,7 @@ import (
 // helper for sending emails
 // leaving the username or password empty will cause all methods to do nothing
 type EmailHelper struct {
+	LocalHost        bool
 	AllowedAddresses []string
 	Username         string
 	Password         string
@@ -54,7 +55,7 @@ func (InvalidEmailAddress) Error() string {
 }
 
 // lower-level sendmail utility
-func (h *EmailHelper) SendMail(toMailbox Mailbox, subject, plaintext, html string) error {
+func (h *EmailHelper) SendMail(toMailbox Mailbox, subject, plaintext, html, ics string) error {
 	boundary := uuid.New()
 	innerBoundary := fmt.Sprintf("--%s\r\n", boundary)
 	finalBoundary := fmt.Sprintf("--%s--\r\n", boundary)
@@ -74,6 +75,9 @@ func (h *EmailHelper) SendMail(toMailbox Mailbox, subject, plaintext, html strin
 		innerBoundary +
 		"Content-Type: text/html; charset=UTF-8\r\nContent-Transfer-Encoding: 7bit\r\n\r\n" +
 		html + "\r\n" +
+		innerBoundary +
+		"Content-Type: text/calendar; charset=UTF-8; method=PUBLISH\r\nContent-Transfer-Encoding: 7bit\r\n\r\n" +
+		ics + "\r\n" +
 		finalBoundary
 
 	// if addresses limited and this one not allowed, dont send
@@ -107,6 +111,7 @@ type BookingNotification struct {
 	Attendance     string
 	CustomerName   string
 	Date           time.Time
+	Duration       time.Duration
 	PartySize      int
 	Notes          string
 }
@@ -119,10 +124,7 @@ func (h *EmailHelper) NotifyRestaurant(notification BookingNotification) error {
 	var subjectLine string
 	var messageLine string
 	switch notification.Attendance {
-	case "attended":
-		// no need to notify
-		return nil
-	case "no-show":
+	case "attended", "no-show":
 		// no need to notify
 		return nil
 	case "pending":
@@ -150,7 +152,7 @@ func (h *EmailHelper) NotifyRestaurant(notification BookingNotification) error {
 			dateTime,
 		)
 	default:
-		panic(fmt.Sprintf("unexpected model.Attendance: %#v", notification.Attendance))
+		panic(fmt.Sprintf("unexpected attendance: %#v", notification.Attendance))
 	}
 
 	var plaintextNotes string
@@ -159,15 +161,23 @@ func (h *EmailHelper) NotifyRestaurant(notification BookingNotification) error {
 		plaintextNotes = strings.ReplaceAll(notification.Notes, "\n", "\r\n") + "\r\n\r\n"
 		htmlNotes = strings.ReplaceAll(html.EscapeString(notification.Notes), "\n", "<br>") + "<br><br>"
 	}
+
+	var host string
+	if h.LocalHost {
+		host = "http://localhost:3000"
+	} else {
+		host = "https://stront.rest"
+	}
+
 	plaintext := messageLine + "\r\n\r\n" +
 		plaintextNotes +
-		fmt.Sprintf("See it on STRONT: <%s>\r\n", fmt.Sprintf("https://stront.rest/bookings/%s", notification.ID)) +
-		fmt.Sprintf("Add it to your calendar: <%s>\r\n", fmt.Sprintf("https://stront.rest/bookings/cal/%s", notification.ID))
+		fmt.Sprintf("See it on STRONT: <%s>\r\n", fmt.Sprintf("%s/bookings/%s", host, notification.ID)) +
+		fmt.Sprintf("Add it to your calendar: <%s>\r\n", fmt.Sprintf("%s/bookings/cal/%s.ics", host, notification.ID))
 
 	html := htmlTemplate(messageLine + "<br><br>" +
 		htmlNotes +
-		fmt.Sprintf("<a href=\"%s\">See it on STRONT</a><br>", fmt.Sprintf("https://stront.rest/bookings/%s", notification.ID)) +
-		fmt.Sprintf("<a href=\"%s\">Add it to your calendar</a><br>", fmt.Sprintf("https://stront.rest/bookings/cal/%s", notification.ID)),
+		fmt.Sprintf("<a href=\"%s\">See it on STRONT</a><br>", fmt.Sprintf("%s/bookings/%s", host, notification.ID)) +
+		fmt.Sprintf("<a href=\"%s\">Add it to your calendar</a><br>", fmt.Sprintf("%s/bookings/cal/%s.ics", host, notification.ID)),
 	)
 
 	return h.SendMail(
@@ -175,6 +185,15 @@ func (h *EmailHelper) NotifyRestaurant(notification BookingNotification) error {
 		subjectLine,
 		plaintext,
 		html,
+		createIcs(
+			h.LocalHost,
+			notification.ID,
+			notification.RestaurantName,
+			notification.PartySize,
+			notification.Date,
+			notification.Duration,
+			notification.Attendance,
+		),
 	)
 }
 
@@ -186,10 +205,7 @@ func (h *EmailHelper) NotifyCustomer(notification BookingNotification) error {
 	var subjectLine string
 	var messageLine string
 	switch notification.Attendance {
-	case "attended":
-		// no need to notify
-		return nil
-	case "no-show":
+	case "attended", "no-show":
 		// no need to notify
 		return nil
 	case "pending":
@@ -215,7 +231,7 @@ func (h *EmailHelper) NotifyCustomer(notification BookingNotification) error {
 			dateTime,
 		)
 	default:
-		panic(fmt.Sprintf("unexpected model.Attendance: %#v", notification.Attendance))
+		panic(fmt.Sprintf("unexpected attendance: %#v", notification.Attendance))
 	}
 
 	var plaintextNotes string
@@ -224,15 +240,23 @@ func (h *EmailHelper) NotifyCustomer(notification BookingNotification) error {
 		plaintextNotes = strings.ReplaceAll(notification.Notes, "\n", "\r\n") + "\r\n\r\n"
 		htmlNotes = strings.ReplaceAll(html.EscapeString(notification.Notes), "\n", "<br>") + "<br><br>"
 	}
+
+	var host string
+	if h.LocalHost {
+		host = "http://localhost:3000"
+	} else {
+		host = "https://stront.rest"
+	}
+
 	plaintext := messageLine + "\r\n\r\n" +
 		plaintextNotes +
-		fmt.Sprintf("See it on STRONT: <%s>\r\n", fmt.Sprintf("https://stront.rest/bookings/%s", notification.ID)) +
-		fmt.Sprintf("Add it to your calendar: <%s>\r\n", fmt.Sprintf("https://stront.rest/bookings/cal/%s", notification.ID))
+		fmt.Sprintf("See it on STRONT: <%s>\r\n", fmt.Sprintf("%s/bookings/%s", host, notification.ID)) +
+		fmt.Sprintf("Add it to your calendar: <%s>\r\n", fmt.Sprintf("%s/bookings/cal/%s.ics", host, notification.ID))
 
 	html := htmlTemplate(messageLine + "<br><br>" +
 		htmlNotes +
-		fmt.Sprintf("<a href=\"%s\">See it on STRONT</a><br>", fmt.Sprintf("https://stront.rest/booking/%s", notification.ID)) +
-		fmt.Sprintf("<a href=\"%s\">Add it to your calendar</a><br>", fmt.Sprintf("https://stront.rest/booking/cal/%s", notification.ID)),
+		fmt.Sprintf("<a href=\"%s\">See it on STRONT</a><br>", fmt.Sprintf("%s/booking/%s", host, notification.ID)) +
+		fmt.Sprintf("<a href=\"%s\">Add it to your calendar</a><br>", fmt.Sprintf("%s/booking/cal/%s.ics", host, notification.ID)),
 	)
 
 	return h.SendMail(
@@ -240,5 +264,14 @@ func (h *EmailHelper) NotifyCustomer(notification BookingNotification) error {
 		subjectLine,
 		plaintext,
 		html,
+		createIcs(
+			h.LocalHost,
+			notification.ID,
+			notification.RestaurantName,
+			notification.PartySize,
+			notification.Date,
+			notification.Duration,
+			notification.Attendance,
+		),
 	)
 }

@@ -8,7 +8,6 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
-	"plange/backend/model"
 	"time"
 
 	"gorm.io/driver/postgres"
@@ -17,6 +16,7 @@ import (
 
 	"plange/backend/api"
 	"plange/backend/lib"
+	"plange/backend/model"
 	"plange/backend/vite"
 )
 
@@ -155,10 +155,11 @@ func main() {
 	}
 
 	emailHelper := api.EmailHelper{
+		LocalHost: vite.IsDev,
 		// NOTE: if you are testing sending email, fill in this variable
 		// to ensure that it only sends to the listed addresses, leaving
 		// it empty will send to any address
-		AllowedAddresses: []string{"oscar@fuck.mychungus.life"},
+		AllowedAddresses: []string{},
 		// NOTE: set these environment variables in order to enable setting email
 		Username: os.Getenv("STRONT_MAIL_USERNAME"),
 		Password: os.Getenv("STRONT_MAIL_PASSWORD"),
@@ -196,6 +197,7 @@ func main() {
 	authedAppMux.Handle("POST /api/restaurant/occasion/delete", &api.DeleteOccasionHandler{})
 	authedAppMux.Handle("POST /api/restaurant/occasion/update", &api.UpdateOccasionHandler{})
 
+	appMux.Handle("GET /booking/cal/{id}", &api.BookingIcsHandler{LocalHost: vite.IsDev})
 	appMux.Handle("POST /api/booking/create", &api.CreateOnlineBookingHandler{EmailHelper: emailHelper})
 	appMux.Handle("GET /api/booking/{booking}", &api.GetBookingByIDHandler{})
 	appMux.Handle("GET /api/booking/edit/{booking}", &api.UpdateBookingHandler{})
