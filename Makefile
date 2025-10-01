@@ -18,8 +18,8 @@ build:
 # TODO: Containerise and update the test command
 .PHONY: test
 test:
-	go test -v ./backend/api/... ./backend/lib/... ./backend/model/...
-	cd frontend; npm install && npm run test
+	go run gotest.tools/gotestsum@latest --format=testname --junitfile test-results.xml --packages="./backend/api/... ./backend/lib/... ./backend/model/..."
+	cd frontend; npm i && npm run test
 
 .PHONY: db
 db:

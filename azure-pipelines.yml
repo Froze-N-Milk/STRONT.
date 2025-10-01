@@ -1,0 +1,63 @@
+trigger:
+  branches:
+    include:
+      - master
+  paths:
+    exclude:
+      - README.md
+
+pr:
+  branches:
+    include:
+      - master
+  paths:
+    exclude:
+      - README.md
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  IMAGE_NAME: 'stront'
+
+stages:
+  - stage: BuildAndTest
+    jobs:
+      - job: BuildTestJob
+        steps:
+          - script: |
+              make test
+            displayName: 'Running Tests'
+
+          - task: PublishTestResults@2
+            inputs:
+              testResultsFormat: 'JUnit'
+              testResultsFiles: 'test-results.xml'
+              testRunTitle: 'Publishing Backend Test Results'
+
+          - task: PublishTestResults@2
+            inputs:
+              testResultsFormat: 'JUnit'
+              testResultsFiles: 'frontend/vite-test-junit.xml'
+              testRunTitle: 'Publishing Frontend Test Results'
+
+#  - stage: PublishImage
+#    dependsOn: BuildAndTest
+#    condition: succeeded()
+#    jobs:
+#      - job: PushImageJob
+#        steps:
+#          - task: Docker@2
+#            inputs:
+#              command: 'login'
+#              containerRegistry: '' # TODO: Add container registry details here
+#
+#          - script: |
+#              docker build -t $(IMAGE_NAME):latest --target runner .
+#            displayName: 'Build Final Runner Image'
+#
+#          - task: Docker@2
+#            inputs:
+#              command: 'push'
+#              repository: '' # TODO: Add container registry stuff here
+#              tags: 'latest'

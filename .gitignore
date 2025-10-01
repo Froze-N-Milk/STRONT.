@@ -13,3 +13,6 @@ local.db
 # jetbrains
 /.idea
 /*.http
+
+# junit test results output
+*.xml
