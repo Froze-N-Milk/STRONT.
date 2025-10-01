@@ -138,8 +138,6 @@ function MakeBookingForm({ restaurantData }: { restaurantData: DateObj[] }) {
   const [loading, setLoading] = useState(false);
   const restaurantid = Route.useParams().restaurantid;
 
-  console.log(restaurantData);
-
   const detailsFilled =
     selectedTime != "" &&
     contactFirstName != "" &&
@@ -177,7 +175,7 @@ function MakeBookingForm({ restaurantData }: { restaurantData: DateObj[] }) {
       phone: contactNumber,
       email: contactEmail,
       party_size: partySize,
-      booking_date: selectedDate.date.toISOString(),
+      booking_date: selectedDate.date.getTime(),
       time_slot: selectedTimeSlot,
       customer_notes: customerNotes,
     };
