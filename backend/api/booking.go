@@ -425,48 +425,17 @@ func (h *CancelBookingHandler) ServeHTTP(ctx AppContext, w http.ResponseWriter, 
 type GetUpcomingBookingsHandler struct{}
 
 type restaurantBookingResponse struct {
-	bookingRequest
-	RestaurantNotes string `json:"restaurant_notes"`
-}
-
-func (r restaurantBookingResponse) MarshalJSON() ([]byte, error) {
-	// marshal the compose bookingRequest first
-	bookingJSON, err := r.bookingRequest.MarshalJSON()
-	if err != nil {
-		return nil, err
-	}
-
-	// unmarshal it into a map so that we can edit the JSON kv pairs directly
-	var baseMap map[string]any
-	if err := json.Unmarshal(bookingJSON, &baseMap); err != nil {
-		return nil, err
-	}
-
-	// add a restaurant_notes kv pair
-	baseMap["restaurant_notes"] = r.RestaurantNotes
-
-	// re-marshal everything and ship it
-	return json.Marshal(baseMap)
-}
-
-func (r *restaurantBookingResponse) UnmarshalJSON(b []byte) error {
-	// unmarshal the json and let bookingRequest sort itself out
-	if err := r.bookingRequest.UnmarshalJSON(b); err != nil {
-		return err
-	}
-
-	// unmarshal *just* the restaurant_notes field into the struct
-	notes := struct {
-		RestaurantNotes string `json:"restaurant_notes"`
-	}{}
-	if err := json.Unmarshal(b, &notes); err != nil {
-		return err
-	}
-
-	// add the field into the struct
-	r.RestaurantNotes = notes.RestaurantNotes
-
-	return nil
+	BookingID       uuid.UUID `json:"booking_id"`
+	GivenName       string    `json:"given_name"`
+	FamilyName      string    `json:"family_name"`
+	Phone           string    `json:"phone"`
+	Email           string    `json:"email"`
+	PartySize       int       `json:"party_size"`
+	BookingDate     time.Time `json:"booking_date"`
+	TimeSlot        int       `json:"time_slot"`
+	CreationDate    time.Time `json:"creation_date"`
+	CustomerNotes   string    `json:"customer_notes"`
+	RestaurantNotes string    `json:"restaurant_notes"`
 }
 
 func (h *GetUpcomingBookingsHandler) handle(ctx context.Context, db *gorm.DB, restaurantID uuid.UUID, user User) ([]restaurantBookingResponse, error) {
