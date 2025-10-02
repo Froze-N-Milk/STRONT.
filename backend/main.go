@@ -202,7 +202,7 @@ func main() {
 	appMux.Handle("POST /api/booking/create", &api.CreateOnlineBookingHandler{EmailHelper: emailHelper})
 	appMux.Handle("POST /api/booking/edit/{booking}", &api.UpdateBookingHandler{})
 	appMux.Handle("POST /api/booking/cancel/{booking}", &api.CancelBookingHandler{})
-	authedAppMux.Handle("GET /api/booking/upcoming/{restaurant}", &api.GetUpcomingBookingsHandler{})
+	mux.Handle("GET /api/booking/upcoming/{restaurant}", &api.GetUpcomingBookingsHandler{DB: db, JWTKey: &jwtKey})
 	authedAppMux.Handle("GET /api/booking/history/{restaurant}", &api.GetBookingHistoryHandler{})
 	authedAppMux.Handle("POST /api/booking/restaurant-notes/{booking}", &api.UpdateRestaurantNotesHandler{})
 	authedAppMux.Handle("POST /api/booking/attendance/{booking}", &api.UpdateAttendanceHandler{})

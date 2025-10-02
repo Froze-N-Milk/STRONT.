@@ -422,54 +422,27 @@ func (h *CancelBookingHandler) ServeHTTP(ctx AppContext, w http.ResponseWriter, 
 //		customer_notes: string,
 //		restaurant_notes: string
 //	}
-type GetUpcomingBookingsHandler struct{}
+type GetUpcomingBookingsHandler struct {
+	DB     *gorm.DB
+	JWTKey *[32]byte
+}
 
 type restaurantBookingResponse struct {
-	bookingRequest
-	RestaurantNotes string `json:"restaurant_notes"`
-}
-
-func (r restaurantBookingResponse) MarshalJSON() ([]byte, error) {
-	// marshal the compose bookingRequest first
-	bookingJSON, err := r.bookingRequest.MarshalJSON()
-	if err != nil {
-		return nil, err
-	}
-
-	// unmarshal it into a map so that we can edit the JSON kv pairs directly
-	var baseMap map[string]any
-	if err := json.Unmarshal(bookingJSON, &baseMap); err != nil {
-		return nil, err
-	}
-
-	// add a restaurant_notes kv pair
-	baseMap["restaurant_notes"] = r.RestaurantNotes
-
-	// re-marshal everything and ship it
-	return json.Marshal(baseMap)
-}
-
-func (r *restaurantBookingResponse) UnmarshalJSON(b []byte) error {
-	// unmarshal the json and let bookingRequest sort itself out
-	if err := r.bookingRequest.UnmarshalJSON(b); err != nil {
-		return err
-	}
-
-	// unmarshal *just* the restaurant_notes field into the struct
-	notes := struct {
-		RestaurantNotes string `json:"restaurant_notes"`
-	}{}
-	if err := json.Unmarshal(b, &notes); err != nil {
-		return err
-	}
-
-	// add the field into the struct
-	r.RestaurantNotes = notes.RestaurantNotes
-
-	return nil
+	BookingID       uuid.UUID `json:"booking_id"`
+	GivenName       string    `json:"given_name"`
+	FamilyName      string    `json:"family_name"`
+	Phone           string    `json:"phone"`
+	Email           string    `json:"email"`
+	PartySize       int       `json:"party_size"`
+	BookingDate     time.Time `json:"booking_date"`
+	TimeSlot        int       `json:"time_slot"`
+	CreationDate    time.Time `json:"creation_date"`
+	CustomerNotes   string    `json:"customer_notes"`
+	RestaurantNotes string    `json:"restaurant_notes"`
 }
 
 func (h *GetUpcomingBookingsHandler) handle(ctx context.Context, db *gorm.DB, restaurantID uuid.UUID, user User) ([]restaurantBookingResponse, error) {
+	slog.Debug("", "ctx", ctx, "db", db, "user", user, "id", restaurantID)
 	bookings, err := gorm.G[restaurantBookingResponse](db).Raw(`
 SELECT
 	b.id AS booking_id,
@@ -494,6 +467,8 @@ ORDER BY b.booking_date`,
 		user.Email,
 		restaurantID).Find(ctx)
 
+	slog.Debug("", "bookings", bookings)
+
 	if err != nil {
 		return []restaurantBookingResponse{}, err
 	}
@@ -501,19 +476,40 @@ ORDER BY b.booking_date`,
 	return bookings, nil
 }
 
-func (h *GetUpcomingBookingsHandler) ServeHTTP(ctx AuthedAppContext, w http.ResponseWriter, r *http.Request) {
+func (h *GetUpcomingBookingsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	// get session token cookie, ensure that it exists
+	token, err := r.Cookie("session-token")
+	if err != nil || token.Value == "" {
+		slog.Error("session token not set", "url", r.URL, "error", err)
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	// validate the token
+	email, _, err := ValidateJWT(token.Value, h.JWTKey)
+	if err != nil {
+		slog.Error("Invalid session token", "url", r.URL, "error", err)
+		// remove all site data
+		setSessionTokenCookie(w, "")
+		w.Header().Add("Clear-Site-Data", "\"*\"")
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
 	restaurantID, err := uuid.Parse(r.PathValue("restaurant"))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	response, err := h.handle(r.Context(), ctx.DB, restaurantID, ctx.User)
+	response, err := h.handle(r.Context(), h.DB, restaurantID, User{email})
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+
+	slog.Debug("", "response", response)
 
 	err = json.NewEncoder(w).Encode(response)
 
