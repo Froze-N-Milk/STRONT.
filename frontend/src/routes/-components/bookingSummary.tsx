@@ -12,6 +12,16 @@ export default function BookingSummary({
   const bookingdate = new Date(bookingData.booking_date);
   const [bookingNotes, setBookingNotes] = useState(bookingData.customer_notes);
 
+  async function cancelTS() {
+    await fetch("/api/booking/cancel/" + bookingData.booking_id, {
+      method: "POST",
+    }).then(async (r) => {
+      if (r.status == 200) {
+        window.location.href = "/";
+      }
+    });
+  }
+
   return (
     <div className="booking-summary">
       <h2 style={{ textAlign: "center", borderBottom: "0.5px solid black" }}>
@@ -53,6 +63,11 @@ export default function BookingSummary({
       >
         {bookingNotes}
       </textarea>
+      <div className="confirm-popover-contents">
+        <button className="submit_button" onClick={cancelTS}>
+          cancel booking
+        </button>
+      </div>
     </div>
   );
 }

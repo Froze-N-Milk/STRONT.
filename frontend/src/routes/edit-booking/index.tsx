@@ -9,6 +9,11 @@ export const Route = createFileRoute("/edit-booking/")({
 function RouteComponent() {
   //const [err, setErr] = useState("");
   const [bookingid, setBookingid] = useState("");
+  const [searched, setSearched] = useState(false);
+
+  function handleBookingSearch() {
+    setSearched(!searched);
+  }
 
   return (
     <div>
@@ -26,15 +31,17 @@ function RouteComponent() {
             />
             <p></p>
           </div>
-          <button className="submit_button">Search Booking</button>
+          <button className="submit_button" onClick={handleBookingSearch}>
+            Search Booking
+          </button>
         </div>
-        <div className="booking-edit-wrapper">
+        <div className={searched ? "booking-edit-wrapper" : "hidden"}>
           <h2>
             Booking for: <span style={{ fontWeight: "300" }}>Don Julio</span>
           </h2>
           <h6>donjulio@fazoolio.com</h6>
           <h6>
-            Booking ID: <span style={{ fontWeight: "300" }}>Don Julio</span>
+            Booking ID: <span style={{ fontWeight: "300" }}>{bookingid}</span>
           </h6>
           <div className="booking-edit-details">
             <h5>Date:</h5>
