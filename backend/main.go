@@ -198,10 +198,10 @@ func main() {
 	authedAppMux.Handle("POST /api/restaurant/occasion/update", &api.UpdateOccasionHandler{})
 
 	appMux.Handle("GET /booking/cal/{id}", &api.BookingIcsHandler{LocalHost: vite.IsDev})
-	appMux.Handle("POST /api/booking/create", &api.CreateOnlineBookingHandler{EmailHelper: emailHelper})
 	appMux.Handle("GET /api/booking/{booking}", &api.GetBookingByIDHandler{})
-	appMux.Handle("GET /api/booking/edit/{booking}", &api.UpdateBookingHandler{})
-	appMux.Handle("GET /api/booking/cancel/{booking}", &api.CancelBookingHandler{})
+	appMux.Handle("POST /api/booking/create", &api.CreateOnlineBookingHandler{EmailHelper: emailHelper})
+	appMux.Handle("POST /api/booking/edit/{booking}", &api.UpdateBookingHandler{})
+	appMux.Handle("POST /api/booking/cancel/{booking}", &api.CancelBookingHandler{})
 	authedAppMux.Handle("GET /api/booking/upcoming/{restaurant}", &api.GetUpcomingBookingsHandler{})
 	authedAppMux.Handle("GET /api/booking/history/{restaurant}", &api.GetBookingHistoryHandler{})
 	authedAppMux.Handle("POST /api/booking/restaurant-notes/{booking}", &api.UpdateRestaurantNotesHandler{})
