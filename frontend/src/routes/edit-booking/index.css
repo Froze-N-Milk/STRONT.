@@ -28,9 +28,14 @@
     padding: 10px;
     border-radius: 20px;
     border: 1px solid red;
+    animation: appear 1s ease forwards;
 }
 
 .booking-edit-details {
     width: 80%;
     padding: 10px 0 10px 0;
+}
+
+.hidden {
+    display: none;
 }
