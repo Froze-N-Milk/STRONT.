@@ -199,7 +199,7 @@ func (h *CreateOnlineBookingHandler) handle(ctx context.Context, db *gorm.DB, re
 		ContactID:       customerContact.ID,
 		RestaurantID:    request.RestaurantID,
 		PartySize:       request.PartySize,
-		BookingDate:     request.BookingDate,
+		BookingDate:     request.BookingDate.UTC(),
 		TimeSlot:        request.TimeSlot,
 		CustomerNotes:   request.CustomerNotes,
 		Attendance:      "pending",
