@@ -57,22 +57,26 @@ func TestCreateOnlineBooking(t *testing.T) {
 				FamilyName:    s.CustomerContact.FamilyName,
 				Phone:         s.CustomerContact.Phone,
 				Email:         s.CustomerContact.Email,
-				PartySize:     13,
-				BookingDate:   time.Date(2026, 1, 1, 0, 0, 0, 0, time.Local),
-				TimeSlot:      12,
+				PartySize:     4,
+				BookingDate:   time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
+				TimeSlot:      24,
 				CustomerNotes: "yay",
 			}
+
+			db.Session(&gorm.Session{SkipDefaultTransaction: true}).Begin()
 			response, err := handler.handle(s.Ctx, db, br)
 			if err != nil {
+				db.Rollback()
 				t.Errorf("error running CreateOnlineBookingHandler.handle(): %v", err)
+				return
 			}
 
 			bookingRow, err := gorm.G[model.Booking](db).Where("id = ?", response.ID).First(ctx)
 			if err != nil {
 				t.Errorf("failed retrieving bookingRow from database: %v", err)
+				return
 			}
 
-			// TODO: Fix timezone issues between sending and retrieving from db
 			if !(bookingRow.ContactID == response.ContactID &&
 				bookingRow.RestaurantID == response.RestaurantID &&
 				bookingRow.PartySize == response.PartySize &&
@@ -82,11 +86,13 @@ func TestCreateOnlineBooking(t *testing.T) {
 				bookingRow.CustomerNotes == response.CustomerNotes &&
 				bookingRow.RestaurantNotes == response.RestaurantNotes) {
 				t.Errorf("response does not match bookingRow returned from db query")
+				return
 			}
 
 			contactRow, err := gorm.G[model.CustomerContact](db).Where("id = ?", response.ContactID).First(ctx)
 			if err != nil {
 				t.Errorf("failed retrieving contactRow from database: %v", err)
+				return
 			}
 
 			if !(br.GivenName == contactRow.GivenName &&
@@ -94,18 +100,87 @@ func TestCreateOnlineBooking(t *testing.T) {
 				br.Phone == contactRow.Phone &&
 				br.Email == contactRow.Email) {
 				t.Errorf("response does not match contactRow returned from db query")
+				return
 			}
 		})
-		t.Run("Invalid Booking Data", func(t *testing.T) {
+		t.Run("Reject Negative Party Size", func(t *testing.T) {
 			br := bookingRequest{
 				RestaurantID:  s.Restaurant.ID,
-				GivenName:     "",
-				FamilyName:    "zoinkeroonies",
-				Phone:         "jinkies",
-				Email:         "1234556666667778",
+				GivenName:     s.CustomerContact.GivenName,
+				FamilyName:    s.CustomerContact.FamilyName,
+				Phone:         s.CustomerContact.Phone,
+				Email:         s.CustomerContact.Email,
 				PartySize:     -4,
-				BookingDate:   time.Date(60000000, 1, 1, 0, 0, 0, 0, time.UTC),
-				TimeSlot:      17,
+				BookingDate:   time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
+				TimeSlot:      24,
+				CustomerNotes: "yay",
+			}
+			response, err := handler.handle(s.Ctx, db, br)
+			if err == nil {
+				t.Errorf("expected error, got %v", response)
+			}
+		})
+		t.Run("Reject Part Size Too Large", func(t *testing.T) {
+			br := bookingRequest{
+				RestaurantID:  s.Restaurant.ID,
+				GivenName:     s.CustomerContact.GivenName,
+				FamilyName:    s.CustomerContact.FamilyName,
+				Phone:         s.CustomerContact.Phone,
+				Email:         s.CustomerContact.Email,
+				PartySize:     13,
+				BookingDate:   time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
+				TimeSlot:      24,
+				CustomerNotes: "yay",
+			}
+			response, err := handler.handle(s.Ctx, db, br)
+			if err == nil {
+				t.Errorf("expected error, got %v", response)
+			}
+		})
+		t.Run("Reject Negative Time Slot", func(t *testing.T) {
+			br := bookingRequest{
+				RestaurantID:  s.Restaurant.ID,
+				GivenName:     s.CustomerContact.GivenName,
+				FamilyName:    s.CustomerContact.FamilyName,
+				Phone:         s.CustomerContact.Phone,
+				Email:         s.CustomerContact.Email,
+				PartySize:     4,
+				BookingDate:   time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
+				TimeSlot:      -12,
+				CustomerNotes: "yay",
+			}
+			response, err := handler.handle(s.Ctx, db, br)
+			if err == nil {
+				t.Errorf("expected error, got %v", response)
+			}
+		})
+		t.Run("Reject Time Slot During Closed Hours", func(t *testing.T) {
+			br := bookingRequest{
+				RestaurantID:  s.Restaurant.ID,
+				GivenName:     s.CustomerContact.GivenName,
+				FamilyName:    s.CustomerContact.FamilyName,
+				Phone:         s.CustomerContact.Phone,
+				Email:         s.CustomerContact.Email,
+				PartySize:     4,
+				BookingDate:   time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
+				TimeSlot:      0,
+				CustomerNotes: "yay",
+			}
+			response, err := handler.handle(s.Ctx, db, br)
+			if err == nil {
+				t.Errorf("expected error, got %v", response)
+			}
+		})
+		t.Run("Reject Booking Date on Closed Day", func(t *testing.T) {
+			br := bookingRequest{
+				RestaurantID:  s.Restaurant.ID,
+				GivenName:     s.CustomerContact.GivenName,
+				FamilyName:    s.CustomerContact.FamilyName,
+				Phone:         s.CustomerContact.Phone,
+				Email:         s.CustomerContact.Email,
+				PartySize:     4,
+				BookingDate:   time.Date(2026, 1, 7, 0, 0, 0, 0, time.UTC),
+				TimeSlot:      24,
 				CustomerNotes: "yay",
 			}
 			response, err := handler.handle(s.Ctx, db, br)
