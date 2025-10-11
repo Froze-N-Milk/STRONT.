@@ -79,14 +79,15 @@ func SeedDB(db *gorm.DB) SeedData {
 		log.Panicf("Failed to add account to db: %v", err)
 	}
 
-	const weekdayHours int64 = 0b0000000000000000000000000000000001111111111111111111111111000000
-	// bit mask for 10am-6pm
-	const weekendHours int64 = 0b0000000000000000000000000000000000011111111111111111100000000000
+	// 09:00-22:30
+	weekdayHours := CreateHourMaskFromRange(18, 45)
+	// 11:00-21:00
+	weekendHours := CreateHourMaskFromRange(22, 42)
 
 	availability := model.Availability{
 		MondayHourMask:    weekdayHours,
 		TuesdayHourMask:   weekdayHours,
-		WednesdayHourMask: weekdayHours,
+		WednesdayHourMask: 0, // closed on wednesdays
 		ThursdayHourMask:  weekdayHours,
 		FridayHourMask:    weekdayHours,
 		SaturdayHourMask:  weekendHours,
@@ -214,4 +215,20 @@ func WithTestDB(t *testing.T, testFunc func(db *gorm.DB)) {
 	})
 
 	testFunc(testDB)
+}
+
+// CreateHourMaskFromRange is a helper function to create hour masks from 30 minute increments.
+//
+// example: to create a range of 09:00 to 22:30, take both hour values and multiply by two:
+//
+//	CreateHourMaskFromRange(18, 44)
+//
+// then add one for the 30 mins making it
+//
+//	CreateHourMaskFromRange(18, 45)
+func CreateHourMaskFromRange(openHour int, closeHour int) int64 {
+	hourRange := closeHour - openHour
+	rangeMask := (1 << (hourRange + 1)) - 1
+	hourMask := rangeMask << openHour
+	return int64(hourMask)
 }
