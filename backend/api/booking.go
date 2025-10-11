@@ -165,6 +165,12 @@ func (h *GetBookingByIDHandler) ServeHTTP(ctx AppContext, w http.ResponseWriter,
 //
 // POST /api/booking/create
 //
+// TODO: Check these things:
+//
+//	party size is within the restaurant's max
+//	booking date is on an available date
+//	time slot is within the available time
+//
 // expects:
 //
 //	{
@@ -183,13 +189,73 @@ type CreateOnlineBookingHandler struct {
 }
 
 func (h *CreateOnlineBookingHandler) handle(ctx context.Context, db *gorm.DB, request bookingRequest) (model.Booking, error) {
+	restaurant, err := gorm.G[model.Restaurant](db).Where("id = ?", request.RestaurantID).First(ctx)
+
+	if err != nil {
+		return model.Booking{}, err
+	}
+
+	// check party size is allowed
+	if request.PartySize < 0 || request.PartySize > restaurant.MaxPartySize {
+		return model.Booking{}, fmt.Errorf("requested party size exceeds restaurant limit: %d/%d",
+			request.PartySize,
+			restaurant.MaxPartySize)
+	}
+
+	// check booking time slot is available
+	// load the associations for the restaurant availability and occasions
+	availability, err := gorm.G[model.Availability](db).Where("id = ?", restaurant.AvailabilityID).First(ctx)
+
+	if err != nil {
+		return model.Booking{}, err
+	}
+
+	if request.TimeSlot < 0 {
+		return model.Booking{}, fmt.Errorf("time slot is negative: %d", request.TimeSlot)
+	}
+
+	hourMask := *availability.WeekdayMask(request.BookingDate.Weekday())
+	// doing 1 << timeSlot will shift the one n number of bits to match the specific bit in the mask for that hour.
+	// then just check if the result isn't 0.
+	// for example 1 << 4 will result in 0b1000, which ANDs against the 4th bit in the hour mask.
+	validTime := (hourMask & (1 << request.TimeSlot)) != 0
+
+	if !validTime {
+		return model.Booking{}, fmt.Errorf("the selected time is not available")
+	}
+
+	// check if the booking date conflicts with any occasions
+	occasions, err := gorm.G[model.Occasion](db).Raw(`
+SELECT *
+FROM occasion
+WHERE
+    close_date = $1 -- Check the exact date
+OR 
+    ( -- Check if any recurring dates 
+        yearly_recurring = TRUE
+        AND EXTRACT(DAY FROM close_date) = EXTRACT(DAY FROM $1)
+        AND EXTRACT(MONTH FROM close_date) = EXTRACT(MONTH FROM $1)
+    )
+`, request.BookingDate.UTC()).Find(ctx)
+
+	if err != nil {
+		return model.Booking{}, err
+	}
+
+	// for any matching occasions, check if timeslot fits within the hour mask
+	for _, o := range occasions {
+		if (o.HourMask & (1 << request.TimeSlot)) != 0 {
+			return model.Booking{}, fmt.Errorf("the selected time is not available")
+		}
+	}
+
 	customerContact := model.CustomerContact{
 		GivenName:  request.GivenName,
 		FamilyName: request.FamilyName,
 		Phone:      request.Phone,
 		Email:      request.Email,
 	}
-	err := gorm.G[model.CustomerContact](db).Create(ctx, &customerContact)
+	err = gorm.G[model.CustomerContact](db).Create(ctx, &customerContact)
 
 	if err != nil {
 		return model.Booking{}, err
