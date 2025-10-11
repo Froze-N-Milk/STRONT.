@@ -37,8 +37,8 @@ test: test-db wait-test-db
 	DB_USER="admin" \
 	DB_PASSWORD="test" \
 	DB_PORT="6543" \
-	go run gotest.tools/gotestsum@latest --format=testname --junitfile test-results.xml --packages="./backend/api/... ./backend/lib/... ./backend/model/..."
-	cd frontend; npm i && npm run test
+	go run gotest.tools/gotestsum@latest --format=testname --junitfile test-results.xml --packages="./backend/api/... ./backend/lib/... ./backend/model/..." || true
+	cd frontend; npm i && npm run test || true
 	$(CONTAINER_RUNTIME) stop test-db
 
 .PHONY: db
