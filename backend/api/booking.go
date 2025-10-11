@@ -13,9 +13,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// TODO: Check if booking time is during opening hours (CREATE, UPDATE)
-// TODO: Send booking confirmation email
-
 type bookingRequest struct {
 	RestaurantID  uuid.UUID
 	GivenName     string
@@ -164,12 +161,6 @@ func (h *GetBookingByIDHandler) ServeHTTP(ctx AppContext, w http.ResponseWriter,
 // # No auth required
 //
 // POST /api/booking/create
-//
-// TODO: Check these things:
-//
-//	party size is within the restaurant's max
-//	booking date is on an available date
-//	time slot is within the available time
 //
 // expects:
 //
