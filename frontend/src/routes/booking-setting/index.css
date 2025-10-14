@@ -32,10 +32,6 @@
   font-weight: 700;
 }
 
-.bks-side-link::after {
-  content: " :";
-}
-
 .bks-active {
   background: #b32121;
   color: #fff;
