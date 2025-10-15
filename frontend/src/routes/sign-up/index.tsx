@@ -233,6 +233,7 @@ function SignUpModal() {
                 type="submit"
                 disabled={loading}
                 className="submit_button"
+                style={{ alignSelf: "center" }}
               >
                 {loading ? "…" : "Create account"}
               </button>
