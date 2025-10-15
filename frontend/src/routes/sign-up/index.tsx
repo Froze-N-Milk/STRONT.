@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 
 /** Call backend account registration API */
@@ -22,9 +22,9 @@ function SignUpModal() {
   const [loading, setLoading] = useState(false);
 
   // Close modal and go back to home
-  function onClose() {
+  const onClose = useCallback(() => {
     navigate({ to: "/", replace: true });
-  }
+  }, [navigate]);
 
   // ESC to close + lock body scroll while modal is open
   // TODO: later, extract this shared effect into a small custom hook.
@@ -37,7 +37,7 @@ function SignUpModal() {
       window.removeEventListener("keydown", onKey);
       document.body.style.overflow = prev;
     };
-  });
+  }, [onClose]);
 
   // Submit sign-up form
   async function onSubmit(e: React.FormEvent) {
@@ -216,7 +216,6 @@ function SignUpModal() {
                   required
                   minLength={6}
                   autoComplete="new-password"
-                  autoFocus
                 />
               </div>
 
@@ -230,7 +229,11 @@ function SignUpModal() {
                 </p>
               )}
 
-              <button type="submit" disabled={loading} className="submit_button">
+              <button
+                type="submit"
+                disabled={loading}
+                className="submit_button"
+              >
                 {loading ? "…" : "Create account"}
               </button>
 

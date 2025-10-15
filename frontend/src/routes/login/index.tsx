@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 
 /** Call backend login API */
@@ -20,9 +20,9 @@ function LoginModal() {
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  function onClose() {
+  const onClose = useCallback(() => {
     navigate({ to: "/", replace: true });
-  }
+  }, [navigate]);
 
   // lock body scroll while modal is open
   useEffect(() => {
@@ -34,7 +34,7 @@ function LoginModal() {
       window.removeEventListener("keydown", onKey);
       document.body.style.overflow = prev;
     };
-  });
+  }, [onClose]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
