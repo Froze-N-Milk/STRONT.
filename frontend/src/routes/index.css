@@ -1,0 +1,87 @@
+.card {
+  padding: 2em;
+}
+
+.create_button {
+  height: 2.8em;
+  padding: 1.6em 2.8em 1.6em 2.8em;
+  background-color: #00994c;
+  border: 1px solid #28bc68;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.submit_button {
+  width: 10rem;
+  height: 2.5rem;
+  border-radius: 5px;
+  background-color: #c62f34;
+  border: 1px solid #a4161a;
+  transition: background-color 0.2s ease;
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.submit_button.search-button,
+.submit_button.search-result-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-decoration: none;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.submit_button.search-button {
+  width: auto;
+  height: auto;
+  padding: 12px 18px;
+  border-radius: 12px;
+}
+
+.submit_button.search-result-link,
+.submit_button.search-result-link:visited {
+  color: #fff;
+}
+
+.submit_button.cta-wide {
+  width: auto;
+  min-width: 220px;
+  height: 2.8em;
+  padding: 0 1.8em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  text-decoration: none;
+  color: #fff;
+  line-height: 1;
+}
+
+.submit_button.cta-wide:visited {
+  color: #fff;
+}
+
+.search-button__icon {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  position: relative;
+}
+
+.search-button__icon::after {
+  content: "";
+  position: absolute;
+  width: 2px;
+  height: 8px;
+  background: currentColor;
+  bottom: -6px;
+  right: -2px;
+  transform: rotate(45deg);
+}
