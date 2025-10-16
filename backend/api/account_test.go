@@ -209,7 +209,9 @@ func TestAccountManagedRestaurants(t *testing.T) {
 				LocationUrl:       s.Restaurant.LocationUrl,
 				FrontpageMarkdown: s.Restaurant.FrontpageMarkdown,
 			}}
-			if !slices.Equal(details, expected) {
+			if !slices.EqualFunc(details, expected, func(lhs, rhs restaurantDetails) bool {
+				return lhs.Equal(rhs)
+			}) {
 				t.Errorf("got %#v, want %#v", details, expected)
 			}
 		})
@@ -220,7 +222,9 @@ func TestAccountManagedRestaurants(t *testing.T) {
 			}
 
 			expected := []restaurantDetails{}
-			if !slices.Equal(details, expected) {
+			if !slices.EqualFunc(details, expected, func(lhs, rhs restaurantDetails) bool {
+				return lhs.Equal(rhs)
+			}) {
 				t.Errorf("got %#v, want %#v", details, expected)
 			}
 		})

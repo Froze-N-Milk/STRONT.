@@ -43,19 +43,12 @@ CREATE TABLE restaurant
     location_text        TEXT,
     location_url         TEXT,
     frontpage_markdown   TEXT,
-    max_party_size INT  NOT NULL CHECK (max_party_size > 0),
+    max_party_size       INT  NOT NULL CHECK (max_party_size > 0),
     booking_capacity     INT  NOT NULL,
     booking_length       INT  NOT NULL,
+    tags                 TEXT[],
     FOREIGN KEY (account_id) REFERENCES account (id) ON DELETE CASCADE,
     FOREIGN KEY (availability_id) REFERENCES availability (id) ON DELETE CASCADE
-);
-
-CREATE TABLE restaurant_tag
-(
-    search_tag    TEXT NOT NULL,
-    restaurant_id UUID NOT NULL,
-    PRIMARY KEY (search_tag, restaurant_id),
-    FOREIGN KEY (restaurant_id) REFERENCES restaurant (id)
 );
 
 CREATE TABLE occasion
@@ -99,7 +92,7 @@ CREATE INDEX idx_booking_booking_date ON booking (booking_date);
 
 -- ===== ACCOUNTS =====
 INSERT INTO account (id, email, password_hash, password_salt)
-VALUES 
+VALUES
 -- The Queen’s Regret
 ('11111111-1111-1111-1111-111111111111', 'british.grub@example.com',
  decode('9b74c9897bac770ffc029102a200c5de3a5f4f61d5c2e2d2b3e9f4d3a9f0e5d2' || lpad('', 256*2 - 64, '0'), 'hex'),
@@ -138,64 +131,41 @@ VALUES
 
 -- ===== RESTAURANTS =====
 INSERT INTO restaurant (id, account_id, availability_id, name, email, phone, description, location_text,
-                        location_url, frontpage_markdown, max_party_size, booking_capacity, booking_length)
+                        location_url, frontpage_markdown, max_party_size, booking_capacity, booking_length, tags)
 VALUES
 -- Queen’s Regret
 ('33333333-3333-3333-3333-333333333333','11111111-1111-1111-1111-111111111111','22222222-2222-2222-2222-222222222222',
  'The Queen’s Regret','british.grub@example.com','+44 20 7946 0958','Authentic British cuisine, served without remorse.',
  '221B Baker Street, London','https://goo.gl/maps/fakebritishrestaurant',
- '### About Us  
-Our food is so undeniably British that most people can’t keep it down.  
-Perfect if you’re looking for an unforgettable (and slightly regrettable) dining experience.  
-Fish, chips, mushy peas, and guaranteed regret in every bite.',8,20,90),
+ '### About Us
+Our food is so undeniably British that most people can’t keep it down.
+Perfect if you’re looking for an unforgettable (and slightly regrettable) dining experience.
+Fish, chips, mushy peas, and guaranteed regret in every bite.',8,20,90,'{"british", "vomit-inducing"}'),
 -- Derulo
 ('66666666-6666-6666-6666-666666666666','44444444-4444-4444-4444-444444444444','55555555-5555-5555-5555-555555555555',
  'Derulo’s Midnight Munchies','derulo.dines@example.com','+1 305-555-0101','Celebrity-owned late-night hotspot serving dishes with rhythm and soul.',
  'Miami Beach, Florida','https://goo.gl/maps/jasondereulo',
- '## Welcome to Derulo’s Midnight Munchies 🎤  
-Jason Derulo’s culinary stage — open when the rest of the world sleeps.  
-Expect flashy cocktails, remixed comfort food, and live mic moments where Jason himself might sing your order.  
-Come hungry, leave singing “Jason Deruuulooooo!”.',12,50,120),
+ '## Welcome to Derulo’s Midnight Munchies 🎤
+Jason Derulo’s culinary stage — open when the rest of the world sleeps.
+Expect flashy cocktails, remixed comfort food, and live mic moments where Jason himself might sing your order.
+Come hungry, leave singing “Jason Deruuulooooo!”.',12,50,120,'{"celebrity-owned", "late-night", "derulo"}'),
 -- Kamal
 ('99999999-9999-9999-9999-999999999999','77777777-7777-7777-7777-777777777777','88888888-8888-8888-8888-888888888888',
  'Kamal’s Aussie Steakhouse','kamal.steakhouse@example.com','+61 2 5555 1212','All the steaks, all the Kamals.',
  'Sydney, Australia','https://goo.gl/maps/fakekamalsteakhouse',
- '### Kamal’s Aussie Steakhouse  
-Every staff member is named Kamal.  
-Expect premium steaks, zero surprises (except maybe their names).',10,30,120),
+ '### Kamal’s Aussie Steakhouse
+Every staff member is named Kamal.
+Expect premium steaks, zero surprises (except maybe their names).',10,30,120,'{"steakhouse", "australian", "kamal"}'),
 -- Pâtisserie Chaos
 ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa','aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa','99999999-9999-9999-9999-999999999998',
  'Pâtisserie Chaos','patisserie.chaos@example.com','+33 1 2345 6789','Over-the-top French desserts.',
  'Paris, France','https://goo.gl/maps/fakepatisserie',
- '### Pâtisserie Chaos  
-Croissants that could collapse your will to live, macarons that might start a small fire in your mouth.  
-Bon appétit, if you dare.',6,15,90),
+ '### Pâtisserie Chaos
+Croissants that could collapse your will to live, macarons that might start a small fire in your mouth.
+Bon appétit, if you dare.',6,15,90,'{"french", "dessert", "chaotic"}'),
 -- Vegan Vortex
 ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb','bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb','aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaab',
  'Vegan Vortex','vegan.vortex@example.com','+44 20 1234 5678','Experimental plant-based cuisine.',
  'London, UK','https://goo.gl/maps/fakeveganvortex',
- '### Vegan Vortex  
-Where kale meets chaos. Only the brave leave smiling. No animals harmed, some egos destroyed.',8,20,60);
-
--- ===== RESTAURANT TAGS =====
-INSERT INTO restaurant_tag (search_tag, restaurant_id)
-VALUES
--- Queen’s Regret
-('british','33333333-3333-3333-3333-333333333333'),
-('vomit-inducing','33333333-3333-3333-3333-333333333333'),
--- Derulo
-('celebrity-owned','66666666-6666-6666-6666-666666666666'),
-('late-night','66666666-6666-6666-6666-666666666666'),
-('derulo','66666666-6666-6666-6666-666666666666'),
--- Kamal
-('steakhouse','99999999-9999-9999-9999-999999999999'),
-('australian','99999999-9999-9999-9999-999999999999'),
-('kamal','99999999-9999-9999-9999-999999999999'),
--- Pâtisserie Chaos
-('french','aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'),
-('dessert','aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'),
-('chaotic','aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'),
--- Vegan Vortex
-('vegan','bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'),
-('experimental','bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'),
-('plant-based','bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb');
+ '### Vegan Vortex
+Where kale meets chaos. Only the brave leave smiling. No animals harmed, some egos destroyed.',8,20,60, '{"vegan", "experimental", "plant-based"}');
