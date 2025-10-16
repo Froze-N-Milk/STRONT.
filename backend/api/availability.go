@@ -107,11 +107,21 @@ type updateRestaurantAvailabilitiesRequest struct {
 func (*UpdateAvailabilitiesHandler) handle(
 	ctx context.Context,
 	db *gorm.DB,
-	user User,
+	email string,
 	request updateRestaurantAvailabilitiesRequest,
 ) error {
 	result := gorm.WithResult()
 	err := gorm.G[model.Availability](db, result).Exec(ctx, `
+WITH authed AS (
+	SELECT availability.id
+	FROM availability
+	INNER JOIN restaurant
+		ON restaurant.id = ?
+		AND restaurant.availability_id = availability.id
+	INNER JOIN account
+		ON account.email = ?
+		AND restaurant.account_id = account.id
+)
 UPDATE availability
 SET
 	monday_hour_mask = ?,
@@ -121,12 +131,10 @@ SET
 	friday_hour_mask = ?,
 	saturday_hour_mask = ?,
 	sunday_hour_mask = ?
-INNER JOIN restaurant
-	ON restaurant.id = ?
-	AND restaurant.availability_id = availability.id
-INNER JOIN account
-	ON account.email = ?
-	AND restaurant.account_id = account.id`,
+FROM authed
+WHERE availability.id = authed.id`,
+		request.ID,
+		email,
 		request.MondayHourMask,
 		request.TuesdayHourMask,
 		request.WednesdayHourMask,
@@ -134,8 +142,6 @@ INNER JOIN account
 		request.FridayHourMask,
 		request.SaturdayHourMask,
 		request.SundayHourMask,
-		request.ID,
-		user.Email,
 	)
 
 	if err != nil {
@@ -157,7 +163,7 @@ func (h *UpdateAvailabilitiesHandler) ServeHTTP(ctx AuthedAppContext, w http.Res
 		return
 	}
 
-	err = h.handle(r.Context(), ctx.DB, ctx.User, request)
+	err = h.handle(r.Context(), ctx.DB, ctx.User.Email, request)
 
 	if errors.Is(err, invalidRestaurantRequestError{}) {
 		w.WriteHeader(http.StatusBadRequest)
