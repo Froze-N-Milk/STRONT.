@@ -8,6 +8,7 @@
 // -----------------------------------------------------------------------------
 
 import "../index.css"; // keep global site styles (navbar + red buttons)
+import "./index.css";
 
 import * as React from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
