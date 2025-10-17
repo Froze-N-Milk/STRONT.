@@ -81,6 +81,45 @@ func (b *bookingRequest) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+func validateBookingDateAndTime(timeSlot int, date time.Time, availability *model.Availability, db *gorm.DB, ctx context.Context) (bool, error) {
+	if timeSlot < 0 {
+		return false, nil
+	}
+
+	weekdayHourMask := *availability.WeekdayMask(date.Weekday())
+
+	if (weekdayHourMask & (1 << timeSlot)) == 0 {
+		return false, nil
+	}
+
+	occasions, err := gorm.G[model.Occasion](db).Raw(`
+SELECT * FROM occasion o
+JOIN availability a on a.id = o.availability_id
+WHERE
+    o.availability_id = $2
+AND 
+    (
+		o.close_date = $1 -- Check the exact date
+	OR 
+		( -- Check if any recurring dates 
+			yearly_recurring = TRUE
+			AND EXTRACT(DAY FROM close_date) = EXTRACT(DAY FROM $1)
+			AND EXTRACT(MONTH FROM close_date) = EXTRACT(MONTH FROM $1)
+		)
+    )
+`, date.UTC(), availability.ID).Find(ctx)
+	if err != nil {
+		return false, err
+	}
+
+	for _, o := range occasions {
+		if (o.HourMask & (1 << timeSlot)) != 0 {
+			return false, nil
+		}
+	}
+	return true, nil
+}
+
 //region Get Booking by ID
 
 // GetBookingByIDHandler retrieves the booking row from the database by its ID and returns a JSON object
@@ -193,7 +232,28 @@ func (h *CreateOnlineBookingHandler) handle(ctx context.Context, db *gorm.DB, re
 			restaurant.MaxPartySize)
 	}
 
-	// check booking time slot is available
+	bookingsAtTimeSlot, err := gorm.G[model.Booking](db).Raw(`
+SELECT * FROM booking
+WHERE
+    restaurant_id = $1
+	AND booking_date = $2
+	AND time_slot = $3`,
+		request.RestaurantID,
+		request.BookingDate,
+		request.TimeSlot).Find(ctx)
+
+	if err != nil {
+		return model.Booking{}, err
+	}
+
+	// Booking capacity for this timeslot has been reached/exceeded
+	if len(bookingsAtTimeSlot) >= restaurant.BookingCapacity {
+		return model.Booking{},
+			fmt.Errorf("restaurant has reached capacity for the requested timeslot: %d (capacity: %d)",
+				request.TimeSlot, restaurant.BookingCapacity)
+	}
+
+	// check booking date and time slot is available
 	// load the associations for the restaurant availability and occasions
 	availability, err := gorm.G[model.Availability](db).Where("id = ?", restaurant.AvailabilityID).First(ctx)
 
@@ -201,43 +261,10 @@ func (h *CreateOnlineBookingHandler) handle(ctx context.Context, db *gorm.DB, re
 		return model.Booking{}, err
 	}
 
-	if request.TimeSlot < 0 {
-		return model.Booking{}, fmt.Errorf("time slot is negative: %d", request.TimeSlot)
-	}
-
-	hourMask := *availability.WeekdayMask(request.BookingDate.Weekday())
-	// doing 1 << timeSlot will shift the one n number of bits to match the specific bit in the mask for that hour.
-	// then just check if the result isn't 0.
-	// for example 1 << 4 will result in 0b1000, which ANDs against the 4th bit in the hour mask.
-	validTime := (hourMask & (1 << request.TimeSlot)) != 0
-
-	if !validTime {
-		return model.Booking{}, fmt.Errorf("the selected time is not available")
-	}
-
-	// check if the booking date conflicts with any occasions
-	occasions, err := gorm.G[model.Occasion](db).Raw(`
-SELECT *
-FROM occasion
-WHERE
-    close_date = $1 -- Check the exact date
-OR 
-    ( -- Check if any recurring dates 
-        yearly_recurring = TRUE
-        AND EXTRACT(DAY FROM close_date) = EXTRACT(DAY FROM $1)
-        AND EXTRACT(MONTH FROM close_date) = EXTRACT(MONTH FROM $1)
-    )
-`, request.BookingDate.UTC()).Find(ctx)
-
-	if err != nil {
+	if result, err := validateBookingDateAndTime(request.TimeSlot, request.BookingDate, &availability, db, ctx); err != nil {
 		return model.Booking{}, err
-	}
-
-	// for any matching occasions, check if timeslot fits within the hour mask
-	for _, o := range occasions {
-		if (o.HourMask & (1 << request.TimeSlot)) != 0 {
-			return model.Booking{}, fmt.Errorf("the selected time is not available")
-		}
+	} else if !result {
+		return model.Booking{}, fmt.Errorf("invalid booking date or time")
 	}
 
 	customerContact := model.CustomerContact{
