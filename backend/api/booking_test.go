@@ -188,5 +188,68 @@ func TestCreateOnlineBooking(t *testing.T) {
 				t.Errorf("expected error, got %v", response)
 			}
 		})
+		t.Run("Reject Booking When Restaurant Capacity Reached", func(t *testing.T) {
+			lowCapacityRestaurant := model.Restaurant{
+				AccountID:       s.Account.ID,
+				AvailabilityID:  s.Availability.ID,
+				Name:            "No Tables",
+				Description:     "Too Small",
+				LocationText:    "000 Empty St, Alice Springs NT 1000",
+				MaxPartySize:    8,
+				BookingCapacity: 1,
+				BookingLength:   2,
+			}
+
+			db.Session(&gorm.Session{SkipDefaultTransaction: true}).Begin()
+			err := gorm.G[model.Restaurant](db).Create(ctx, &lowCapacityRestaurant)
+			if err != nil {
+				db.Rollback()
+				t.Errorf("unexpected error when setting up test environment: %v", err)
+				return
+			}
+
+			c := model.CustomerContact{
+				GivenName:  "Jill",
+				FamilyName: "Roe",
+				Phone:      "0487654321",
+				Email:      "your@chungus.com",
+			}
+
+			br1 := bookingRequest{
+				RestaurantID:  lowCapacityRestaurant.ID,
+				GivenName:     s.CustomerContact.GivenName,
+				FamilyName:    s.CustomerContact.FamilyName,
+				Phone:         s.CustomerContact.Phone,
+				Email:         s.CustomerContact.Email,
+				PartySize:     4,
+				BookingDate:   time.Date(2026, 1, 6, 0, 0, 0, 0, time.UTC),
+				TimeSlot:      24,
+				CustomerNotes: "yay",
+			}
+
+			_, err = handler.handle(ctx, db, br1)
+			if err != nil {
+				db.Rollback()
+				t.Errorf("expected successful response, got error: %v", err)
+				return
+			}
+
+			br2 := bookingRequest{
+				RestaurantID:  lowCapacityRestaurant.ID,
+				GivenName:     c.GivenName,
+				FamilyName:    c.FamilyName,
+				Phone:         c.Phone,
+				Email:         c.Email,
+				PartySize:     4,
+				BookingDate:   time.Date(2026, 1, 7, 0, 0, 0, 0, time.UTC),
+				TimeSlot:      24,
+				CustomerNotes: "yay",
+			}
+
+			response, err := handler.handle(ctx, db, br2)
+			if err == nil {
+				t.Errorf("expected error, got response: %v", response)
+			}
+		})
 	})
 }
