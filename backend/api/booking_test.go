@@ -58,7 +58,7 @@ func TestCreateOnlineBooking(t *testing.T) {
 				Phone:         s.CustomerContact.Phone,
 				Email:         s.CustomerContact.Email,
 				PartySize:     4,
-				BookingDate:   time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
+				BookingDate:   time.Date(2026, 1, 2, 0, 0, 0, 0, time.UTC),
 				TimeSlot:      24,
 				CustomerNotes: "yay",
 			}
