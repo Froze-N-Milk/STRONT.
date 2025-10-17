@@ -149,6 +149,7 @@ func main() {
 			MaxPartySize:    5,
 			BookingCapacity: 100,
 			BookingLength:   2,
+			Tags:            []string{"mine", "test", "i own this place!"},
 		}
 
 		gorm.G[model.Restaurant](db.Clauses(clause.OnConflict{DoNothing: true}, result)).Create(ctx, &restaurant)

@@ -69,11 +69,11 @@ type CreateOccasionHandler struct{}
 func (*CreateOccasionHandler) handle(
 	ctx context.Context,
 	db *gorm.DB,
-	user User,
+	email string,
 	request occasionRequest,
 ) error {
 	return gorm.G[model.Occasion](db).Exec(ctx, `
-WITH a AS (
+WITH authed AS (
 	SELECT availability.id
 	FROM availability
 	INNER JOIN restaurant
@@ -89,12 +89,12 @@ INSERT INTO occasion (
 	hour_mask
 )
 VALUES (
-	a.id,
+	(SELECT id FROM authed),
 	?,
-	0,
+	0
 )`,
 		request.Restaurant,
-		user.Email,
+		email,
 		request.CloseDate)
 }
 
@@ -109,7 +109,7 @@ func (h *CreateOccasionHandler) ServeHTTP(ctx AuthedAppContext, w http.ResponseW
 	err = h.handle(
 		r.Context(),
 		ctx.DB,
-		ctx.User,
+		ctx.User.Email,
 		request,
 	)
 
@@ -133,11 +133,11 @@ type DeleteOccasionHandler struct{}
 func (*DeleteOccasionHandler) handle(
 	ctx context.Context,
 	db *gorm.DB,
-	user User,
+	email string,
 	request occasionRequest,
 ) error {
 	return gorm.G[model.Occasion](db).Exec(ctx, `
-WITH a AS (
+WITH authed AS (
 	SELECT availability.id
 	FROM availability
 	INNER JOIN restaurant
@@ -147,11 +147,13 @@ WITH a AS (
 		ON account.email = ?
 		AND restaurant.account_id = account.id
 )
-DELETE FROM occasion
-WHERE availability_id = a.id
+DELETE
+	FROM occasion
+	USING authed
+	WHERE occasion.availability_id = authed.id
 	AND close_date = ?`,
 		request.Restaurant,
-		user.Email,
+		email,
 		request.CloseDate)
 }
 
@@ -166,7 +168,7 @@ func (h *DeleteOccasionHandler) ServeHTTP(ctx AuthedAppContext, w http.ResponseW
 	err = h.handle(
 		r.Context(),
 		ctx.DB,
-		ctx.User,
+		ctx.User.Email,
 		request,
 	)
 
@@ -198,14 +200,19 @@ type occasionDetails struct {
 	occasionRequest
 }
 
+type NonExistentOccasionError struct {}
+func (NonExistentOccasionError) Error() string {
+	return "Occasion does not exist"
+}
+
 func (*UpdateOccasionHandler) handle(
 	ctx context.Context,
 	db *gorm.DB,
-	user User,
+	email string,
 	occasion occasionDetails,
 ) error {
-	return gorm.G[any](db).Exec(ctx, `
-WITH a AS (
+	rows, err := gorm.G[any](db).Raw(`
+WITH authed AS (
 	SELECT availability.id
 	FROM availability
 	INNER JOIN restaurant
@@ -219,13 +226,25 @@ UPDATE occasion
 SET
 	hour_mask = ?,
 	yearly_recurring = ?
-WHERE occasion.availability_id = a.id AND close_date = ?`,
+FROM authed
+WHERE occasion.availability_id = authed.id AND close_date = ?
+RETURNING 0`,
 		occasion.Restaurant,
-		user.Email,
+		email,
 		occasion.Hours,
 		occasion.Recurring,
 		occasion.CloseDate,
-	)
+	).Find(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	if len(rows) == 0 {
+		return NonExistentOccasionError{}
+	}
+
+	return nil
 }
 
 func (h *UpdateOccasionHandler) ServeHTTP(ctx AuthedAppContext, w http.ResponseWriter, r *http.Request) {
@@ -239,7 +258,7 @@ func (h *UpdateOccasionHandler) ServeHTTP(ctx AuthedAppContext, w http.ResponseW
 	err = h.handle(
 		r.Context(),
 		ctx.DB,
-		ctx.User,
+		ctx.User.Email,
 		request,
 	)
 

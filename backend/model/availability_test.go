@@ -8,6 +8,7 @@ import (
 
 // ensures that the lookup of `time.Weekday` -> `*Availability.*HourMask` is correct
 func TestWeekdayMask(t *testing.T) {
+	t.Parallel()
 	availability := func() Availability {
 		return Availability{
 			MondayHourMask:    0b1,
@@ -39,6 +40,7 @@ func TestWeekdayMask(t *testing.T) {
 }
 
 func TestOccasions(t *testing.T) {
+	t.Parallel()
 	now := time.Now()
 	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.Local)
 	nextWeek := today.AddDate(0, 0, 7)
@@ -158,6 +160,7 @@ func TestOccasions(t *testing.T) {
 }
 
 func TestOrder(t *testing.T) {
+	t.Parallel()
 	availability := func() Availability {
 		return Availability{
 			MondayHourMask:    0,

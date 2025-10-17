@@ -5,8 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"slices"
 
 	"github.com/google/uuid"
+	"github.com/lib/pq"
 	"gorm.io/gorm"
 
 	"plange/backend/model"
@@ -20,6 +22,23 @@ type restaurantDetails struct {
 	LocationText      string    `json:"locationText"`
 	LocationUrl       string    `json:"locationUrl"`
 	FrontpageMarkdown string    `json:"frontpageMarkdown"`
+	MaxPartySize      int       `json:"maxPartySize"`
+	BookingCapacity   int       `json:"bookingCapacity"`
+	BookingLength     int       `json:"bookingLength"`
+	Tags              []string  `json:"tags"`
+}
+
+func (lhs restaurantDetails) Equal(rhs restaurantDetails) bool {
+	return lhs.ID == rhs.ID &&
+		lhs.Name == rhs.Name &&
+		lhs.Description == rhs.Description &&
+		lhs.LocationText == rhs.LocationText &&
+		lhs.LocationUrl == rhs.LocationUrl &&
+		lhs.FrontpageMarkdown == rhs.FrontpageMarkdown &&
+		lhs.MaxPartySize == rhs.MaxPartySize &&
+		lhs.BookingCapacity == rhs.BookingCapacity &&
+		lhs.BookingLength == rhs.BookingLength &&
+		slices.Equal(lhs.Tags, rhs.Tags)
 }
 
 // CreateRestaurantHandler creates a new restaurant in the database for the
@@ -27,13 +46,21 @@ type restaurantDetails struct {
 //
 // authed endpoint
 //
-// expects: { name: string, }
+//	expects: {
+//		name: string,
+//		maxPartySize: number,
+//		bookingCapacity: number,
+//		bookingLength: number,
+//	}
 //
 // bound to: POST /api/restaurant/create
 type CreateRestaurantHandler struct{}
 
 type createRestaurantRequest struct {
-	Name string `json:"name"`
+	Name            string `json:"name"`
+	MaxPartySize    int    `json:"maxPartySize"`
+	BookingCapacity int    `json:"bookingCapacity"`
+	BookingLength   int    `json:"bookingLength"`
 }
 
 func (*CreateRestaurantHandler) handle(ctx context.Context, db *gorm.DB, email string, request createRestaurantRequest) (model.Restaurant, error) {
@@ -69,10 +96,16 @@ RETURNING (id)`).Take(ctx)
 INSERT INTO restaurant (
 	account_id,
 	availability_id,
-	name
+	name,
+	max_party_size,
+	booking_capacity,
+	booking_length
 )
 VALUES (
 	(SELECT id FROM account WHERE email = ?),
+	?,
+	?,
+	?,
 	?,
 	?
 )
@@ -80,6 +113,9 @@ RETURNING (id)`,
 		email,
 		availability.ID,
 		request.Name,
+		request.MaxPartySize,
+		request.BookingCapacity,
+		request.BookingLength,
 	).Take(ctx)
 }
 
@@ -119,7 +155,12 @@ func (h *CreateRestaurantHandler) ServeHTTP(ctx AuthedAppContext, w http.Respons
 //
 // authed endpoint
 //
-// expects: { id: string, }
+//	expects: {
+//		id: string,
+//		maxPartySize: number,
+//		bookingCapacity: number,
+//		bookingLength: number,
+//	}
 //
 // bound to: POST /api/restaurant/delete
 type DeleteRestaurantHandler struct{}
@@ -127,7 +168,7 @@ type DeleteRestaurantHandler struct{}
 func (*DeleteRestaurantHandler) handle(
 	ctx context.Context,
 	db *gorm.DB,
-	user User,
+	email string,
 	id uuid.UUID,
 ) error {
 	return gorm.G[any](db).Exec(ctx, `
@@ -137,7 +178,7 @@ WHERE restaurant.id = ?
 	AND account.email = ?
 	AND restaurant.account_id = account.id`,
 		id,
-		user.Email,
+		email,
 	)
 }
 
@@ -154,7 +195,7 @@ func (h *DeleteRestaurantHandler) ServeHTTP(ctx AuthedAppContext, w http.Respons
 		return
 	}
 
-	err = h.handle(r.Context(), ctx.DB, ctx.User, request.ID)
+	err = h.handle(r.Context(), ctx.DB, ctx.User.Email, request.ID)
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -174,37 +215,66 @@ func (h *DeleteRestaurantHandler) ServeHTTP(ctx AuthedAppContext, w http.Respons
 //		locationText: string,
 //		locationUrl: string,
 //		frontpageMarkdown: string,
+//		maxPartySize: number,
+//		bookingCapacity: number,
+//		bookingLength: number,
+//		tags: string[],
 //	}
 //
 // bound to: POST /api/restaurant/update
 type UpdateRestaurantHandler struct{}
 
+type NonExistentRestaurantError struct{}
+
+func (NonExistentRestaurantError) Error() string {
+	return "Restaurant does not exist"
+}
+
 func (*UpdateRestaurantHandler) handle(
 	ctx context.Context,
 	db *gorm.DB,
-	user User,
+	email string,
 	restaurant restaurantDetails,
 ) error {
-	return gorm.G[any](db).Exec(ctx, `
+	rows, err := gorm.G[any](db).Raw(`
 UPDATE restaurant
 SET
 	name = ?,
 	description = ?,
 	location_text = ?,
 	location_url = ?,
-	frontpage_markdown = ?
+	frontpage_markdown = ?,
+	max_party_size = ?,
+	booking_capacity = ?,
+	booking_length = ?,
+	tags = ?
 FROM account
 WHERE restaurant.id = ?
 	AND account.email = ?
-	AND restaurant.account_id = account.id`,
+	AND restaurant.account_id = account.id
+RETURNING 0`,
 		restaurant.Name,
 		restaurant.Description,
 		restaurant.LocationText,
 		restaurant.LocationUrl,
 		restaurant.FrontpageMarkdown,
+		restaurant.MaxPartySize,
+		restaurant.BookingCapacity,
+		restaurant.BookingLength,
+		pq.StringArray(restaurant.Tags),
 		restaurant.ID,
-		user.Email,
-	)
+		email,
+	).Find(ctx)
+
+	if err != nil {
+		return nil
+	}
+
+	if len(rows) == 0 {
+		return NonExistentRestaurantError{}
+	}
+
+	return nil
 }
 
 func (h *UpdateRestaurantHandler) ServeHTTP(ctx AuthedAppContext, w http.ResponseWriter, r *http.Request) {
@@ -216,12 +286,16 @@ func (h *UpdateRestaurantHandler) ServeHTTP(ctx AuthedAppContext, w http.Respons
 		return
 	}
 
-	err = h.handle(r.Context(), ctx.DB, ctx.User, request)
+	db := ctx.DB.Begin()
+	err = h.handle(r.Context(), db, ctx.User.Email, request)
 
 	if err != nil {
+		db.Rollback()
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+
+	db.Commit()
 }
 
 // BrowseRestaurantsHandler fetches all restaurants
@@ -233,6 +307,10 @@ func (h *UpdateRestaurantHandler) ServeHTTP(ctx AuthedAppContext, w http.Respons
 //		locationText: string,
 //		locationUrl: string,
 //		frontpageMarkdown: string,
+//		maxPartySize: number,
+//		bookingCapacity: number,
+//		bookingLength: number,
+//		tags: string[],
 //	}[]
 //
 // bound to: GET /api/restaurants
@@ -242,15 +320,8 @@ func (*BrowseRestaurantsHandler) handle(
 	ctx context.Context,
 	db *gorm.DB,
 ) ([]restaurantDetails, error) {
-	restaurants, err := gorm.G[model.Restaurant](db).Raw(`
-SELECT
-	id,
-	name,
-	description,
-	location_text,
-	location_url,
-	frontpage_markdown
-FROM restaurant`).Find(ctx)
+	restaurants, err := gorm.G[model.Restaurant](db).
+		Raw(`SELECT * FROM restaurant`).Find(ctx)
 
 	if err != nil {
 		return nil, err
@@ -265,6 +336,10 @@ FROM restaurant`).Find(ctx)
 			LocationText:      restaurant.LocationText,
 			LocationUrl:       restaurant.LocationUrl,
 			FrontpageMarkdown: restaurant.FrontpageMarkdown,
+			MaxPartySize:      restaurant.MaxPartySize,
+			BookingCapacity:   restaurant.BookingCapacity,
+			BookingLength:     restaurant.BookingLength,
+			Tags:              restaurant.Tags,
 		}
 	}
 
@@ -298,6 +373,10 @@ func (h *BrowseRestaurantsHandler) ServeHTTP(ctx AppContext, w http.ResponseWrit
 //		locationText: string,
 //		locationUrl: string,
 //		frontpageMarkdown: string,
+//		maxPartySize: number,
+//		bookingCapacity: number,
+//		bookingLength: number,
+//		tags: string[],
 //	}
 //
 // bound to: GET /api/restaurant/{restaurant}
@@ -309,13 +388,7 @@ func (*RestaurantDetailsHandler) handle(
 	id uuid.UUID,
 ) (restaurantDetails, error) {
 	restaurant, err := gorm.G[model.Restaurant](db).Raw(`
-SELECT
-	id,
-	name,
-	description,
-	location_text,
-	location_url,
-	frontpage_markdown
+SELECT *
 FROM restaurant
 WHERE id = ?`, id).First(ctx)
 
@@ -330,6 +403,10 @@ WHERE id = ?`, id).First(ctx)
 		LocationText:      restaurant.LocationText,
 		LocationUrl:       restaurant.LocationUrl,
 		FrontpageMarkdown: restaurant.FrontpageMarkdown,
+		MaxPartySize:      restaurant.MaxPartySize,
+		BookingCapacity:   restaurant.BookingCapacity,
+		BookingLength:     restaurant.BookingLength,
+		Tags:              restaurant.Tags,
 	}, nil
 }
 

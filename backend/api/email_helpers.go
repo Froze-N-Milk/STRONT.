@@ -81,7 +81,7 @@ func (h *EmailHelper) SendMail(toMailbox Mailbox, subject, plaintext, html, ics 
 		finalBoundary
 
 	// if addresses limited and this one not allowed, dont send
-	if len(h.AllowedAddresses) > 0 && !slices.Contains(h.AllowedAddresses, toMailbox.address) {
+	if (len(h.AllowedAddresses) > 0 || h.LocalHost) && !slices.Contains(h.AllowedAddresses, toMailbox.address) {
 		slog.Debug("not an allowed email address, unable to send email", "message", message)
 		return InvalidEmailAddress{}
 	}

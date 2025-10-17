@@ -22,6 +22,14 @@ type RegisterAccountHandler struct {
 	JWTKey *[32]byte // 32 byte signing key for jwt session tokens
 }
 
+func (*RegisterAccountHandler) handle(ctx context.Context, db *gorm.DB, email string, salt [128]byte, hash [256]byte) error {
+	return gorm.G[model.Account](db.Clauses(clause.OnConflict{DoNothing: true})).Create(ctx, &model.Account{
+		Email:        email,
+		PasswordHash: hash[:],
+		PasswordSalt: salt[:],
+	})
+}
+
 func (h *RegisterAccountHandler) ServeHTTP(ctx AppContext, w http.ResponseWriter, r *http.Request) {
 	signUp := request{}
 	err := json.NewDecoder(r.Body).Decode(&signUp)
@@ -33,11 +41,7 @@ func (h *RegisterAccountHandler) ServeHTTP(ctx AppContext, w http.ResponseWriter
 
 	salt, hash := CreateSaltAndHashPassword(signUp.Password)
 
-	err = gorm.G[model.Account](ctx.DB.Clauses(clause.OnConflict{DoNothing: true})).Create(r.Context(), &model.Account{
-		Email:        signUp.Email,
-		PasswordHash: hash[:],
-		PasswordSalt: salt[:],
-	})
+	err = h.handle(r.Context(), ctx.DB, signUp.Email, salt, hash)
 
 	if err != nil {
 		slog.Error("account already exists for email", "email", signUp.Email, "error", err)
@@ -65,8 +69,12 @@ func (h *RegisterAccountHandler) ServeHTTP(ctx AppContext, w http.ResponseWriter
 // bound to: POST /api/account/delete
 type DeleteAccountHandler struct{}
 
+func (*DeleteAccountHandler) handle(ctx context.Context, db *gorm.DB, email string) (int, error) {
+	return gorm.G[model.Account](db).Where("email = ?", email).Delete(ctx)
+}
+
 func (h *DeleteAccountHandler) ServeHTTP(ctx AuthedAppContext, w http.ResponseWriter, r *http.Request) {
-	i, err := gorm.G[model.Account](ctx.DB).Where("email = ?", ctx.User.Email).Delete(r.Context())
+	i, err := h.handle(r.Context(), ctx.DB, ctx.User.Email)
 	if err != nil {
 		slog.Error("something went wrong", "error", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -91,6 +99,15 @@ func (h *DeleteAccountHandler) ServeHTTP(ctx AuthedAppContext, w http.ResponseWr
 // bound to: POST /api/account/register
 type UpdateAccountHandler struct {
 	JWTKey *[32]byte // 32 byte signing key for jwt session tokens
+}
+
+func (*UpdateAccountHandler) handle(
+	ctx context.Context,
+	db *gorm.DB,
+	email string,
+	account model.Account,
+) (int, error) {
+	return gorm.G[model.Account](db).Where("email = ?", email).Updates(ctx, account)
 }
 
 func (h *UpdateAccountHandler) ServeHTTP(ctx AuthedAppContext, w http.ResponseWriter, r *http.Request) {
@@ -118,7 +135,7 @@ func (h *UpdateAccountHandler) ServeHTTP(ctx AuthedAppContext, w http.ResponseWr
 		updatedAccount.PasswordSalt = salt[:]
 	}
 
-	i, err := gorm.G[model.Account](ctx.DB).Where("email = ?", ctx.User.Email).Updates(r.Context(), updatedAccount)
+	i, err := h.handle(r.Context(), ctx.DB, ctx.User.Email, updatedAccount)
 
 	if err != nil {
 		slog.Error("something went wrong", "error", err)
@@ -147,14 +164,14 @@ func (h *UpdateAccountHandler) ServeHTTP(ctx AuthedAppContext, w http.ResponseWr
 //
 // authed endpoint
 //
-// returns: {
-// 	id: string,
-//	name: string,
-//	description: string,
-//	locationText: string,
-//	locationUrl: string,
-//	frontpageMarkdown: string,
-// }[]
+//	returns: {
+//		id: string,
+//		name: string,
+//		description: string,
+//		locationText: string,
+//		locationUrl: string,
+//		frontpageMarkdown: string,
+//	}[]
 //
 // bound to: GET /api/account/restaurants
 type AccountManagedRestaurantsHandler struct{}
@@ -162,7 +179,7 @@ type AccountManagedRestaurantsHandler struct{}
 func (*AccountManagedRestaurantsHandler) handle(
 	ctx context.Context,
 	db *gorm.DB,
-	user User,
+	email string,
 ) ([]restaurantDetails, error) {
 	restaurants, err := gorm.G[model.Restaurant](db).Raw(`
 SELECT
@@ -176,7 +193,7 @@ FROM restaurant
 INNER JOIN account
 	ON account.email = ?
 	AND restaurant.account_id = account.id`,
-		user.Email).Find(ctx)
+		email).Find(ctx)
 
 	if err != nil {
 		return nil, err
@@ -198,7 +215,7 @@ INNER JOIN account
 }
 
 func (h *AccountManagedRestaurantsHandler) ServeHTTP(ctx AuthedAppContext, w http.ResponseWriter, r *http.Request) {
-	restaurants, err := h.handle(r.Context(), ctx.DB, ctx.User)
+	restaurants, err := h.handle(r.Context(), ctx.DB, ctx.User.Email)
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)

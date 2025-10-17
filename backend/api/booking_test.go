@@ -10,6 +10,7 @@ import (
 )
 
 func TestGetBookingByID(t *testing.T) {
+	t.Parallel()
 	WithTestDB(t, func(db *gorm.DB) {
 		s := SeedDB(db)
 		handler := GetBookingByIDHandler{}
@@ -44,6 +45,7 @@ func TestGetBookingByID(t *testing.T) {
 }
 
 func TestCreateOnlineBooking(t *testing.T) {
+	t.Parallel()
 	WithTestDB(t, func(db *gorm.DB) {
 		s := SeedDB(db)
 		handler := CreateOnlineBookingHandler{}
