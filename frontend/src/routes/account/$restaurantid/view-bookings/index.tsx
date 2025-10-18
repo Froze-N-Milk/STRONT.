@@ -31,21 +31,42 @@ function BookingPage() {
     setModalOpen(false);
   }
 
+  const { restaurantid } = Route.useParams();
+
   return (
     <div className="bk-page">
-      <aside className="bk-side">
-        <nav className="bk-side-nav">
-          <Link to="/account" className="bk-side-link">
-            Account
+      <aside className="bks-side">
+        <nav className="bks-side-nav">
+          <Link to="/account" className="bks-side-link">
+            Back to Account
           </Link>
-          <Link to="/account-setting" className="acc-side-link">
-            Account Setting
+          <Link
+            to="/account/$restaurantid"
+            className="bks-side-link"
+            params={{ restaurantid: restaurantid }}
+          >
+            Edit Restaurant Profile
           </Link>
-          <Link to="/booking" className="bk-side-link bk-active">
-            Booking
+          <Link
+            to="/account/$restaurantid/booking-settings"
+            className="bks-side-link"
+            params={{ restaurantid: restaurantid }}
+          >
+            Booking Settings
           </Link>
-          <Link to="/booking-setting" className="bk-side-link">
-            Booking Setting
+          <Link
+            to="/account/$restaurantid/view-bookings"
+            className="bks-side-link bks-active"
+            params={{ restaurantid: restaurantid }}
+          >
+            Bookings
+          </Link>
+          <Link
+            to="/account/$restaurantid/FOHtracker"
+            className="bks-side-link"
+            params={{ restaurantid: restaurantid }}
+          >
+            FOH Tracker
           </Link>
         </nav>
       </aside>
@@ -174,7 +195,7 @@ function BookingPage() {
   );
 }
 
-export const Route = createFileRoute("/booking/")({
+export const Route = createFileRoute("/account/$restaurantid/view-bookings/")({
   component: BookingPage,
 });
 

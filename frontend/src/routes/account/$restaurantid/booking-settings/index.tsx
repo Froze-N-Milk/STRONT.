@@ -12,6 +12,7 @@ function BookingSettingPage() {
     String(i).padStart(2, "0"),
   ); // 00-59
 
+  const { restaurantid } = Route.useParams();
   const [startHour, setStartHour] = useState("09");
   const [startMinute, setStartMinute] = useState("00");
   const [endHour, setEndHour] = useState("21");
@@ -36,16 +37,35 @@ function BookingSettingPage() {
       <aside className="bks-side">
         <nav className="bks-side-nav">
           <Link to="/account" className="bks-side-link">
-            Account
+            Back to Account
           </Link>
-          <Link to="/account-setting" className="acc-side-link">
-            Account Setting
+          <Link
+            to="/account/$restaurantid"
+            className="bks-side-link"
+            params={{ restaurantid: restaurantid }}
+          >
+            Edit Restaurant Profile
           </Link>
-          <Link to="/booking" className="bks-side-link">
-            Booking
+          <Link
+            to="/account/$restaurantid/booking-settings"
+            className="bks-side-link bks-active"
+            params={{ restaurantid: restaurantid }}
+          >
+            Booking Settings
           </Link>
-          <Link to="/booking-setting" className="bks-side-link bks-active">
-            Booking Setting
+          <Link
+            to="/account/$restaurantid/view-bookings"
+            className="bks-side-link"
+            params={{ restaurantid: restaurantid }}
+          >
+            Bookings
+          </Link>
+          <Link
+            to="/account/$restaurantid/FOHtracker"
+            className="bks-side-link"
+            params={{ restaurantid: restaurantid }}
+          >
+            FOH Tracker
           </Link>
         </nav>
       </aside>
@@ -167,7 +187,9 @@ function BookingSettingPage() {
   );
 }
 
-export const Route = createFileRoute("/booking-setting/")({
+export const Route = createFileRoute(
+  "/account/$restaurantid/booking-settings/",
+)({
   component: BookingSettingPage,
 });
 

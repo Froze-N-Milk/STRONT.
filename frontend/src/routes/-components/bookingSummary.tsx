@@ -2,7 +2,7 @@ import { useState } from "react";
 import {
   timeFromMaskValue,
   type BookingObj,
-} from "../restaurants/$restaurantid/make-booking/-utils";
+} from "../$restaurantid/make-booking/-utils";
 
 export default function BookingSummary({
   bookingData,

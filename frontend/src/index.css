@@ -130,13 +130,6 @@ input[type=text]:focus {
 
 /*SUBPAGE STYLES: POPOVERS, SIDE PANELS*/
 
-.side_panel {
-}
-
-.side_panel_option {
-}
-
-
 .booking-form {
   display: flex;
   align-items: center;
@@ -250,16 +243,18 @@ input[type=text]:focus {
 
 .seating-time-selection {
   height: 100%;
-  width: 100%;
-  display: flex;
-  flex-wrap: wrap;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  animation: appear 0.5s ease forwards;
+  display: grid;
+  overflow: scroll;
+  grid-template-columns: 6em 6em 6em 6em 6em;
+  grid-auto-rows: 3.5em;
 }
 
 .appearing {
+  animation: appear 0.5s ease forwards;
+}
+
+.seating-time-selection.refreshing {
+  opacity: 0%;
   animation: appear 0.5s ease forwards;
 }
 
@@ -271,7 +266,7 @@ input[type=text]:focus {
   border: 1px solid #E5383B;
   filter:drop-shadow(1px 1px 1px #a4161a);
   border-radius: 5px;
-  margin-bottom: 2px;
+  margin-bottom: 5px;
 }
 
 @keyframes appear {
