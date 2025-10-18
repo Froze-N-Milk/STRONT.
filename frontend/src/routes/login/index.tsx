@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 
@@ -12,17 +12,17 @@ async function loginRequest(email: string, password: string) {
   return res;
 }
 
+type LoginModalProps = {
+  onClose: () => void;
+  onSwitchToSignUp: () => void;
+};
+
 /** Login page rendered as a centered modal inside #pagebody_wrapper */
-function LoginModal() {
-  const navigate = useNavigate();
+export function LoginModal({ onClose, onSwitchToSignUp }: LoginModalProps) {
   const [email, setEmail] = useState("");
   const [pw, setPw] = useState("");
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-
-  function onClose() {
-    navigate({ to: "/", replace: true });
-  }
 
   // lock body scroll while modal is open
   useEffect(() => {
@@ -60,7 +60,7 @@ function LoginModal() {
         return;
       }
 
-      navigate({ to: "/", replace: true });
+      onClose();
     } finally {
       setLoading(false);
     }
@@ -201,12 +201,21 @@ function LoginModal() {
 
               <div style={footerLink}>
                 <span>Don’t have an account? </span>
-                <Link
-                  to="/sign-up"
-                  style={{ color: "#a4161a", textDecoration: "underline" }}
+                <button
+                  type="button"
+                  onClick={onSwitchToSignUp}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    padding: 0,
+                    color: "#a4161a",
+                    textDecoration: "underline",
+                    cursor: "pointer",
+                    font: "inherit",
+                  }}
                 >
                   Sign up
-                </Link>
+                </button>
               </div>
             </div>
           </form>
@@ -221,5 +230,16 @@ function LoginModal() {
 }
 
 export const Route = createFileRoute("/login/")({
-  component: LoginModal,
+  beforeLoad: ({ location }) => {
+    throw redirect({
+      to: "/",
+      search: {
+        ...((location.search ?? {}) as Record<string, unknown>),
+        auth: "login",
+      },
+      hash: location.hash,
+      replace: true,
+    });
+  },
+  component: () => null,
 });

@@ -1,7 +1,15 @@
-import { createRootRoute, Link, Outlet } from "@tanstack/react-router";
+import {
+  createRootRoute,
+  Link,
+  Outlet,
+  useNavigate,
+  useRouterState,
+} from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import React, { Suspense } from "react";
 import { AccountContext, type Account } from "./-account";
+import { LoginModal } from "./login/index";
+import { SignUpModal } from "./sign-up/index";
 
 const makeAccountInfo = () => {
   let cache: Account | null = null;
@@ -49,43 +57,120 @@ const Navbar = ({ children }: { children?: React.ReactNode }) => (
   </div>
 );
 
-const Layout = ({ account }: { account: Account | null }) => (
-  <AccountContext value={account}>
-    <div id="pagebody_wrapper">
-      <Navbar>
-        {account ? (
-          <>
-            <div className="navbar_item">
-              <Link to="/account">
-                <button>account</button>
-              </Link>
-            </div>
-            <div className="navbar_item">
-              <button
-                onClick={async () => {
-                  await accountInfo.logout();
-                }}
-              >
-                sign out
-              </button>
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="navbar_item">
-              <Link to="/login">login</Link>
-            </div>
-            <div className="navbar_item">
-              <Link to="/sign-up">sign up</Link>
-            </div>
-          </>
+const Layout = ({ account }: { account: Account | null }) => {
+  const navigate = useNavigate();
+  const location = useRouterState({
+    select: (state) => state.location,
+  });
+  const search = location.search as Record<string, unknown> | undefined;
+  const authValue = typeof search?.auth === "string" ? search.auth : null;
+  const showLogin = authValue === "login";
+  const showSignUp = authValue === "signup";
+
+  const openAuthModal = React.useCallback(
+    (type: "login" | "signup") => {
+      navigate({
+        to: ".",
+        search: (prev) => ({
+          ...(prev as Record<string, unknown>),
+          auth: type,
+        }),
+        replace: true,
+      });
+    },
+    [navigate],
+  );
+
+  const closeAuthModal = React.useCallback(() => {
+    navigate({
+      to: ".",
+      search: (prev) => {
+        const next = { ...(prev as Record<string, unknown>) };
+        delete next.auth;
+        return next;
+      },
+      replace: true,
+    });
+  }, [navigate]);
+
+  return (
+    <AccountContext value={account}>
+      <div id="pagebody_wrapper">
+        <Navbar>
+          {account ? (
+            <>
+              <div className="navbar_item">
+                <Link to="/account">
+                  <button>account</button>
+                </Link>
+              </div>
+              <div className="navbar_item">
+                <button
+                  onClick={async () => {
+                    await accountInfo.logout();
+                  }}
+                >
+                  sign out
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="navbar_item">
+                <button
+                  type="button"
+                  onClick={() => openAuthModal("login")}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    padding: 0,
+                    cursor: "pointer",
+                    color: "inherit",
+                    textDecoration: "underline",
+                    font: "inherit",
+                  }}
+                >
+                  login
+                </button>
+              </div>
+              <div className="navbar_item">
+                <button
+                  type="button"
+                  onClick={() => openAuthModal("signup")}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    padding: 0,
+                    cursor: "pointer",
+                    color: "inherit",
+                    textDecoration: "underline",
+                    font: "inherit",
+                  }}
+                >
+                  sign up
+                </button>
+              </div>
+            </>
+          )}
+        </Navbar>
+        <Outlet />
+        {showLogin && (
+          <LoginModal
+            onClose={closeAuthModal}
+            onSwitchToSignUp={() => openAuthModal("signup")}
+          />
         )}
-      </Navbar>
-      <Outlet />
-    </div>
-    <TanStackRouterDevtools />
-  </AccountContext>
-);
+        {showSignUp && (
+          <SignUpModal
+            onClose={closeAuthModal}
+            onSwitchToLogin={() => openAuthModal("login")}
+          />
+        )}
+      </div>
+      <TanStackRouterDevtools />
+    </AccountContext>
+  );
+};
 
 export const Route = createRootRoute({
   component: () => (
