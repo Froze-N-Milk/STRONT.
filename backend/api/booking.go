@@ -550,7 +550,10 @@ func (h *GetUpcomingBookingsHandler) ServeHTTP(w http.ResponseWriter, r *http.Re
 //		restaurant_notes: string,
 //		attendance: string
 //	}
-type GetBookingHistoryHandler struct{}
+type GetBookingHistoryHandler struct {
+	DB     *gorm.DB
+	JWTKey *[32]byte
+}
 
 func (h *GetBookingHistoryHandler) handle(ctx context.Context, db *gorm.DB, restaurantID uuid.UUID, user User) ([]restaurantBookingResponse, error) {
 	bookings, err := gorm.G[restaurantBookingResponse](db).Raw(`
@@ -585,14 +588,33 @@ ORDER BY b.booking_date`,
 	return bookings, nil
 }
 
-func (h *GetBookingHistoryHandler) ServeHTTP(ctx AuthedAppContext, w http.ResponseWriter, r *http.Request) {
+func (h *GetBookingHistoryHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	// get session token cookie, ensure that it exists
+	token, err := r.Cookie("session-token")
+	if err != nil || token.Value == "" {
+		slog.Error("session token not set", "url", r.URL, "error", err)
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	// validate the token
+	email, _, err := ValidateJWT(token.Value, h.JWTKey)
+	if err != nil {
+		slog.Error("Invalid session token", "url", r.URL, "error", err)
+		// remove all site data
+		setSessionTokenCookie(w, "")
+		w.Header().Add("Clear-Site-Data", "\"*\"")
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
 	restaurantID, err := uuid.Parse(r.PathValue("restaurant"))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	response, err := h.handle(r.Context(), ctx.DB, restaurantID, ctx.User)
+	response, err := h.handle(r.Context(), h.DB, restaurantID, User{email})
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
