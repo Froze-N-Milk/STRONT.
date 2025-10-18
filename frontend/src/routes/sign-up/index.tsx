@@ -1,5 +1,5 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useCallback, useEffect, useState } from "react";
+import { createFileRoute, redirect } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 
 /** Call backend account registration API */
@@ -12,19 +12,18 @@ async function signupRequest(email: string, password: string) {
   return res;
 }
 
+type SignUpModalProps = {
+  onClose: () => void;
+  onSwitchToLogin: () => void;
+};
+
 /** Sign-up page rendered as a centered modal inside #pagebody_wrapper */
-function SignUpModal() {
-  const navigate = useNavigate();
+export function SignUpModal({ onClose, onSwitchToLogin }: SignUpModalProps) {
   const [email, setEmail] = useState("");
   const [pw, setPw] = useState("");
   const [pw2, setPw2] = useState("");
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-
-  // Close modal and go back to home
-  const onClose = useCallback(() => {
-    navigate({ to: "/", replace: true });
-  }, [navigate]);
 
   // ESC to close + lock body scroll while modal is open
   // TODO: later, extract this shared effect into a small custom hook.
@@ -37,7 +36,7 @@ function SignUpModal() {
       window.removeEventListener("keydown", onKey);
       document.body.style.overflow = prev;
     };
-  }, [onClose]);
+  });
 
   // Submit sign-up form
   async function onSubmit(e: React.FormEvent) {
@@ -74,7 +73,7 @@ function SignUpModal() {
 
       // Fallback: if backend doesn't redirect (should be rare), go home so navbar can refresh user state.
       // This line shouldn't normally get hit.
-      navigate({ to: "/", replace: true });
+      onClose();
     } finally {
       setLoading(false);
     }
@@ -216,6 +215,7 @@ function SignUpModal() {
                   required
                   minLength={6}
                   autoComplete="new-password"
+                  autoFocus
                 />
               </div>
 
@@ -241,12 +241,21 @@ function SignUpModal() {
               <div style={{ textAlign: "center", marginTop: 12 }}>
                 <span style={footerLine}>
                   <span>Already have an account?</span>
-                  <Link
-                    to="/login"
-                    style={{ color: "#a4161a", textDecoration: "underline" }}
+                  <button
+                    type="button"
+                    onClick={onSwitchToLogin}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      padding: 0,
+                      color: "#a4161a",
+                      textDecoration: "underline",
+                      cursor: "pointer",
+                      font: "inherit",
+                    }}
                   >
                     Log in
-                  </Link>
+                  </button>
                 </span>
               </div>
             </div>
@@ -263,5 +272,16 @@ function SignUpModal() {
 }
 
 export const Route = createFileRoute("/sign-up/")({
-  component: SignUpModal,
+  beforeLoad: ({ location }) => {
+    throw redirect({
+      to: "/",
+      search: {
+        ...((location.search ?? {}) as Record<string, unknown>),
+        auth: "signup",
+      },
+      hash: location.hash,
+      replace: true,
+    });
+  },
+  component: () => null,
 });

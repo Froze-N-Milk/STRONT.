@@ -1,19 +1,19 @@
 // frontend/src/routes/index.tsx
 // -----------------------------------------------------------------------------
-// Browse Restaurants (respect backend data + UUID routing)
+// Browse Restaurants (inline filters + list view)
 // - Uses GET /api/restaurants
-// - Card link goes to /restaurants/$id (UUID)
-// - Handle loading/error/empty states
-// - Uses global .submit_button (red) + .card styles
+// - Local filtering (keyword/date/time/party/tags)
+// - List rows link to /restaurants/$id
+// - Uses global .submit_button (red)
 // -----------------------------------------------------------------------------
 
 import "../index.css"; // keep global site styles (navbar + red buttons)
 import "./index.css";
 
 import * as React from "react";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 
-type Restaurant = {
+export type Restaurant = {
   id: string; // UUID
   name: string;
   description: string | null;
@@ -23,6 +23,7 @@ type Restaurant = {
   maxPartySize: number;
   bookingCapacity: number;
   bookingLength: number;
+  tags: string[];
 };
 
 const errMsg = (e: unknown) => (e instanceof Error ? e.message : String(e));
@@ -59,8 +60,9 @@ export const Route = createFileRoute("/")({
 });
 
 function BrowseRestaurants() {
-  const navigate = useNavigate();
-  const [list, setList] = React.useState<Restaurant[] | null>(null);
+  const [restaurants, setRestaurants] = React.useState<Restaurant[] | null>(
+    null,
+  );
   const [err, setErr] = React.useState<string | null>(null);
   const [q, setQ] = React.useState("");
   const [loading, setLoading] = React.useState(false);
@@ -68,6 +70,7 @@ function BrowseRestaurants() {
   const [timeSlotFilter, setTimeSlotFilter] = React.useState("");
   const [partySizeFilter, setPartySizeFilter] = React.useState("");
   const [searchError, setSearchError] = React.useState<string | null>(null);
+  const [selectedTags, setSelectedTags] = React.useState<string[]>([]);
 
   React.useEffect(() => {
     let alive = true;
@@ -80,14 +83,25 @@ function BrowseRestaurants() {
           const message = await res.text();
           throw new Error(message || `HTTP ${res.status}`);
         }
-        const data: Restaurant[] = await res.json();
+        const data: unknown = await res.json();
+        if (!Array.isArray(data)) {
+          throw new Error("Bad restaurant payload");
+        }
+        const normalized: Restaurant[] = data.map((item) => {
+          const restaurant = item as Restaurant;
+          const tags = Array.isArray(restaurant.tags) ? restaurant.tags : [];
+          return {
+            ...restaurant,
+            tags,
+          };
+        });
         if (alive) {
-          setList(data);
+          setRestaurants(normalized);
         }
       } catch (e: unknown) {
         if (alive) {
           setErr(errMsg(e));
-          setList([]);
+          setRestaurants([]);
         }
       } finally {
         if (alive) {
@@ -95,26 +109,23 @@ function BrowseRestaurants() {
         }
       }
     })();
+
     return () => {
       alive = false;
     };
   }, []);
 
-  React.useEffect(() => {
-    if (!dateFilter && timeSlotFilter) {
-      setTimeSlotFilter("");
-    }
-  }, [dateFilter, timeSlotFilter]);
-
   const isFiltering =
     dateFilter.length > 0 ||
     timeSlotFilter.length > 0 ||
-    partySizeFilter.length > 0;
+    partySizeFilter.length > 0 ||
+    selectedTags.length > 0;
 
   const clearFilters = React.useCallback(() => {
     setDateFilter("");
     setTimeSlotFilter("");
     setPartySizeFilter("");
+    setSelectedTags([]);
     setSearchError(null);
   }, []);
 
@@ -131,7 +142,78 @@ function BrowseRestaurants() {
     }
   }, []);
 
-  const noRestaurants = !err && !loading && list !== null && list.length === 0;
+  const availableTags = React.useMemo(() => {
+    if (!restaurants) return [] as string[];
+    const bucket = new Set<string>();
+    restaurants.forEach((restaurant) => {
+      restaurant.tags.forEach((tag) => {
+        if (tag.trim().length > 0) bucket.add(tag);
+      });
+    });
+    return Array.from(bucket).sort((a, b) => a.localeCompare(b));
+  }, [restaurants]);
+
+  const filteredRestaurants = React.useMemo(() => {
+    if (!restaurants) return [] as Restaurant[];
+    const trimmedQuery = q.trim().toLowerCase();
+    const parsedPartySize = Number(partySizeFilter);
+
+    return restaurants.filter((restaurant) => {
+      if (
+        selectedTags.length > 0 &&
+        !selectedTags.every((tag) => restaurant.tags.includes(tag))
+      ) {
+        return false;
+      }
+
+      if (trimmedQuery) {
+        const haystack = [
+          restaurant.name,
+          restaurant.description ?? "",
+          restaurant.locationText ?? "",
+          restaurant.locationUrl ?? "",
+          restaurant.tags.join(" "),
+        ]
+          .join(" ")
+          .toLowerCase();
+        if (!haystack.includes(trimmedQuery)) {
+          return false;
+        }
+      }
+
+      if (
+        partySizeFilter &&
+        !Number.isNaN(parsedPartySize) &&
+        restaurant.maxPartySize < parsedPartySize
+      ) {
+        return false;
+      }
+
+      // TODO: incorporate date/time availability filtering when data is present
+
+      return true;
+    });
+  }, [restaurants, selectedTags, q, partySizeFilter]);
+
+  const toggleTag = React.useCallback((tag: string) => {
+    setSelectedTags((current) =>
+      current.includes(tag)
+        ? current.filter((item) => item !== tag)
+        : [...current, tag],
+    );
+  }, []);
+
+  const noRestaurants =
+    !err && !loading && restaurants !== null && restaurants.length === 0;
+
+  const hasFiltered = filteredRestaurants.length > 0;
+  const noMatches =
+    !err &&
+    !loading &&
+    restaurants !== null &&
+    restaurants.length > 0 &&
+    filteredRestaurants.length === 0;
+
   return (
     <div
       className="browse-root"
@@ -164,12 +246,12 @@ function BrowseRestaurants() {
         }
         @media (min-width: 740px) {
           .browse-grid {
-            grid-template-columns: repeat(2, minmax(340px, 1fr)); 
+            grid-template-columns: repeat(2, minmax(340px, 1fr));
           }
         }
         @media (min-width: 1120px) {
           .browse-grid {
-            grid-template-columns: repeat(3, minmax(340px, 1fr)); 
+            grid-template-columns: repeat(3, minmax(340px, 1fr));
           }
         }
       `}</style>
@@ -228,7 +310,6 @@ function BrowseRestaurants() {
               setTimeSlotFilter(e.target.value);
               setSearchError(null);
             }}
-            disabled={!dateFilter}
             style={{
               border: "1px solid #e5e5e5",
               borderRadius: 12,
@@ -287,7 +368,8 @@ function BrowseRestaurants() {
               trimmed.length > 0 ||
               dateFilter.length > 0 ||
               timeSlotFilter.length > 0 ||
-              partySizeFilter.length > 0;
+              partySizeFilter.length > 0 ||
+              selectedTags.length > 0;
             if (!nextCanSearch) {
               setSearchError(
                 "Please set at least one filter or keyword before searching.",
@@ -296,15 +378,6 @@ function BrowseRestaurants() {
             }
             setSearchError(null);
             setQ(trimmed);
-            navigate({
-              to: "/search",
-              search: {
-                q: trimmed || undefined,
-                date: dateFilter || undefined,
-                timeSlot: timeSlotFilter || undefined,
-                partySize: partySizeFilter || undefined,
-              },
-            });
           }}
           style={{
             display: "flex",
@@ -343,6 +416,70 @@ function BrowseRestaurants() {
         <div style={{ color: "#b91c1c", marginBottom: 16 }}>{searchError}</div>
       )}
 
+      {(q ||
+        dateFilter ||
+        timeSlotFilter ||
+        partySizeFilter ||
+        selectedTags.length > 0) && (
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 12,
+            marginBottom: 16,
+            color: "#374151",
+            fontSize: 14,
+          }}
+        >
+          {q && (
+            <span>
+              Keyword <strong>{q}</strong>
+            </span>
+          )}
+          {dateFilter && (
+            <span>
+              Date <strong>{dateFilter}</strong>
+            </span>
+          )}
+          {timeSlotFilter && (
+            <span>
+              Time <strong>{slotLabel(Number(timeSlotFilter))}</strong>
+            </span>
+          )}
+          {partySizeFilter && (
+            <span>
+              Party size <strong>{partySizeFilter}</strong>
+            </span>
+          )}
+        </div>
+      )}
+
+      {availableTags.length > 0 && (
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 8,
+            marginBottom: 24,
+          }}
+        >
+          {availableTags.map((tag) => {
+            const isActive = selectedTags.includes(tag);
+            return (
+              <button
+                key={tag}
+                type="button"
+                onClick={() => toggleTag(tag)}
+                className="browse-tag-chip"
+                aria-pressed={isActive}
+              >
+                {tag}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       {/* Status indicators */}
       {err && (
         <div style={{ color: "#b91c1c", marginBottom: 16 }}>
@@ -355,134 +492,105 @@ function BrowseRestaurants() {
           No restaurants have been added yet.
         </div>
       )}
-      {/* Card grid */}
-      {list && list.length > 0 && (
-        <div className="browse-grid">
-          {list.map((r) => (
+      {!err && !loading && noMatches && (
+        <div style={{ marginBottom: 16 }}>
+          No restaurants match the selected tags.
+        </div>
+      )}
+      {/* List view */}
+      {hasFiltered && (
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 24,
+          }}
+        >
+          {filteredRestaurants.map((restaurant) => (
             <div
-              key={r.id}
-              className="card browse-card"
+              key={restaurant.id}
               style={{
-                border: "1px solid #e5e5e5",
-                borderRadius: 12,
-                overflow: "hidden",
-                background: "#fff",
-                padding: "2em",
-                display: "flex",
-                flexDirection: "column",
-                gap: 16,
-                minHeight: 440,
+                display: "grid",
+                gap: 12,
+                gridTemplateColumns: "1fr auto",
+                alignItems: "center",
+                paddingBottom: 18,
+                borderBottom: "1px solid #e5e7eb",
               }}
             >
               <div
                 style={{
-                  aspectRatio: "4/3",
-                  background: "#bbb",
-                  overflow: "hidden",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "#444",
-                  borderRadius: 8,
-                  width: "100%",
-                }}
-              >
-                image (demo)
-              </div>
-
-              <div
-                style={{
-                  fontSize: 14,
-                  lineHeight: 1.35,
                   display: "flex",
                   flexDirection: "column",
-                  gap: 8,
-                  flex: 1,
+                  gap: 10,
                 }}
               >
-                <div style={{ fontWeight: 700 }}>{r.name}</div>
-
                 <div
                   style={{
-                    color: "#4B5563",
-                    lineHeight: 1.6,
-                    minHeight: "3.2em",
-                    maxHeight: "3.2em",
-                    overflow: "hidden",
-                    display: "block",
+                    display: "flex",
+                    gap: 12,
+                    flexWrap: "wrap",
+                    alignItems: "baseline",
                   }}
                 >
-                  <span style={{ display: "block" }}>
-                    {r.description || "No description yet."}
-                  </span>
-                  <span
-                    style={{ display: "block", visibility: "hidden" }}
-                    aria-hidden="true"
-                  >
-                    placeholder
+                  <h2 style={{ margin: 0, fontSize: 20 }}>{restaurant.name}</h2>
+                  <span style={{ fontSize: 13, color: "#6b7280" }}>
+                    Capacity {restaurant.bookingCapacity} • Up to{" "}
+                    {restaurant.maxPartySize} guests •{" "}
+                    {formatDurationFromSlots(restaurant.bookingLength)}
                   </span>
                 </div>
 
+                <p style={{ margin: 0, color: "#4b5563" }}>
+                  {restaurant.description || "No description yet."}
+                </p>
+
                 <div
                   style={{
+                    display: "flex",
+                    gap: 12,
+                    fontSize: 13,
                     color: "#374151",
-                    lineHeight: 1.6,
-                    minHeight: "1.6em",
-                    maxHeight: "1.6em",
-                    overflow: "hidden",
-                    whiteSpace: "nowrap",
-                    textOverflow: "ellipsis",
-                    display: "block",
+                    flexWrap: "wrap",
                   }}
                 >
-                  {r.locationText ? (
-                    r.locationUrl ? (
-                      <a
-                        href={r.locationUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        style={{
-                          color: "#374151",
-                          textDecoration: "underline",
-                          whiteSpace: "nowrap",
-                          textOverflow: "ellipsis",
-                          overflow: "hidden",
-                          display: "inline-block",
-                          maxWidth: "100%",
-                        }}
-                      >
-                        {r.locationText}
-                      </a>
-                    ) : (
-                      r.locationText
-                    )
-                  ) : (
-                    "No location set."
+                  <span>{restaurant.locationText || "No location set."}</span>
+                  {restaurant.locationUrl && (
+                    <a
+                      href={restaurant.locationUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{ color: "#a4161a" }}
+                    >
+                      View map
+                    </a>
                   )}
                 </div>
 
-                <div
-                  style={{
-                    fontSize: 12,
-                    color: "#6b7280",
-                    display: "flex",
-                    flexWrap: "wrap",
-                    gap: 12,
-                  }}
-                >
-                  <span>Up to {r.maxPartySize} guests</span>
-                  <span>
-                    {formatDurationFromSlots(r.bookingLength)} per booking
-                  </span>
-                  <span>Capacity {r.bookingCapacity}</span>
-                </div>
+                {restaurant.tags.length > 0 && (
+                  <div
+                    style={{
+                      display: "flex",
+                      flexWrap: "wrap",
+                      gap: 8,
+                    }}
+                  >
+                    {restaurant.tags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="browse-tag-chip browse-tag-chip--readonly"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <Link
-                to="/restaurants/$id"
-                params={{ id: r.id }}
-                className="submit_button cta-wide"
-                style={{ marginTop: "auto" }}
+                to="/$restaurantid"
+                params={{ restaurantid: restaurant.id }}
+                className="submit_button cta-wide search-result-link"
               >
                 Go to booking
               </Link>

@@ -262,8 +262,8 @@ function SearchPage() {
                 </div>
               </div>
               <Link
-                to="/restaurants/$id"
-                params={{ id: restaurant.id }}
+                to="/$restaurantid"
+                params={{ restaurantid: restaurant.id }}
                 className="submit_button cta-wide search-result-link"
                 style={{ justifySelf: "flex-end" }}
               >
