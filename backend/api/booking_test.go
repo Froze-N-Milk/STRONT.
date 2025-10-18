@@ -253,3 +253,48 @@ func TestCreateOnlineBooking(t *testing.T) {
 		})
 	})
 }
+
+func TestUpdateBooking(t *testing.T) {
+	t.Parallel()
+	WithTestDB(t, func(db *gorm.DB) {
+		s := SeedDB(db)
+		handler := UpdateBookingHandler{}
+
+		t.Run("Accept Valid Booking Update", func(t *testing.T) {
+			createBookingHandler := CreateOnlineBookingHandler{}
+			// Set up booking to update
+			br := bookingRequest{
+				RestaurantID:  s.Restaurant.ID,
+				GivenName:     s.CustomerContact.GivenName,
+				FamilyName:    s.CustomerContact.FamilyName,
+				Phone:         s.CustomerContact.Phone,
+				Email:         s.CustomerContact.Email,
+				PartySize:     4,
+				BookingDate:   time.Date(2026, 1, 2, 0, 0, 0, 0, time.UTC),
+				TimeSlot:      24,
+				CustomerNotes: "yay",
+			}
+
+			db.Session(&gorm.Session{SkipDefaultTransaction: true}).Begin()
+			response, err := createBookingHandler.handle(s.Ctx, db, br)
+			if err != nil {
+				db.Rollback()
+				t.Errorf("error running CreateOnlineBookingHandler.handle(): %v", err)
+				return
+			}
+			// db.Commit()
+
+			ur := updateBookingRequest{
+				TimeSlot:      25,
+				PartySize:     3,
+				CustomerNotes: "lmao dude",
+			}
+
+			err = handler.handle(s.Ctx, db, ur, response.ID)
+
+			if err != nil {
+				t.Errorf("error running UpdateBookingHandler.handle(): %v", err)
+			}
+		})
+	})
+}
