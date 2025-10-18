@@ -420,7 +420,8 @@ func (h *CancelBookingHandler) ServeHTTP(ctx AppContext, w http.ResponseWriter, 
 //		time_slot: int,
 //		creation_date: string,
 //		customer_notes: string,
-//		restaurant_notes: string
+//		restaurant_notes: string,
+//		attendance: string
 //	}
 type GetUpcomingBookingsHandler struct {
 	DB     *gorm.DB
@@ -439,6 +440,7 @@ type restaurantBookingResponse struct {
 	CreationDate    time.Time `json:"creation_date"`
 	CustomerNotes   string    `json:"customer_notes"`
 	RestaurantNotes string    `json:"restaurant_notes"`
+	Attendance      string    `json:"attendance"`
 }
 
 func (h *GetUpcomingBookingsHandler) handle(ctx context.Context, db *gorm.DB, restaurantID uuid.UUID, user User) ([]restaurantBookingResponse, error) {
@@ -455,7 +457,8 @@ SELECT
 	b.time_slot,
 	b.creation_date,
 	b.customer_notes,
-	b.restaurant_notes
+	b.restaurant_notes,
+	b.attendance
 FROM booking b
 JOIN customer_contact c ON c.id = b.contact_id
 JOIN restaurant r on r.id = $2
@@ -544,7 +547,8 @@ func (h *GetUpcomingBookingsHandler) ServeHTTP(w http.ResponseWriter, r *http.Re
 //		time_slot: int,
 //		creation_date: string,
 //		customer_notes: string,
-//		restaurant_notes: string
+//		restaurant_notes: string,
+//		attendance: string
 //	}
 type GetBookingHistoryHandler struct{}
 
@@ -561,7 +565,8 @@ SELECT
 	b.time_slot,
 	b.creation_date,
 	b.customer_notes,
-	b.restaurant_notes
+	b.restaurant_notes,
+	b.attendance
 FROM booking b
 JOIN customer_contact c ON c.id = b.contact_id
 JOIN restaurant r on r.id = $2
