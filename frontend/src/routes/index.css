@@ -53,8 +53,9 @@
 .search-button {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
-  padding: 0 16px;
+  padding: 0 22px 0 18px;
   font-size: 14px;
   font-weight: 600;
 }
@@ -82,7 +83,18 @@
 
 .cta-wide {
   min-width: 200px;
+  display: inline-flex;
+  align-items: center;
   justify-content: center;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  color: #ffffff;
+}
+
+.cta-wide:visited,
+.cta-wide:hover {
+  color: #ffffff;
 }
 
 .search-result-link {
