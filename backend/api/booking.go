@@ -81,6 +81,7 @@ func (b *bookingRequest) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// TODO: Check booking capacity for surrounding timeslots to see if ongoing bookings will cause overlap into this timeslot
 func validateBookingDateAndTime(timeSlot int, date time.Time, availability *model.Availability, db *gorm.DB, ctx context.Context) (bool, error) {
 	if timeSlot < 0 {
 		return false, nil
