@@ -21,12 +21,12 @@ type Restaurant = {
   frontpageMarkdown: string | null;
 };
 
-export const Route = createFileRoute("/restaurants/$id/")({
+export const Route = createFileRoute("/$restaurantid/")({
   component: RestaurantDetail,
 });
 
 function RestaurantDetail() {
-  const { id } = Route.useParams();
+  const { restaurantid } = Route.useParams();
   const [r, setR] = React.useState<Restaurant | null>(null);
   const [err, setErr] = React.useState<string | null>(null);
   const [loading, setLoading] = React.useState(true);
@@ -37,7 +37,7 @@ function RestaurantDetail() {
       try {
         setLoading(true);
         setErr(null);
-        const res = await fetch(`/api/restaurant/${id}`);
+        const res = await fetch(`/api/restaurant/${restaurantid}`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data: Restaurant = await res.json();
         if (alive) setR(data);
@@ -50,7 +50,7 @@ function RestaurantDetail() {
     return () => {
       alive = false;
     };
-  }, [id]);
+  }, [restaurantid]);
 
   if (loading) return <main style={{ padding: 24 }}>Loading…</main>;
   if (err)
@@ -156,8 +156,8 @@ function RestaurantDetail() {
             style={{ display: "flex", justifyContent: "center", marginTop: 18 }}
           >
             <Link
-              to="/restaurants/$restaurantid/make-booking" // match generated route path (no trailing slash)
-              params={{ restaurantid: id }} // pass current detail id as param
+              to="/$restaurantid/make-booking"
+              params={{ restaurantid: restaurantid }} // pass current detail id as param
               className="submit_button" // keep global red style
               style={{
                 height: "2.2em",

@@ -215,8 +215,8 @@ function BrowseRestaurants() {
               </div>
 
               <Link
-                to="/restaurants/$id"
-                params={{ id: r.id }}
+                to="/$restaurantid"
+                params={{ restaurantid: r.id }}
                 className="submit_button"
                 style={{
                   gridRow: 3,

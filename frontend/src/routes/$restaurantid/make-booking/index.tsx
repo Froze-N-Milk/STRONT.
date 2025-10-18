@@ -2,34 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { timeFromMaskValue } from "./-utils";
 
-export const Route = createFileRoute(
-  "/restaurants/$restaurantid/make-booking/",
-)({
+export const Route = createFileRoute("/$restaurantid/make-booking/")({
   component: BookingPageContent,
 });
-
-//const fetchRestaurantData = (restaurantid: string) => {
-//  let cache: DateObj[] | null = null;
-//  let promise: Promise<void> | null = null;
-//  const fetchData = () =>
-//    fetch("/api/availability/" + restaurantid, {
-//      method: "GET",
-//    }).then(async (r) => {
-//      promise = null;
-//      if (r.status == 200) {
-//        cache = parseDates(await r.text()); //TODO: Change this to use response.json later
-//      } else {
-//        cache = null;
-//      }
-//    });
-//  promise = fetchData();
-//  return {
-//    read() {
-//      if (promise) throw promise;
-//      return cache;
-//    },
-//  };
-//};
 
 function parseDates(datedata: string) {
   const formattedDates: DateObj[] = [];
@@ -122,6 +97,7 @@ function MakeBookingForm({ restaurantData }: { restaurantData: DateObj[] }) {
   const [contactNumber, setContactNumber] = useState("");
   const [customerNotes, setCustomerNotes] = useState("");
   const [loading, setLoading] = useState(false);
+  const [refresh, setRefresh] = useState(false);
   const restaurantid = Route.useParams().restaurantid;
 
   const detailsFilled =
@@ -143,9 +119,13 @@ function MakeBookingForm({ restaurantData }: { restaurantData: DateObj[] }) {
 
   function handleDateSelect(date: DateObj) {
     if (date != selectedDate) {
+      setRefresh(true);
       setSelectedDate(date);
       setSelectedTime("");
     }
+    setTimeout(() => {
+      setRefresh(false);
+    }, 10);
   }
 
   function handleTimeSelect(timeFormatted: string, timeValue: number) {
@@ -250,7 +230,13 @@ function MakeBookingForm({ restaurantData }: { restaurantData: DateObj[] }) {
 
         <h3>Available seating times:</h3>
         <div className="seating-time-wrapper">
-          <div className="seating-time-selection">
+          <div
+            className={
+              refresh
+                ? "seating-time-selection"
+                : "seating-time-selection refreshing"
+            }
+          >
             {selectedDate.hours != BigInt(0) ? (
               listAvailableTimes(selectedDate.hours).map((i: number) => {
                 const timeFormatted = timeFromMaskValue(i);
