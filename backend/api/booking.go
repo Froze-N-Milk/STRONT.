@@ -403,6 +403,19 @@ func (h *UpdateBookingHandler) handle(ctx context.Context, db *gorm.DB, request 
 		return err
 	}
 
+	availability, err := gorm.G[model.Availability](db).Raw(`
+SELECT * FROM availability a
+JOIN restaurant r ON r.availability_id = a.id
+WHERE
+    r.id = $1
+`, booking.RestaurantID).First(ctx)
+
+	if result, err := validateBookingDateAndTime(request.TimeSlot, booking.BookingDate, &availability, db, ctx); err != nil {
+		return err
+	} else if !result {
+		return fmt.Errorf("invalid booking date or time")
+	}
+
 	booking.TimeSlot = request.TimeSlot
 	booking.PartySize = request.PartySize
 
