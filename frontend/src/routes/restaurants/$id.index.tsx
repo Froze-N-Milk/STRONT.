@@ -4,6 +4,7 @@
 // -----------------------------------------------------------------------------
 
 import "../../index.css";
+import "../index.css";
 import * as React from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import type { Restaurant } from "../index";
