@@ -17,6 +17,7 @@ build:
 
 .PHONY: test-db
 test-db:
+	$(CONTAINER_RUNTIME) stop test-db || true # make sure it's stopped before trying to start it again.
 	$(CONTAINER_RUNTIME) run --rm -d --name test-db \
     	-v ./init.sql:/docker-entrypoint-initdb.d/init.sql \
     	-e POSTGRES_DB=stront_template \
@@ -30,7 +31,6 @@ wait-test-db:
 		sleep 1; \
 	done
 
-# TODO: Containerise and update the test command
 .PHONY: test
 test: test-db wait-test-db
 	DB_HOST="localhost" \

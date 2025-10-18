@@ -13,9 +13,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// TODO: Check if booking time is during opening hours (CREATE, UPDATE)
-// TODO: Send booking confirmation email
-
 type bookingRequest struct {
 	RestaurantID  uuid.UUID
 	GivenName     string
@@ -82,6 +79,46 @@ func (b *bookingRequest) UnmarshalJSON(data []byte) error {
 	b.CustomerNotes = raw.CustomerNotes
 
 	return nil
+}
+
+// TODO: Check booking capacity for surrounding timeslots to see if ongoing bookings will cause overlap into this timeslot
+func validateBookingDateAndTime(timeSlot int, date time.Time, availability *model.Availability, db *gorm.DB, ctx context.Context) (bool, error) {
+	if timeSlot < 0 {
+		return false, nil
+	}
+
+	weekdayHourMask := *availability.WeekdayMask(date.Weekday())
+
+	if (weekdayHourMask & (1 << timeSlot)) == 0 {
+		return false, nil
+	}
+
+	occasions, err := gorm.G[model.Occasion](db).Raw(`
+SELECT * FROM occasion o
+JOIN availability a on a.id = o.availability_id
+WHERE
+    o.availability_id = $2
+AND 
+    (
+		o.close_date = $1 -- Check the exact date
+	OR 
+		( -- Check if any recurring dates 
+			yearly_recurring = TRUE
+			AND EXTRACT(DAY FROM close_date) = EXTRACT(DAY FROM $1)
+			AND EXTRACT(MONTH FROM close_date) = EXTRACT(MONTH FROM $1)
+		)
+    )
+`, date.UTC(), availability.ID).Find(ctx)
+	if err != nil {
+		return false, err
+	}
+
+	for _, o := range occasions {
+		if (o.HourMask & (1 << timeSlot)) != 0 {
+			return false, nil
+		}
+	}
+	return true, nil
 }
 
 //region Get Booking by ID
@@ -183,13 +220,61 @@ type CreateOnlineBookingHandler struct {
 }
 
 func (h *CreateOnlineBookingHandler) handle(ctx context.Context, db *gorm.DB, request bookingRequest) (model.Booking, error) {
+	restaurant, err := gorm.G[model.Restaurant](db).Where("id = ?", request.RestaurantID).First(ctx)
+
+	if err != nil {
+		return model.Booking{}, err
+	}
+
+	// check party size is allowed
+	if request.PartySize < 0 || request.PartySize > restaurant.MaxPartySize {
+		return model.Booking{}, fmt.Errorf("requested party size exceeds restaurant limit: %d/%d",
+			request.PartySize,
+			restaurant.MaxPartySize)
+	}
+
+	bookingsAtTimeSlot, err := gorm.G[model.Booking](db).Raw(`
+SELECT * FROM booking
+WHERE
+    restaurant_id = $1
+	AND booking_date = $2
+	AND time_slot = $3`,
+		request.RestaurantID,
+		request.BookingDate,
+		request.TimeSlot).Find(ctx)
+
+	if err != nil {
+		return model.Booking{}, err
+	}
+
+	// Booking capacity for this timeslot has been reached/exceeded
+	if len(bookingsAtTimeSlot) >= restaurant.BookingCapacity {
+		return model.Booking{},
+			fmt.Errorf("restaurant has reached capacity for the requested timeslot: %d (capacity: %d)",
+				request.TimeSlot, restaurant.BookingCapacity)
+	}
+
+	// check booking date and time slot is available
+	// load the associations for the restaurant availability and occasions
+	availability, err := gorm.G[model.Availability](db).Where("id = ?", restaurant.AvailabilityID).First(ctx)
+
+	if err != nil {
+		return model.Booking{}, err
+	}
+
+	if result, err := validateBookingDateAndTime(request.TimeSlot, request.BookingDate, &availability, db, ctx); err != nil {
+		return model.Booking{}, err
+	} else if !result {
+		return model.Booking{}, fmt.Errorf("invalid booking date or time")
+	}
+
 	customerContact := model.CustomerContact{
 		GivenName:  request.GivenName,
 		FamilyName: request.FamilyName,
 		Phone:      request.Phone,
 		Email:      request.Email,
 	}
-	err := gorm.G[model.CustomerContact](db).Create(ctx, &customerContact)
+	err = gorm.G[model.CustomerContact](db).Create(ctx, &customerContact)
 
 	if err != nil {
 		return model.Booking{}, err
@@ -199,7 +284,7 @@ func (h *CreateOnlineBookingHandler) handle(ctx context.Context, db *gorm.DB, re
 		ContactID:       customerContact.ID,
 		RestaurantID:    request.RestaurantID,
 		PartySize:       request.PartySize,
-		BookingDate:     request.BookingDate,
+		BookingDate:     request.BookingDate.UTC(),
 		TimeSlot:        request.TimeSlot,
 		CustomerNotes:   request.CustomerNotes,
 		Attendance:      "pending",
@@ -317,6 +402,19 @@ func (h *UpdateBookingHandler) handle(ctx context.Context, db *gorm.DB, request 
 	booking, err := gorm.G[model.Booking](db).Where("id = ?", bookingId).First(ctx)
 	if err != nil {
 		return err
+	}
+
+	availability, err := gorm.G[model.Availability](db).Raw(`
+SELECT * FROM availability a
+JOIN restaurant r ON r.availability_id = a.id
+WHERE
+    r.id = $1
+`, booking.RestaurantID).First(ctx)
+
+	if result, err := validateBookingDateAndTime(request.TimeSlot, booking.BookingDate, &availability, db, ctx); err != nil {
+		return err
+	} else if !result {
+		return fmt.Errorf("invalid booking date or time")
 	}
 
 	booking.TimeSlot = request.TimeSlot
