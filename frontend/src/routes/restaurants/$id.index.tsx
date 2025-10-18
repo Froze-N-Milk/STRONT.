@@ -1,17 +1,13 @@
 // frontend/src/routes/restaurants/$id.index.tsx
 // -----------------------------------------------------------------------------
-// Restaurant Detail (respect backend data + UUID routing)
-// - Uses GET /api/restaurant/:id
-// - Only exposes available fields (name/description/location*/frontpageMarkdown)
-// - Removed party-size demo
-// - Use global .submit_button (red)
-// - esponsive layout (no horizontal scroll): 1-col on small, 2-col on wide
+// Restaurant Detail (inline overview + availability + actions)
 // -----------------------------------------------------------------------------
 
-import "../../index.css"; // keep global site styles (red buttons)
+import "../../index.css";
 import * as React from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { AccountContext } from "../-account";
+import type { Restaurant } from "../index";
+
 const errMsg = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
 const HALF_HOUR_SLOTS = 48;
@@ -90,42 +86,26 @@ interface AvailabilityDay {
   hours: bigint;
 }
 
-type Restaurant = {
-  id: string;
-  name: string;
-  description: string | null;
-  locationText: string | null;
-  locationUrl: string | null;
-  frontpageMarkdown: string | null;
-  maxPartySize: number;
-  bookingCapacity: number;
-  bookingLength: number;
-};
-
 export const Route = createFileRoute("/restaurants/$id/")({
   component: RestaurantDetail,
 });
 
 function RestaurantDetail() {
   const { id } = Route.useParams();
-  const account = React.useContext(AccountContext);
   const navigate = useNavigate();
-  const [r, setR] = React.useState<Restaurant | null>(null);
+  const [restaurant, setRestaurant] = React.useState<Restaurant | null>(null);
   const [availability, setAvailability] = React.useState<
     AvailabilityDay[] | null
   >(null);
   const [err, setErr] = React.useState<string | null>(null);
   const [loading, setLoading] = React.useState(true);
+
   const handleReserveClick = React.useCallback(() => {
-    if (!account) {
-      navigate({ to: "/login" });
-      return;
-    }
     navigate({
       to: "/restaurants/$restaurantid/make-booking",
       params: { restaurantid: id },
     });
-  }, [account, id, navigate]);
+  }, [id, navigate]);
 
   React.useEffect(() => {
     let alive = true;
@@ -136,14 +116,17 @@ function RestaurantDetail() {
         const res = await fetch(`/api/restaurant/${id}`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data: Restaurant = await res.json();
-        if (alive) setR(data);
+        const normalized: Restaurant = {
+          ...data,
+          tags: Array.isArray(data.tags) ? data.tags : [],
+        };
+        if (alive) setRestaurant(normalized);
       } catch (e: unknown) {
         if (alive) setErr(errMsg(e));
       } finally {
         if (alive) setLoading(false);
       }
     })();
-
     return () => {
       alive = false;
     };
@@ -176,92 +159,65 @@ function RestaurantDetail() {
   if (loading) return <main style={{ padding: 24 }}>Loading…</main>;
   if (err)
     return <main style={{ padding: 24, color: "#b91c1c" }}>Error: {err}</main>;
-  if (!r) return <main style={{ padding: 24 }}>Not found.</main>;
+  if (!restaurant) return <main style={{ padding: 24 }}>Not found.</main>;
 
-  const bookingDuration = formatDurationFromSlots(r.bookingLength);
+  const bookingDuration = formatDurationFromSlots(restaurant.bookingLength);
 
   return (
-    <main
-      style={{
-        maxWidth: 1200,
-        margin: "0 auto",
-        padding: 24,
-        overflowX: "hidden", // prevent horizontal scroll on small screens
-      }}
-    >
-      {/* local responsive styles: stack on small, 2-cols on wide */}
+    <main style={{ maxWidth: 1200, margin: "0 auto", padding: 24 }}>
       <style>{`
         .detail-grid {
           display: grid;
           gap: 24px;
           align-items: start;
-          grid-template-columns: 1fr;            /*  mobile: single column */
+          grid-template-columns: 1fr;
         }
         @media (min-width: 900px) {
           .detail-grid {
-            grid-template-columns: minmax(360px, 560px) 1fr; /*  wide: 2 cols */
+            grid-template-columns: minmax(360px, 560px) 1fr;
           }
         }
       `}</style>
 
       <div className="detail-grid">
-        {/* Left: image (demo) */}
-        <div>
-          <div
-            style={{
-              aspectRatio: "4/3",
-              background: "#e5e7eb",
-              overflow: "hidden",
-              borderRadius: 12,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: "#6b7280",
-              width: "100%", // respect column width
-            }}
-          >
-            image (demo)
-          </div>
-        </div>
-
-        {/* Right: content */}
         <div
           style={{
             background: "#fff",
             border: "1px solid #e5e5e5",
             borderRadius: 12,
-            padding: 16,
+            padding: 24,
+            display: "flex",
+            flexDirection: "column",
+            gap: 16,
           }}
         >
-          <h1 style={{ fontSize: 24, fontWeight: 700 }}>{r.name}</h1>
-
-          <div style={{ marginTop: 8, color: "#4B5563" }}>
-            {r.description || "No description yet."}
-          </div>
-
-          <div style={{ marginTop: 12 }}>
-            <strong>Location: </strong>
-            {r.locationText ? (
-              r.locationUrl ? (
-                <a
-                  href={r.locationUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  style={{ color: "#374151", wordBreak: "break-word" }} // long text safe
-                >
-                  {r.locationText}
-                </a>
+          <header style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <h1 style={{ margin: 0, fontSize: 28, fontWeight: 700 }}>
+              {restaurant.name}
+            </h1>
+            <div style={{ color: "#374151", fontSize: 14 }}>
+              <strong>Location: </strong>
+              {restaurant.locationText ? (
+                restaurant.locationUrl ? (
+                  <a
+                    href={restaurant.locationUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{ color: "#374151", wordBreak: "break-word" }}
+                  >
+                    {restaurant.locationText}
+                  </a>
+                ) : (
+                  restaurant.locationText
+                )
               ) : (
-                r.locationText
-              )
-            ) : (
-              "No location set."
-            )}
-          </div>
+                "No location set."
+              )}
+            </div>
+          </header>
 
-          <div
+          <section
             style={{
-              marginTop: 16,
               display: "flex",
               flexWrap: "wrap",
               gap: 12,
@@ -269,28 +225,75 @@ function RestaurantDetail() {
               color: "#374151",
             }}
           >
-            <span>Max party {r.maxPartySize}</span>
-            <span>Capacity {r.bookingCapacity}</span>
+            <span>Max party {restaurant.maxPartySize}</span>
+            <span>Capacity {restaurant.bookingCapacity}</span>
             <span>Booking length {bookingDuration}</span>
-          </div>
+          </section>
 
-          {/* Availability summary */}
+          {restaurant.tags.length > 0 && (
+            <section
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: 8,
+                fontSize: 12,
+              }}
+            >
+              {restaurant.tags.map((tag) => (
+                <span
+                  key={tag}
+                  style={{
+                    backgroundColor: "#f3f4f6",
+                    color: "#1f2937",
+                    padding: "4px 8px",
+                    borderRadius: 999,
+                  }}
+                >
+                  {tag}
+                </span>
+              ))}
+            </section>
+          )}
+
+          <section>
+            <h2 style={{ margin: "12px 0", fontSize: 20, fontWeight: 600 }}>
+              About Us
+            </h2>
+            <p
+              style={{
+                margin: 0,
+                color: "#4B5563",
+                lineHeight: 1.6,
+                whiteSpace: "pre-wrap",
+              }}
+            >
+              {restaurant.frontpageMarkdown ||
+                restaurant.description ||
+                "No overview added yet."}
+            </p>
+          </section>
+        </div>
+
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 16,
+          }}
+        >
           {availability && (
             <section
               style={{
-                marginTop: 18,
+                background: "#fff",
                 border: "1px solid #e5e5e5",
                 borderRadius: 12,
                 padding: 16,
-                background: "#f9fafb",
               }}
             >
               <h2 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>
                 Upcoming availability
               </h2>
-              <ul
-                style={{ listStyle: "none", padding: 0, margin: "12px 0 0 0" }}
-              >
+              <ul style={{ listStyle: "none", padding: 0, margin: "12px 0 0" }}>
                 {availability.map((day) => (
                   <li
                     key={day.date.toISOString()}
@@ -315,38 +318,21 @@ function RestaurantDetail() {
             </section>
           )}
 
-          {/* frontpageMarkdown displayed as plain text (markdown renderer later) */}
-          {r.frontpageMarkdown && (
-            <div
-              style={{
-                marginTop: 12,
-                padding: 12,
-                border: "1px solid #e5e5e5",
-                borderRadius: 8,
-                whiteSpace: "pre-wrap",
-              }}
-            >
-              {r.frontpageMarkdown}
-            </div>
-          )}
-
-          {/*  Reserve button only (red) */}
-          <div
+          <section
             style={{
+              background: "#fff",
+              border: "1px solid #e5e5e5",
+              borderRadius: 12,
+              padding: 16,
               display: "flex",
-              alignItems: "center",
               justifyContent: "space-between",
-              marginTop: 20,
+              alignItems: "center",
               gap: 16,
             }}
           >
             <Link
               to="/"
-              style={{
-                color: "#374151",
-                textDecoration: "none",
-                fontSize: 14,
-              }}
+              style={{ color: "#374151", textDecoration: "none", fontSize: 14 }}
             >
               ← Back to Browse
             </Link>
@@ -357,7 +343,7 @@ function RestaurantDetail() {
             >
               Reserve now
             </button>
-          </div>
+          </section>
         </div>
       </div>
     </main>

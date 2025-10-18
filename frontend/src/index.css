@@ -118,10 +118,21 @@ input[type=text]:focus {
   background-color: #c62f34;
   border: 1px solid #a4161a;
   transition: background-color 0.2s ease;
+  color: #fff;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
 }
 
 .submit_button:hover {
   background-color: #e5383b;
+}
+
+.submit_button:visited {
+  color: #fff;
+  text-decoration: none;
 }
 
 .submit_button.saving {
