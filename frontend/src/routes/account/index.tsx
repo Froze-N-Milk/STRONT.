@@ -1,199 +1,358 @@
 import { createFileRoute } from "@tanstack/react-router";
 import "./index.css";
-import { useState } from "react";
+import {
+  useState,
+  useEffect,
+  useMemo,
+  type ChangeEvent,
+  type FormEvent,
+} from "react";
 import { Link } from "@tanstack/react-router";
 
+type Restaurant = {
+  id: string;
+  name: string;
+  description: string | null;
+  locationText: string | null;
+  locationUrl: string | null;
+  frontpageMarkdown: string | null;
+};
+
+const errMsg = (e: unknown) => (e instanceof Error ? e.message : String(e));
+
 function Account() {
-  const [tags, setTags] = useState<string[]>(["Tag", "Vegan"]);
-  const [newTag, setNewTag] = useState("");
-  const [logo, setLogo] = useState<string | null>(null);
-  const [address, setAddress] = useState("");
+  const [list, setList] = useState<Restaurant[] | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+  const [q, setQ] = useState("");
+  const [showNewModal, setShowNewModal] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
+  const [restaurantToRemove, setRestaurantToRemove] = useState<string | null>(
+    null,
+  );
+  const [newRestaurantName, setNewRestaurantName] = useState("");
+  const [newRestaurantImage, setNewRestaurantImage] = useState<string | null>(
+    null,
+  );
+  const [newPwd, setNewPwd] = useState("");
+  const [confirmPwd, setConfirmPwd] = useState("");
 
-  const canAdd = newTag.trim().length > 0 && !tags.includes(newTag.trim());
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        setErr(null);
+        const res = await fetch("/api/restaurants");
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data: Restaurant[] = await res.json();
+        if (alive) setList(data);
+      } catch {
+        if (alive) {
+          const mockData: Restaurant[] = [
+            {
+              id: "mock-1",
+              name: "Restaurant Name",
+              description: null,
+              locationText: null,
+              locationUrl: null,
+              frontpageMarkdown: null,
+            },
+            {
+              id: "mock-2",
+              name: "Restaurant Name",
+              description: null,
+              locationText: null,
+              locationUrl: null,
+              frontpageMarkdown: null,
+            },
+            {
+              id: "mock-3",
+              name: "Restaurant Name",
+              description: null,
+              locationText: null,
+              locationUrl: null,
+              frontpageMarkdown: null,
+            },
+            {
+              id: "mock-4",
+              name: "Restaurant Name",
+              description: null,
+              locationText: null,
+              locationUrl: null,
+              frontpageMarkdown: null,
+            },
+          ];
+          setList(mockData);
+          setErr(null);
+        }
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
 
-  function addTag() {
-    if (!canAdd) return;
-    setTags((list) => [...list, newTag.trim()]);
-    setNewTag("");
-  }
+  const filtered = useMemo((): Restaurant[] | null => {
+    if (!list) return null;
+    const key = q.trim().toLowerCase();
+    if (!key) return list;
+    return list.filter((r) => {
+      const hay = [
+        r.name,
+        r.description ?? "",
+        r.locationText ?? "",
+        r.locationUrl ?? "",
+      ]
+        .join(" ")
+        .toLowerCase();
+      return hay.includes(key);
+    });
+  }, [list, q]);
 
-  function removeTag(tag: string) {
-    setTags((list) => list.filter((t) => t !== tag));
-  }
+  const handleRemoveClick = (id: string) => {
+    setRestaurantToRemove(id);
+    setShowRemoveConfirm(true);
+  };
 
-  async function onSave(e: React.FormEvent) {
+  const handleConfirmRemove = async () => {
+    if (!restaurantToRemove) return;
+    try {
+      const res = await fetch(`/api/restaurants/${restaurantToRemove}`, {
+        method: "DELETE",
+      });
+      if (res.ok)
+        setList(
+          (prev) => prev?.filter((r) => r.id !== restaurantToRemove) ?? null,
+        );
+    } catch {
+      void 0; // keep block non-empty for eslint
+    }
+    setShowRemoveConfirm(false);
+    setRestaurantToRemove(null);
+  };
+
+  const handleNewRestaurant = async (e: FormEvent) => {
     e.preventDefault();
-    // Backend：Submit /api/account/update
-    // Input：name, ownerName, email, contactNumber, address,
-  }
+    try {
+      const res = await fetch("/api/restaurants", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: newRestaurantName }),
+      });
+      if (res.ok) {
+        const newRestaurant = await res.json();
+        setList((prev) => (prev ? [...prev, newRestaurant] : [newRestaurant]));
+        setShowNewModal(false);
+        setNewRestaurantName("");
+        setNewRestaurantImage(null);
+      }
+    } catch {
+      void 0; // keep block non-empty for eslint
+    }
+  };
 
-  function onLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
+  const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     const url = URL.createObjectURL(file);
-    setLogo(url);
-    // Backend：Upload（e.g. /api/account/upload-logo）Return URL
-  }
+    setNewRestaurantImage(url);
+  };
+
+  const handleSaveSettings = async (e: FormEvent) => {
+    e.preventDefault();
+    if (newPwd && newPwd === confirmPwd && newPwd.length >= 6) {
+      setNewPwd("");
+      setConfirmPwd("");
+      setShowSettingsModal(false);
+    }
+  };
 
   return (
-    <div className="acc-page">
-      <div className="acc-shell">
-        <aside className="acc-side">
-          <nav className="acc-side-nav">
-            <Link to="/account" className="acc-side-link acc-active">
-              Account
-            </Link>
-            <Link to="/account-setting" className="acc-side-link">
-              Account Setting
-            </Link>
-            <Link to="/booking" className="acc-side-link">
-              Booking
-            </Link>
-            <Link to="/booking-setting" className="acc-side-link">
-              Booking Setting
-            </Link>
-          </nav>
-        </aside>
+    <div className="browse-root">
+      <div className="toolbar">
+        <button
+          className="toolbar-icon-btn"
+          onClick={() => setShowNewModal(true)}
+          title="Add New Restaurant"
+        >
+          +
+        </button>
+        <input
+          className="toolbar-search"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="Search"
+        />
+        <button
+          className="toolbar-icon-btn"
+          onClick={() => setShowSettingsModal(true)}
+          title="Settings"
+          style={{ fontSize: "28px" }}
+        >
+          ⚙
+        </button>
+      </div>
 
-        <main className="acc-main">
-          <form className="acc-card" onSubmit={onSave}>
-            <div className="acc-logo">
-              <label className="acc-logo-circle" htmlFor="acc-logo-input">
-                {logo ? (
-                  <img src={logo} alt="Logo preview" />
+      {err && (
+        <div className="status-error">
+          Failed to load restaurants: {errMsg(err)}
+        </div>
+      )}
+      {!err && list === null && <div className="status-muted">Loading…</div>}
+      {!err && list?.length === 0 && (
+        <div className="status-muted">No restaurants yet.</div>
+      )}
+
+      {filtered && filtered.length > 0 && (
+        <div className="browse-grid">
+          {filtered.map((r) => (
+            <Link
+              key={r.id}
+              to="/account"
+              search={{ restaurantId: r.id }}
+              className="link-reset"
+            >
+              <div className="restaurant-card">
+                <div className="card-image-wrapper">
+                  <button
+                    className="card-remove-btn"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleRemoveClick(r.id);
+                    }}
+                  >
+                    Remove
+                  </button>
+                </div>
+                <div className="card-content">
+                  <div className="card-title">{r.name}</div>
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
+
+      {showNewModal && (
+        <div className="overlay" onClick={() => setShowNewModal(false)}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+            <h2 className="modal-title">New Restaurant</h2>
+            <form onSubmit={handleNewRestaurant}>
+              <label className="image-upload-area">
+                {newRestaurantImage ? (
+                  <img src={newRestaurantImage} alt="Restaurant preview" />
                 ) : (
-                  <>
-                    <span className="acc-logo-plus">+</span>
-                    <div className="acc-logo-sub">Add Your Restaurant LOGO</div>
-                  </>
+                  <div className="upload-icon">+</div>
                 )}
                 <input
-                  id="acc-logo-input"
                   type="file"
                   accept="image/*"
-                  onChange={onLogoChange}
+                  onChange={handleImageChange}
                   style={{ display: "none" }}
                 />
               </label>
-            </div>
 
-            <div className="acc-grid">
-              {/* Restaurant Name */}
-              <label className="acc-field">
-                <span>Restaurant Name:</span>
+              <div className="form-field">
+                <label className="form-label">Restaurant Name:</label>
                 <input
-                  placeholder="Enter the restaurant name here"
+                  className="form-input"
+                  value={newRestaurantName}
+                  onChange={(e) => setNewRestaurantName(e.target.value)}
+                  placeholder="Enter restaurant name"
                   required
-                  maxLength={80}
                 />
-              </label>
-              {/* Email Address */}
-              <label className="acc-field">
-                <span>E-mail Address:</span>
-                <input
-                  type="email"
-                  required
-                  placeholder="Enter the e-mail address here"
-                />
-              </label>
-              {/* Phone Number */}
-              <label className="acc-field">
-                <span>Phone Number:</span>
-                <input
-                  placeholder="Enter the Contact Number here"
-                  inputMode="tel"
-                />
-              </label>
-              {/* Address */}
-              <label className="acc-field acc-span-2">
-                <span>Restaurant Address:</span>
-                <input placeholder="Enter the restaurant address here" />
-              </label>
-              {/* Maps Link */}
-              <label className="acc-field">
-                <span>Google Maps:</span>
-                <div
-                  style={{ display: "flex", gap: "8px", alignItems: "center" }}
-                >
-                  <input
-                    placeholder="Enter google maps link for your restaurant."
-                    required
-                    value={address}
-                    onChange={(e) => setAddress(e.target.value)}
-                  />
-                  <a
-                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    title="Select on Google Maps"
-                    style={{ fontSize: "20px", textDecoration: "none" }}
-                  >
-                    📍
-                  </a>
-                </div>
-              </label>
-            </div>
-
-            <div className="acc-section">
-              <div className="acc-section-title">Add Search Tags</div>
-              <div className="acc-tags">
-                {tags.map((t) => (
-                  <span key={t} className="acc-tag">
-                    {t}
-                    <button
-                      type="button"
-                      aria-label="remove"
-                      onClick={() => removeTag(t)}
-                    >
-                      ×
-                    </button>
-                  </span>
-                ))}
               </div>
-              <div className="acc-tag-add">
-                <input
-                  value={newTag}
-                  onChange={(e) => setNewTag(e.target.value)}
-                  placeholder="Enter your restaurant's type and add it as a tag."
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      addTag();
-                    }
-                  }}
-                />
-                <button type="button" onClick={addTag} disabled={!canAdd}>
-                  +
+
+              <div className="modal-actions">
+                <button type="submit" className="btn-primary">
+                  Save
                 </button>
               </div>
-            </div>
+            </form>
+          </div>
+        </div>
+      )}
 
-            <div className="acc-section">
-              <div className="acc-section-title">Short Description</div>
-              <textarea
-                className="short-desc"
-                placeholder="Enter the restaurant BIO here"
-                rows={6}
-              />
-            </div>
+      {showSettingsModal && (
+        <div className="overlay" onClick={() => setShowSettingsModal(false)}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+            <h2 className="modal-title">Account Setting</h2>
+            <form onSubmit={handleSaveSettings}>
+              <div className="settings-form-grid">
+                <div className="form-field">
+                  <label className="form-label">New Password:</label>
+                  <input
+                    type="password"
+                    className="form-input"
+                    value={newPwd}
+                    onChange={(e) => setNewPwd(e.target.value)}
+                    placeholder="Enter your new password"
+                  />
+                </div>
+                <div className="form-field">
+                  <label className="form-label">Confirm Password:</label>
+                  <input
+                    type="password"
+                    className="form-input"
+                    value={confirmPwd}
+                    onChange={(e) => setConfirmPwd(e.target.value)}
+                    placeholder="Enter your new password again"
+                  />
+                  {newPwd && confirmPwd && newPwd !== confirmPwd && (
+                    <div className="error-text">Passwords do not match.</div>
+                  )}
+                  {newPwd && newPwd.length > 0 && newPwd.length < 6 && (
+                    <div className="error-text">
+                      Password should be at least 6 characters.
+                    </div>
+                  )}
+                </div>
+              </div>
 
-            <div className="acc-section">
-              <div className="acc-section-title">BIO</div>
-              <textarea
-                className="bio-desc"
-                placeholder="Enter the restaurant BIO here"
-                rows={10}
-              />
-            </div>
+              <div className="modal-actions modal-actions--split">
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() => setShowSettingsModal(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btn-primary"
+                  disabled={
+                    !newPwd || newPwd.length < 6 || newPwd !== confirmPwd
+                  }
+                >
+                  Save
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
-            <div className="acc-actions">
-              <button type="submit" className="acc-save">
-                Save
+      {showRemoveConfirm && (
+        <div className="overlay" onClick={() => setShowRemoveConfirm(false)}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+            <div className="confirm-text">
+              Are you sure to remove this restaurant?
+            </div>
+            <div className="modal-actions">
+              <button
+                className="btn-secondary"
+                onClick={() => setShowRemoveConfirm(false)}
+              >
+                No
+              </button>
+              <button className="btn-primary" onClick={handleConfirmRemove}>
+                Yes
               </button>
             </div>
-          </form>
-        </main>
-      </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -201,4 +360,5 @@ function Account() {
 export const Route = createFileRoute("/account/")({
   component: Account,
 });
+
 export default Account;
