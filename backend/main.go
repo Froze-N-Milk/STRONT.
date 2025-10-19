@@ -204,8 +204,8 @@ func main() {
 	appMux.Handle("POST /api/booking/cancel/{booking}", &api.CancelBookingHandler{})
 	mux.Handle("GET /api/booking/upcoming/{restaurant}", &api.GetUpcomingBookingsHandler{DB: db, JWTKey: &jwtKey})
 	mux.Handle("GET /api/booking/history/{restaurant}", &api.GetBookingHistoryHandler{DB: db, JWTKey: &jwtKey})
-	authedAppMux.Handle("POST /api/booking/restaurant-notes/{booking}", &api.UpdateRestaurantNotesHandler{})
-	authedAppMux.Handle("POST /api/booking/attendance/{booking}", &api.UpdateAttendanceHandler{})
+	mux.Handle("POST /api/booking/restaurant-notes/{booking}", &api.UpdateRestaurantNotesHandler{DB: db, JWTKey: &jwtKey})
+	mux.Handle("POST /api/booking/attendance/{booking}", &api.UpdateAttendanceHandler{DB: db, JWTKey: &jwtKey})
 
 	server := http.Server{
 		Addr:    hostString,

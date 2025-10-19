@@ -644,7 +644,10 @@ func (h *GetBookingHistoryHandler) ServeHTTP(w http.ResponseWriter, r *http.Requ
 //	{
 //		restaurant_notes: string
 //	}
-type UpdateRestaurantNotesHandler struct{}
+type UpdateRestaurantNotesHandler struct {
+	DB     *gorm.DB
+	JWTKey *[32]byte
+}
 type updateRestaurantNotesRequest struct {
 	RestaurantNotes string `json:"restaurant_notes"`
 }
@@ -669,7 +672,26 @@ WHERE a.email = $2
 	return nil
 }
 
-func (h *UpdateRestaurantNotesHandler) ServeHTTP(ctx AuthedAppContext, w http.ResponseWriter, r *http.Request) {
+func (h *UpdateRestaurantNotesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	// get session token cookie, ensure that it exists
+	token, err := r.Cookie("session-token")
+	if err != nil || token.Value == "" {
+		slog.Error("session token not set", "url", r.URL, "error", err)
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	// validate the token
+	email, _, err := ValidateJWT(token.Value, h.JWTKey)
+	if err != nil {
+		slog.Error("Invalid session token", "url", r.URL, "error", err)
+		// remove all site data
+		setSessionTokenCookie(w, "")
+		w.Header().Add("Clear-Site-Data", "\"*\"")
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
 	bookingId, err := uuid.Parse(r.PathValue("booking"))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -683,8 +705,8 @@ func (h *UpdateRestaurantNotesHandler) ServeHTTP(ctx AuthedAppContext, w http.Re
 		return
 	}
 
-	db := ctx.DB.Session(&gorm.Session{SkipDefaultTransaction: true}).Begin()
-	err = h.handle(r.Context(), db, request, bookingId, ctx.User)
+	db := h.DB.Session(&gorm.Session{SkipDefaultTransaction: true}).Begin()
+	err = h.handle(r.Context(), db, request, bookingId, User{email})
 
 	if err != nil {
 		db.Rollback()
@@ -712,7 +734,10 @@ func (h *UpdateRestaurantNotesHandler) ServeHTTP(ctx AuthedAppContext, w http.Re
 //	{
 //		attendance: string
 //	}
-type UpdateAttendanceHandler struct{}
+type UpdateAttendanceHandler struct {
+	DB     *gorm.DB
+	JWTKey *[32]byte
+}
 type updateAttendanceRequest struct {
 	Attendance string `json:"attendance"`
 }
@@ -737,7 +762,25 @@ WHERE a.email = $2
 	return nil
 }
 
-func (h *UpdateAttendanceHandler) ServeHTTP(ctx AuthedAppContext, w http.ResponseWriter, r *http.Request) {
+func (h *UpdateAttendanceHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	// get session token cookie, ensure that it exists
+	token, err := r.Cookie("session-token")
+	if err != nil || token.Value == "" {
+		slog.Error("session token not set", "url", r.URL, "error", err)
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	// validate the token
+	email, _, err := ValidateJWT(token.Value, h.JWTKey)
+	if err != nil {
+		slog.Error("Invalid session token", "url", r.URL, "error", err)
+		// remove all site data
+		setSessionTokenCookie(w, "")
+		w.Header().Add("Clear-Site-Data", "\"*\"")
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
 	bookingId, err := uuid.Parse(r.PathValue("booking"))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -751,8 +794,8 @@ func (h *UpdateAttendanceHandler) ServeHTTP(ctx AuthedAppContext, w http.Respons
 		return
 	}
 
-	db := ctx.DB.Session(&gorm.Session{SkipDefaultTransaction: true}).Begin()
-	err = h.handle(r.Context(), db, request, bookingId, ctx.User)
+	db := h.DB.Session(&gorm.Session{SkipDefaultTransaction: true}).Begin()
+	err = h.handle(r.Context(), db, request, bookingId, User{email})
 
 	if err != nil {
 		db.Rollback()
