@@ -208,7 +208,7 @@ function Account() {
           {filtered.map((r) => (
             <Link
               key={r.id}
-              to="/account"
+              to="/profile"
               search={{ restaurantId: r.id }}
               className="link-reset"
             >

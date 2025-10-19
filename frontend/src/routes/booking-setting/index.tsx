@@ -35,11 +35,8 @@ function BookingSettingPage() {
     <div className="bks-page">
       <aside className="bks-side">
         <nav className="bks-side-nav">
-          <Link to="/account" className="bks-side-link">
-            Account
-          </Link>
-          <Link to="/account-setting" className="acc-side-link">
-            Account Setting
+          <Link to="/profile" className="bks-side-link">
+            Profile
           </Link>
           <Link to="/booking" className="bks-side-link">
             Booking
