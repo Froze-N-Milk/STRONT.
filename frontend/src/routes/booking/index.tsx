@@ -2,10 +2,13 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import "./index.css";
 import { useState } from "react";
 import type React from "react";
-const restaurantId =
-  new URLSearchParams(window.location.search).get("restaurantId") || "";
 
 function BookingPage() {
+  const restaurantId =
+    typeof window !== "undefined"
+      ? (new URLSearchParams(window.location.search).get("restaurantId") ?? "")
+      : "";
+
   const [items, setItems] = useState(
     Array.from({ length: 6 }).map((_, i) => ({ id: i + 1 })),
   );
