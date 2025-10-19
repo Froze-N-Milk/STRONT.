@@ -1,6 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import "./index.css";
 import { useState } from "react";
+import type React from "react";
+const restaurantId =
+  new URLSearchParams(window.location.search).get("restaurantId") || "";
 
 function BookingPage() {
   const [items, setItems] = useState(
@@ -35,10 +38,18 @@ function BookingPage() {
     <div className="bk-page">
       <aside className="bk-side">
         <nav className="bk-side-nav">
-          <Link to="/profile" className="bk-side-link">
+          <Link
+            to="/profile"
+            search={{ restaurantId }}
+            className="bk-side-link"
+          >
             Profile
           </Link>
-          <Link to="/booking" className="bk-side-link bk-active">
+          <Link
+            to="/booking"
+            search={{ restaurantId }}
+            className="bk-side-link bk-active"
+          >
             Booking
           </Link>
           <Link to="/booking-setting" className="bk-side-link">
