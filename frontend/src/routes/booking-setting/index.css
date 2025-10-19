@@ -34,6 +34,13 @@
   font-weight: 700;
 }
 
+.bks-side-link:hover{
+  background: #b32121;
+  color: #ffffff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
 .bks-side-footer {
   margin-top: auto;
 }
