@@ -56,6 +56,11 @@ function BookingPage() {
             Booking Setting
           </Link>
         </nav>
+        <div className="bk-side-footer">
+          <Link to="/account" className="bk-side-link">
+            ← Back to Dashboard
+          </Link>
+        </div>
       </aside>
 
       <main className="bk-main">

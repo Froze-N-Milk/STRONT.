@@ -67,6 +67,11 @@ function Profile() {
               Booking Setting
             </Link>
           </nav>
+          <div className="side-footer">
+            <Link to="/account" className="acc-side-link">
+              ← Back to Dashboard
+            </Link>
+          </div>
         </aside>
 
         <main className="acc-main">

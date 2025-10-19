@@ -8,6 +8,8 @@
 }
 
 .bks-side {
+  display: flex;
+  flex-direction: column;
   width: 220px;
   background: #911a1a;
   color: #fff;
@@ -30,6 +32,10 @@
   text-decoration: none;
   padding: 10px 24px;
   font-weight: 700;
+}
+
+.bks-side-footer {
+  margin-top: auto;
 }
 
 .bks-active {
