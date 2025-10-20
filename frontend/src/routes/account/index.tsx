@@ -46,45 +46,8 @@ function Account() {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data: Restaurant[] = await res.json();
         if (alive) setList(data);
-      } catch {
-        if (alive) {
-          const mockData: Restaurant[] = [
-            {
-              id: "mock-1",
-              name: "Restaurant Name",
-              description: null,
-              locationText: null,
-              locationUrl: null,
-              frontpageMarkdown: null,
-            },
-            {
-              id: "mock-2",
-              name: "Restaurant Name",
-              description: null,
-              locationText: null,
-              locationUrl: null,
-              frontpageMarkdown: null,
-            },
-            {
-              id: "mock-3",
-              name: "Restaurant Name",
-              description: null,
-              locationText: null,
-              locationUrl: null,
-              frontpageMarkdown: null,
-            },
-            {
-              id: "mock-4",
-              name: "Restaurant Name",
-              description: null,
-              locationText: null,
-              locationUrl: null,
-              frontpageMarkdown: null,
-            },
-          ];
-          setList(mockData);
-          setErr(null);
-        }
+      } catch (e) {
+        if (alive) setErr(String(e));
       }
     })();
     return () => {
@@ -117,9 +80,12 @@ function Account() {
   const handleConfirmRemove = async () => {
     if (!restaurantToRemove) return;
     try {
-      const res = await fetch(`/api/restaurants/${restaurantToRemove}`, {
-        method: "DELETE",
-      });
+      const res = await fetch(
+        `/api/account/restaurants/${restaurantToRemove}`,
+        {
+          method: "DELETE",
+        },
+      );
       if (res.ok)
         setList(
           (prev) => prev?.filter((r) => r.id !== restaurantToRemove) ?? null,
@@ -134,7 +100,7 @@ function Account() {
   const handleNewRestaurant = async (e: FormEvent) => {
     e.preventDefault();
     try {
-      const res = await fetch("/api/restaurants", {
+      const res = await fetch("/api/account/restaurants", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: newRestaurantName }),
