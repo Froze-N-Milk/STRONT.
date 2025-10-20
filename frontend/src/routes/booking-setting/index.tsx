@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import "./index.css";
 import { useState } from "react";
-import type React from "react";
+import type { FormEvent } from "react";
 
 function BookingSettingPage() {
   const restaurantId =
@@ -32,7 +32,7 @@ function BookingSettingPage() {
     });
   }
 
-  function onSaveSettings(e: React.FormEvent) {
+  function onSaveSettings(e: FormEvent) {
     e.preventDefault();
     //const payload = { timeSlot };
   }
