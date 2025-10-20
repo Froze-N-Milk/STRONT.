@@ -1,7 +1,18 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import "./index.css";
-import { useState } from "react";
 import type { FormEvent } from "react";
+import { useState } from "react";
+
+export type UpdateAvailabilitiesRequest = {
+  id: string;
+  mondayHours: bigint;
+  tuesdayHours: bigint;
+  wednesdayHours: bigint;
+  thursdayHours: bigint;
+  fridayHours: bigint;
+  saturdayHours: bigint;
+  sundayHours: bigint;
+};
 
 function BookingSettingPage() {
   const restaurantId =
@@ -32,7 +43,57 @@ function BookingSettingPage() {
     });
   }
 
-  function onSaveSettings(e: FormEvent) {
+  function formatHourMask(): bigint {
+    const startHourInt = +startHour;
+    const startMinuteInt = +startMinute;
+    const endHourInt = +endHour;
+    const endMinuteInt = +endMinute;
+
+    const openTimeSlot = BigInt(startHourInt * 2 + startMinuteInt / 30);
+    const closeTimeSlot = BigInt(endHourInt * 2 + endMinuteInt / 30);
+
+    const hourRange = closeTimeSlot - openTimeSlot;
+    const rangeMask = BigInt(1) << (hourRange + BigInt(1) - BigInt(1));
+
+    return rangeMask << openTimeSlot;
+  }
+
+  // API request logic flow:
+  // Construct data from frontend into request -> submit request -> check request result
+
+  // TODO (For Sissi):
+  // /api/restaurant/update
+  // update the maxPartySize, bookingCapacity, and bookingLength variables
+  // (refer to UpdateRestaurantHandler line 225 in backend/api/restaurant.go)
+  //
+  // MAKE SURE TO RETAIN EVERYTHING ELSE. This API endpoint expects the full restaurant details,
+  // so you need to send back everything like the ID, name, description, etc. You don't want to change these,
+  // keep them the same as when you received the details for this restaurant.
+  async function onSaveSettings(e: FormEvent) {
+    const hourMask = formatHourMask();
+    // TODO: Fix JSON BigInt parsing.
+    try {
+      const request: UpdateAvailabilitiesRequest = {
+        id: restaurantId,
+        mondayHours: selectedDays.has("monday") ? hourMask : BigInt(0),
+        tuesdayHours: selectedDays.has("tuesday") ? hourMask : BigInt(0),
+        wednesdayHours: selectedDays.has("wednesday") ? hourMask : BigInt(0),
+        thursdayHours: selectedDays.has("thursday") ? hourMask : BigInt(0),
+        fridayHours: selectedDays.has("friday") ? hourMask : BigInt(0),
+        saturdayHours: selectedDays.has("saturday") ? hourMask : BigInt(0),
+        sundayHours: selectedDays.has("sunday") ? hourMask : BigInt(0),
+      };
+
+      const response = await fetch(`/api/availability/update`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(request),
+      });
+
+      if (!response.ok) throw new Error(response.status.toString());
+    } catch (error) {
+      console.error("Error updating restaurant availabilities: ", error);
+    }
     e.preventDefault();
     //const payload = { timeSlot };
   }
