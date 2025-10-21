@@ -29,7 +29,7 @@ describe("booking-setting functions", () => {
 
   test("formatHourMaskForTest: same open/close -> 0", () => {
     const m = formatHourMaskForTest("09", "00", "09", "00");
-    expect(m).toBe(0);
+    expect(m).toBe(0n);
   });
 
   test("formatHourMaskForTest: different span yields different mask", () => {
@@ -46,7 +46,7 @@ describe("booking-setting functions", () => {
 
     expect(body.id).toBe("rid-1");
     expect(body.mondayHours).toBe(mask);
-    expect(body.tuesdayHours).toBe(0);
+    expect(body.tuesdayHours).toBe(0n);
     expect(body.fridayHours).toBe(mask);
     expect(body.sundayHours).toBe(mask);
   });
