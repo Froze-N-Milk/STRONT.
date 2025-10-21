@@ -70,53 +70,11 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, .08);
 }
 
-.acc-logo {
-  display: flex;
-  justify-content: center;
-  margin: 12px 0 24px;
-}
-
-.acc-logo-circle {
-  width: 150px;
-  height: 150px;
-  border: 3px solid #b32121;
-  border-radius: 50%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  color: #b32121;
-  font-size: 42px;
-  position: relative;
-  text-align: center;
-  cursor: pointer;
-  overflow: hidden;
-}
-
-.acc-logo-circle img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.acc-logo-plus {
-  line-height: 1;
-}
-
 .acc-tag-add button:hover {
   background: #b32121;
   color: #fff;
   transform: scale(1.2);
   transition: all 0.2s ease;
-}
-
-.acc-logo-sub {
-  position: static;
-  margin-top: 6px;
-  font-size: 12px;
-  color: #666;
-  width: 120px;
-  line-height: 1.2;
 }
 
 .acc-grid {

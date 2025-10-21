@@ -7,7 +7,6 @@ import { Link } from "@tanstack/react-router";
 function Profile() {
   const [tags, setTags] = useState<string[]>(["Tag", "Vegan"]);
   const [newTag, setNewTag] = useState("");
-  const [logo, setLogo] = useState<string | null>(null);
   const [address, setAddress] = useState("");
 
   const restaurantId =
@@ -31,13 +30,6 @@ function Profile() {
 
   async function onSave(e: React.FormEvent) {
     e.preventDefault();
-  }
-
-  function onLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const url = URL.createObjectURL(file);
-    setLogo(url);
   }
 
   return (
@@ -76,26 +68,6 @@ function Profile() {
 
         <main className="acc-main">
           <form className="acc-card" onSubmit={onSave}>
-            <div className="acc-logo">
-              <label className="acc-logo-circle" htmlFor="acc-logo-input">
-                {logo ? (
-                  <img src={logo} alt="Logo preview" />
-                ) : (
-                  <>
-                    <span className="acc-logo-plus">+</span>
-                    <div className="acc-logo-sub">Add Your Restaurant LOGO</div>
-                  </>
-                )}
-                <input
-                  id="acc-logo-input"
-                  type="file"
-                  accept="image/*"
-                  onChange={onLogoChange}
-                  style={{ display: "none" }}
-                />
-              </label>
-            </div>
-
             <div className="acc-grid">
               <label className="acc-field">
                 <span>Restaurant Name:</span>
