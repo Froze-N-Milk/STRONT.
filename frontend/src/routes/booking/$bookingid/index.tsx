@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import BookingSummary from "../../-components/bookingSummary";
-import type { BookingObj } from "../../restaurants/$restaurantid/make-booking/-utils";
+import type { BookingObj } from "../../$restaurantid/make-booking/-utils";
 
 export const Route = createFileRoute("/booking/$bookingid/")({
   component: BookingConfirmContent,
@@ -29,7 +29,13 @@ function BookingConfirmContent() {
 
   return (
     <div
-      style={{ display: "flex", flexDirection: "column", alignItems: "center" }}
+      style={{
+        height: "70vh",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
     >
       <BookingSummary bookingData={bookingData} />
     </div>

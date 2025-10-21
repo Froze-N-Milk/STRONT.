@@ -519,7 +519,8 @@ func (h *CancelBookingHandler) ServeHTTP(ctx AppContext, w http.ResponseWriter, 
 //		time_slot: int,
 //		creation_date: string,
 //		customer_notes: string,
-//		restaurant_notes: string
+//		restaurant_notes: string,
+//		attendance: string
 //	}
 type GetUpcomingBookingsHandler struct {}
 
@@ -535,6 +536,7 @@ type restaurantBookingResponse struct {
 	CreationDate    time.Time `json:"creation_date"`
 	CustomerNotes   string    `json:"customer_notes"`
 	RestaurantNotes string    `json:"restaurant_notes"`
+	Attendance      string    `json:"attendance"`
 }
 
 func (h *GetUpcomingBookingsHandler) handle(ctx context.Context, db *gorm.DB, restaurantID uuid.UUID, user User) ([]restaurantBookingResponse, error) {
@@ -551,7 +553,8 @@ SELECT
 	b.time_slot,
 	b.creation_date,
 	b.customer_notes,
-	b.restaurant_notes
+	b.restaurant_notes,
+	b.attendance
 FROM booking b
 JOIN customer_contact c ON c.id = b.contact_id
 JOIN restaurant r on r.id = $2
@@ -562,8 +565,6 @@ WHERE a.email = $1
 ORDER BY b.booking_date`,
 		user.Email,
 		restaurantID).Find(ctx)
-
-	slog.Debug("", "bookings", bookings)
 
 	if err != nil {
 		return []restaurantBookingResponse{}, err
@@ -621,7 +622,8 @@ func (h *GetUpcomingBookingsHandler) ServeHTTP(ctx AuthedAppContext, w http.Resp
 //		time_slot: int,
 //		creation_date: string,
 //		customer_notes: string,
-//		restaurant_notes: string
+//		restaurant_notes: string,
+//		attendance: string
 //	}
 type GetBookingHistoryHandler struct{}
 
@@ -638,7 +640,8 @@ SELECT
 	b.time_slot,
 	b.creation_date,
 	b.customer_notes,
-	b.restaurant_notes
+	b.restaurant_notes,
+	b.attendance
 FROM booking b
 JOIN customer_contact c ON c.id = b.contact_id
 JOIN restaurant r on r.id = $2
@@ -768,23 +771,15 @@ type updateAttendanceRequest struct {
 }
 
 func (h *UpdateAttendanceHandler) handle(ctx context.Context, db *gorm.DB, request updateAttendanceRequest, bookingId uuid.UUID, user User) error {
-	booking, err := gorm.G[model.Booking](db).Raw(`
-SELECT * FROM booking b
-    JOIN restaurant r ON r.id = b.restaurant_id
-    JOIN account a ON a.id = r.account_id
-WHERE a.email = $2
-	AND b.id = $1
-`, bookingId, user.Email).Take(ctx)
-
-	if err != nil {
-		return err
-	}
-
-	booking.Attendance = request.Attendance
-
-	db.Save(&booking)
-
-	return nil
+	return gorm.G[model.Booking](db).Exec(ctx, `
+UPDATE booking AS b
+SET attendance = $2
+FROM restaurant AS r
+	JOIN account a ON a.id = r.account_id
+WHERE
+    b.id = $1
+	AND b.restaurant_id = r.id
+`, bookingId, request.Attendance)
 }
 
 func (h *UpdateAttendanceHandler) ServeHTTP(ctx AuthedAppContext, w http.ResponseWriter, r *http.Request) {

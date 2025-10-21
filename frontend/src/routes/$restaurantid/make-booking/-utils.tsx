@@ -1,3 +1,5 @@
+import type { Restaurant } from "../../-components/restaurantType";
+
 export type BookingObj = {
   booking_id: string;
   restaurant_id: string;
@@ -10,6 +12,23 @@ export type BookingObj = {
   time_slot: number;
   customer_notes: string;
 };
+
+export function parseRestaurantInfo(strontinfo: string) {
+  const strontJSON = JSON.parse(strontinfo);
+  const parsedStront: Restaurant = {
+    id: strontJSON.id,
+    name: strontJSON.name,
+    description: strontJSON.description,
+    locationText: strontJSON.locationText,
+    locationUrl: strontJSON.locationUrl,
+    frontpageMarkdown: strontJSON.frontpageMarkdown,
+    maxPartySize: strontJSON.maxPartySize,
+    bookingCapacity: strontJSON.bookingCapacity,
+    bookingLength: strontJSON.bookingLength,
+    tags: strontJSON.tags,
+  };
+  return parsedStront;
+}
 
 export function timeFromMaskValue(maskvalue: number): string {
   const mins = maskvalue % 2 == 0 ? "00 " : "30 ";
