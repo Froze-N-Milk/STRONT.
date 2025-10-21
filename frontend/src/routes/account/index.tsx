@@ -37,12 +37,22 @@ function Account() {
   const [newPwd, setNewPwd] = useState("");
   const [confirmPwd, setConfirmPwd] = useState("");
 
+  // Connected backend endpoint: GET /api/account/restaurants
   useEffect(() => {
     let alive = true;
     (async () => {
       try {
         setErr(null);
-        const res = await fetch("/api/restaurants");
+
+        const res = await fetch("/api/account/restaurants", {
+          credentials: "include",
+        });
+
+        if (res.status === 401) {
+          window.location.href = "/login";
+          return;
+        }
+
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data: Restaurant[] = await res.json();
         if (alive) setList(data);
@@ -77,33 +87,45 @@ function Account() {
     setShowRemoveConfirm(true);
   };
 
+  // Connected backend endpoint: POST /api/restaurant/delete
   const handleConfirmRemove = async () => {
     if (!restaurantToRemove) return;
+
     try {
-      const res = await fetch(
-        `/api/account/restaurants/${restaurantToRemove}`,
-        {
-          method: "DELETE",
-        },
-      );
-      if (res.ok)
+      const res = await fetch("/api/restaurant/delete", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: restaurantToRemove }),
+      });
+
+      if (res.ok) {
         setList(
           (prev) => prev?.filter((r) => r.id !== restaurantToRemove) ?? null,
         );
-    } catch {
-      void 0; // keep block non-empty for eslint
+      } else if (res.status === 401) {
+        window.location.href = "/login";
+        return;
+      } else {
+        setErr(`HTTP ${res.status}`);
+      }
+    } catch (e) {
+      setErr(String(e));
+    } finally {
+      setShowRemoveConfirm(false);
+      setRestaurantToRemove(null);
     }
-    setShowRemoveConfirm(false);
-    setRestaurantToRemove(null);
   };
 
+  // Connected backend endpoint: POST /api/restaurant/create
   const handleNewRestaurant = async (e: FormEvent) => {
     e.preventDefault();
     try {
-      const res = await fetch("/api/account/restaurants", {
+      const res = await fetch("/api/restaurant/create", {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newRestaurantName }),
+        body: JSON.stringify({ name: newRestaurantName.trim() }),
       });
       if (res.ok) {
         const newRestaurant = await res.json();
