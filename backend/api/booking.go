@@ -770,8 +770,8 @@ FROM restaurant AS r
 	JOIN account a ON a.id = r.account_id
 WHERE
     b.id = $1
-	AND b.restaurant_id = r.id
-`, bookingId, request.Attendance)
+	AND a.email = $3
+`, bookingId, request.Attendance, user.Email)
 }
 
 func (h *UpdateAttendanceHandler) ServeHTTP(ctx AuthedAppContext, w http.ResponseWriter, r *http.Request) {
