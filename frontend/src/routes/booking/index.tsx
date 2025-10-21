@@ -1,7 +1,81 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createFileRoute, Link } from "@tanstack/react-router";
 import "./index.css";
 import { useState, useEffect } from "react";
 import type React from "react";
+
+export function composeIso(dateStr: string, timeStr: string) {
+  return new Date(`${dateStr}T${timeStr}:00`).toISOString();
+}
+
+export function isValidEmail(email: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+export function buildBookingPayload({
+  restaurantId,
+  date,
+  time,
+  partySize,
+  firstName,
+  lastName,
+  email,
+  phone,
+  notes,
+}: {
+  restaurantId: string;
+  date: string;
+  time: string;
+  partySize: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+  notes?: string;
+}) {
+  return {
+    restaurantId,
+    date,
+    time,
+    partySize,
+    firstName: firstName.trim(),
+    lastName: lastName.trim(),
+    email: email.trim(),
+    phone: phone?.trim() || undefined,
+    notes: notes?.trim() || undefined,
+    startsAt: composeIso(date, time),
+  };
+}
+
+export function validateBookingInput({
+  date,
+  time,
+  firstName,
+  lastName,
+  email,
+}: {
+  date: string;
+  time: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+}) {
+  if (!date || !time) return "Date and time are required";
+  if (!firstName || !lastName) return "Name is required";
+  if (!isValidEmail(email)) return "Invalid email";
+  return null;
+}
+
+export function filterBookings(
+  bookings: { firstName: string; lastName: string; email: string }[],
+  keyword: string,
+) {
+  const key = keyword.trim().toLowerCase();
+  if (!key) return bookings;
+  return bookings.filter((b) =>
+    [b.firstName, b.lastName, b.email].join(" ").toLowerCase().includes(key),
+  );
+}
 
 function BookingPage() {
   type Booking = {
