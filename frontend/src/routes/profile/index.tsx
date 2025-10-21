@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createFileRoute } from "@tanstack/react-router";
 import "./index.css";
 import { useState, useEffect } from "react";
@@ -14,6 +15,42 @@ type RestaurantUpdateRequest = {
   contactEmail?: string;
   contactPhone?: string;
 };
+
+export function canAddTagCandidate(newTag: string, tags: string[]): boolean {
+  const trimmed = newTag.trim();
+  return trimmed.length > 0 && !tags.includes(trimmed);
+}
+
+export function makeUpdatePayload(
+  id: string,
+  name: string,
+  shortDesc: string,
+  address: string,
+  tags: string[],
+  email: string,
+  phone: string,
+  bio: string,
+): RestaurantUpdateRequest {
+  const payload: RestaurantUpdateRequest = {
+    id,
+    name,
+    description: shortDesc,
+    locationText: address,
+    tags,
+  };
+  if (email.trim()) payload.contactEmail = email.trim();
+  if (phone.trim()) payload.contactPhone = phone.trim();
+  if (bio.trim()) payload.frontpageMarkdown = bio.trim();
+  return payload;
+}
+
+export function normalizeTagInput(s: string): string {
+  return s.trim();
+}
+
+export function shouldIncludeOptional(value: string): boolean {
+  return value.trim().length > 0;
+}
 
 function Profile() {
   const [tags, setTags] = useState<string[]>(["Tag", "Vegan"]);
