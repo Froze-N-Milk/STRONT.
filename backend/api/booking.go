@@ -522,7 +522,7 @@ func (h *CancelBookingHandler) ServeHTTP(ctx AppContext, w http.ResponseWriter, 
 //		restaurant_notes: string,
 //		attendance: string
 //	}
-type GetUpcomingBookingsHandler struct {}
+type GetUpcomingBookingsHandler struct{}
 
 type restaurantBookingResponse struct {
 	BookingID       uuid.UUID `json:"booking_id"`
@@ -703,23 +703,15 @@ type updateRestaurantNotesRequest struct {
 }
 
 func (h *UpdateRestaurantNotesHandler) handle(ctx context.Context, db *gorm.DB, request updateRestaurantNotesRequest, bookingId uuid.UUID, user User) error {
-	booking, err := gorm.G[model.Booking](db).Raw(`
-SELECT * FROM booking b
-    JOIN restaurant r ON r.id = b.restaurant_id
-    JOIN account a ON a.id = r.account_id
-WHERE a.email = $2
-	AND b.id = $1
-`, bookingId, user.Email).Take(ctx)
-
-	if err != nil {
-		return err
-	}
-
-	booking.RestaurantNotes = request.RestaurantNotes
-
-	db.Save(&booking)
-
-	return nil
+	return gorm.G[model.Booking](db).Exec(ctx, `
+UPDATE booking AS b
+SET restaurant_notes = $2
+FROM restaurant AS r 
+	JOIN account a ON a.id = r.account_id
+WHERE
+    b.id = $1
+	AND a.email = $3
+`, bookingId, request.RestaurantNotes, user.Email)
 }
 
 func (h *UpdateRestaurantNotesHandler) ServeHTTP(ctx AuthedAppContext, w http.ResponseWriter, r *http.Request) {
