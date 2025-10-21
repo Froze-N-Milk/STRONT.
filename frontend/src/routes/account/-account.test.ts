@@ -1,32 +1,31 @@
-import { test, expect } from "vitest";
-import Account from "./index";
+import { describe, test, expect } from "vitest";
+import { isValidRestaurantName, isValidPassword } from "./index";
 
-test("Account component is defined", () => {
-  expect(typeof Account).toBe("function");
-});
+describe("Account page exported logic", () => {
+  // --- Restaurant name validation ---
+  test("accepts a valid restaurant name", () => {
+    expect(isValidRestaurantName("My Restaurant")).toBe(true);
+  });
 
-test("basic math works", () => {
-  expect(2 + 2).toBe(4);
-});
+  test("rejects empty or whitespace name", () => {
+    expect(isValidRestaurantName("   ")).toBe(false);
+    expect(isValidRestaurantName("")).toBe(false);
+  });
 
-test("array includes value", () => {
-  const arr = ["Tag", "Vegan"];
-  expect(arr).toContain("Vegan");
-});
+  test("trims leading/trailing spaces before validating name", () => {
+    expect(isValidRestaurantName("   Cafe ")).toBe(true);
+  });
 
-test("string matches regex", () => {
-  expect("Account Setting").toMatch(/Setting/);
-});
+  // --- Password validation ---
+  test("accepts matching passwords with sufficient length", () => {
+    expect(isValidPassword("123456", "123456")).toBe(true);
+  });
 
-test("object has property", () => {
-  const obj = { name: "Demo" };
-  expect(obj).toHaveProperty("name");
-});
+  test("rejects passwords that don't match", () => {
+    expect(isValidPassword("123456", "654321")).toBe(false);
+  });
 
-test("boolean is true", () => {
-  expect(true).toBe(true);
-});
-
-test("string length check", () => {
-  expect("Account".length).toBeGreaterThan(3);
+  test("rejects passwords that are too short", () => {
+    expect(isValidPassword("abcdef", "abcdeg")).toBe(false);
+  });
 });

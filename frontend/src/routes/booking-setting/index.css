@@ -8,6 +8,8 @@
 }
 
 .bks-side {
+  display: flex;
+  flex-direction: column;
   width: 220px;
   background: #911a1a;
   color: #fff;
@@ -32,8 +34,15 @@
   font-weight: 700;
 }
 
-.bks-side-link::after {
-  content: " :";
+.bks-side-link:hover{
+  background: #b32121;
+  color: #ffffff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.bks-side-footer {
+  margin-top: auto;
 }
 
 .bks-active {

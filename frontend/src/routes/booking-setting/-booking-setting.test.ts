@@ -1,37 +1,53 @@
-import { test, expect } from "vitest";
-import BookingSettingPage from "./index";
+import { describe, test, expect } from "vitest";
+import {
+  toggleDayForTest,
+  formatHourMaskForTest,
+  makeAvailabilitiesRequestForTest,
+} from "./index";
 
-test("BookingSettingPage component is defined", () => {
-  expect(typeof BookingSettingPage).toBe("function");
-});
+describe("booking-setting functions", () => {
+  // toggleDayForTest
+  test("toggleDayForTest: flip existing day", () => {
+    const prev = new Set(["monday", "tuesday"]);
+    const next = toggleDayForTest(prev, "monday");
+    expect(next.has("monday")).toBe(false);
+    expect(next.has("tuesday")).toBe(true);
+  });
 
-test("select booking duration", () => {
-  const durations = [60, 90, 120];
-  expect(durations).toContain(90);
-});
+  test("toggleDayForTest: add missing day", () => {
+    const prev = new Set<string>();
+    const next = toggleDayForTest(prev, "wednesday");
+    expect(next.has("wednesday")).toBe(true);
+  });
 
-test("toggle day selection", () => {
-  const selected = new Set(["Mon", "Wed"]);
-  selected.add("Fri");
-  expect(selected.has("Fri")).toBe(true);
-});
+  // formatHourMaskForTest
+  test("formatHourMaskForTest: 09:00-21:00 yields non-zero", () => {
+    const m = formatHourMaskForTest("09", "00", "21", "00");
+    expect(typeof m).toBe("bigint");
+    expect(m > 0n).toBe(true);
+  });
 
-test("end time is after start time", () => {
-  const start = 9;
-  const end = 21;
-  expect(end > start).toBe(true);
-});
+  test("formatHourMaskForTest: same open/close -> 0", () => {
+    const m = formatHourMaskForTest("09", "00", "09", "00");
+    expect(m).toBe(0n);
+  });
 
-test("array push works", () => {
-  const arr = [1];
-  arr.push(2);
-  expect(arr).toEqual([1, 2]);
-});
+  test("formatHourMaskForTest: different span yields different mask", () => {
+    const a = formatHourMaskForTest("09", "00", "21", "00");
+    const b = formatHourMaskForTest("10", "00", "21", "00");
+    expect(a).not.toBe(b);
+  });
 
-test("string uppercase", () => {
-  expect("book".toUpperCase()).toBe("BOOK");
-});
+  // makeAvailabilitiesRequestForTest
+  test("makeAvailabilitiesRequestForTest: builds day masks correctly", () => {
+    const days = new Set(["monday", "friday", "sunday"]);
+    const mask = formatHourMaskForTest("10", "00", "18", "00");
+    const body = makeAvailabilitiesRequestForTest("rid-1", days, mask);
 
-test("object equality", () => {
-  expect({ id: 1, name: "Table" }).toEqual({ id: 1, name: "Table" });
+    expect(body.id).toBe("rid-1");
+    expect(body.mondayHours).toBe(mask);
+    expect(body.tuesdayHours).toBe(0n);
+    expect(body.fridayHours).toBe(mask);
+    expect(body.sundayHours).toBe(mask);
+  });
 });
