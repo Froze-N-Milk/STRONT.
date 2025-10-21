@@ -157,6 +157,35 @@ func main() {
 		}
 
 		gorm.G[model.Restaurant](db.Clauses(clause.OnConflict{DoNothing: true}, result)).Create(ctx, &restaurant)
+
+		// ===== EXTRA BOOKINGS: Donald Fungus & Charles Brungus =====
+		// Add their customer contact records first
+		gorm.G[any](db).Exec(ctx, `
+INSERT INTO customer_contact (id, given_name, family_name, phone, email) VALUES
+('00000000-0000-0000-0000-000000000006', 'Donald', 'Fungus', '+1 555-0106', 'donald.fungus@example.com'),
+('00000000-0000-0000-0000-000000000007', 'Charles', 'Brungus', '+1 555-0107', 'charles.brungus@example.com')
+`)
+
+		// ===== BOOKINGS ON 22ND OCTOBER 2025 =====
+		gorm.G[any](db).Raw(`
+INSERT INTO booking (id, contact_id, restaurant_id, party_size, booking_date, time_slot, creation_date, attendance, customer_notes, restaurant_notes) VALUES
+(gen_random_uuid(), '00000000-0000-0000-0000-000000000006', $1, 2, '2025-10-22', 18, '2025-10-10 12:00:00+00', 'pending', 'Dinner with a friend.', ''),
+(gen_random_uuid(), '00000000-0000-0000-0000-000000000007', $1, 4, '2025-10-22', 19, '2025-10-09 14:15:00+00', 'attended', 'Group dinner for 4.', ''),
+(gen_random_uuid(), '00000000-0000-0000-0000-000000000006', $1, 3, '2025-10-22', 20, '2025-10-08 11:30:00+00', 'pending', 'Evening outing.', ''),
+(gen_random_uuid(), '00000000-0000-0000-0000-000000000007', $1, 5, '2025-10-22', 17, '2025-10-06 10:45:00+00', 'cancelled', 'Cancelled due to work.', ''),
+(gen_random_uuid(), '00000000-0000-0000-0000-000000000006', $1, 6, '2025-10-22', 21, '2025-10-05 16:50:00+00', 'no-show', 'Forgot reservation.', '')
+`, restaurant.ID).Find(ctx)
+
+		// ===== BOOKINGS ON 24TH OCTOBER 2025 =====
+		gorm.G[any](db).Raw(`
+INSERT INTO booking (id, contact_id, restaurant_id, party_size, booking_date, time_slot, creation_date, attendance, customer_notes, restaurant_notes) VALUES
+(gen_random_uuid(), '00000000-0000-0000-0000-000000000007', $1, 2, '2025-10-24', 19, '2025-10-11 09:10:00+00', 'pending', 'Casual dinner with partner.', ''),
+(gen_random_uuid(), '00000000-0000-0000-0000-000000000006', $1, 4, '2025-10-24', 18, '2025-10-07 15:40:00+00', 'attended', 'Business meeting.', ''),
+(gen_random_uuid(), '00000000-0000-0000-0000-000000000007', $1, 3, '2025-10-24', 17, '2025-10-12 18:20:00+00', 'pending', 'Dinner with family.', ''),
+(gen_random_uuid(), '00000000-0000-0000-0000-000000000006', $1, 2, '2025-10-24', 20, '2025-10-09 11:55:00+00', 'cancelled', 'Rescheduled due to travel.', ''),
+(gen_random_uuid(), '00000000-0000-0000-0000-000000000007', $1, 5, '2025-10-24', 21, '2025-10-08 10:30:00+00', 'pending', 'Birthday dinner.', '')
+`, restaurant.ID).Find(ctx)
+
 	}
 
 	emailHelper := api.EmailHelper{
