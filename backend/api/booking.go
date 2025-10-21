@@ -419,6 +419,7 @@ WHERE
 
 	booking.TimeSlot = request.TimeSlot
 	booking.PartySize = request.PartySize
+	booking.CustomerNotes = request.CustomerNotes
 
 	db.Save(&booking)
 
