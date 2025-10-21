@@ -566,8 +566,6 @@ ORDER BY b.booking_date`,
 		user.Email,
 		restaurantID).Find(ctx)
 
-	slog.Debug("", "bookings", bookings)
-
 	if err != nil {
 		return []restaurantBookingResponse{}, err
 	}
