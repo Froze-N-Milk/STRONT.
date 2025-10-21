@@ -48,6 +48,7 @@ function RouteComponent() {
   const [isNotesModalOpen, setIsNoteModalOpen] = useState(false);
   const [modalBookingId, setModalBookingId] = useState("");
   const [notesInput, setNotesInput] = useState("");
+  const [customerNotes, setCustomerNotes] = useState("no customer notes");
 
   const [upcomingData, setUpcomingData] = useState<Booking[] | null>(null);
 
@@ -110,6 +111,7 @@ function RouteComponent() {
     setNotesInput(
       upcomingData ? (booking ? booking.restaurant_notes : "") : "",
     );
+    setCustomerNotes(booking ? booking.customer_notes : "no customer notes");
   };
 
   const handleCloseNotesModal = () => {
@@ -148,7 +150,45 @@ function RouteComponent() {
   };
 
   if (upcomingData == null) {
-    return <div>i shid myself</div>;
+    return (
+      <div style={{ display: "flex", gap: "20px", width: "max-content" }}>
+        <div className="bks-side">
+          <nav className="bks-side-nav">
+            <Link to="/account" className="bks-side-link">
+              Back to Account
+            </Link>
+            <Link
+              to="/account/$restaurantid"
+              className="bks-side-link"
+              params={{ restaurantid: restaurantId }}
+            >
+              Edit Restaurant Profile
+            </Link>
+            <Link
+              to="/account/$restaurantid/booking-settings"
+              className="bks-side-link"
+              params={{ restaurantid: restaurantId }}
+            >
+              Booking Settings
+            </Link>
+            <Link
+              to="/account/$restaurantid/view-bookings"
+              className="bks-side-link"
+              params={{ restaurantid: restaurantId }}
+            >
+              Bookings
+            </Link>
+            <Link
+              to="/account/$restaurantid/FOHtracker"
+              className="bks-side-link bks-active"
+              params={{ restaurantid: restaurantId }}
+            >
+              FOH Tracker
+            </Link>
+          </nav>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -188,7 +228,15 @@ function RouteComponent() {
           </Link>
         </nav>
       </div>
-      <div style={{ width: "80vw", overflow: "scroll" }}>
+      <div
+        style={{
+          width: "80vw",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+        }}
+      >
+        <h2>Today's Bookings:</h2>
         <table>
           <thead>
             <tr>
@@ -199,8 +247,6 @@ function RouteComponent() {
               <th>Phone Number</th>
               <th>Email</th>
               <th>Attendance</th>
-              <th style={{ padding: "12px 120px" }}>Customer Notes</th>
-              <th style={{ padding: "12px 120px" }}>Restaurant Notes</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -214,8 +260,6 @@ function RouteComponent() {
                 <td>{booking.phone}</td>
                 <td>{booking.email}</td>
                 <td>{booking.attendance}</td>
-                <td>{booking.customer_notes}</td>
-                <td>{booking.restaurant_notes}</td>
                 <td>
                   <div className="action-buttons">
                     <button
@@ -249,7 +293,7 @@ function RouteComponent() {
                       className="action-button note"
                       onClick={() => handleOpenNotesModal(booking.booking_id)}
                     >
-                      Edit Notes
+                      Edit / View Notes
                     </button>
                   </div>
                 </td>
@@ -261,24 +305,22 @@ function RouteComponent() {
           <div className="modal-overlay">
             <div className="modal-content">
               <h2 className="modal-title">Edit Restaurant Notes</h2>
-              <input
-                type="text"
+              <textarea
                 value={notesInput}
                 onChange={(e) => setNotesInput(e.target.value)}
                 className="modal-text-field"
                 placeholder="Add notes here..."
               />
+              <h4>Customer Notes</h4>
+              <p style={{ paddingBottom: "20px" }}>{customerNotes}</p>
               <div className="modal-footer">
                 <button
-                  className="modal-cancel modal-button"
+                  className="submit_button"
                   onClick={handleCloseNotesModal}
                 >
                   Cancel
                 </button>
-                <button
-                  className="modal-confirm modal-button"
-                  onClick={handleSaveNotes}
-                >
+                <button className="submit_button" onClick={handleSaveNotes}>
                   Save
                 </button>
               </div>

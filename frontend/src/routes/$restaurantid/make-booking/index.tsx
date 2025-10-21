@@ -292,7 +292,7 @@ function MakeBookingForm({
                   );
                 })
               ) : (
-                <div style={{ width: 400 }}>
+                <div style={{ width: "450px" }}>
                   no booking times available for this day, please check another
                   day!
                 </div>
