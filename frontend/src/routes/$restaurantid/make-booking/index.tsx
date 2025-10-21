@@ -126,6 +126,8 @@ function MakeBookingForm({
   const [refresh, setRefresh] = useState(false);
   const restaurantid = Route.useParams().restaurantid;
   const maxTableSize = restaurantBioInfo.maxPartySize;
+  const [firstNameValid, setFirstNameValid] = useState(true);
+  const [lastNameValid, setLastNameValid] = useState(true);
 
   const detailsFilled =
     selectedTime != "" &&
@@ -199,6 +201,20 @@ function MakeBookingForm({
     }
   }
 
+  function handleFirstNameChange(value: string) {
+    setContactFirstName(value);
+    if (/\d/.test(value)) {
+      setFirstNameValid(false);
+    } else setFirstNameValid(true);
+  }
+
+  function handleFamilyNameChange(value: string) {
+    setContactFamilyName(value);
+    if (/\d/.test(value)) {
+      setLastNameValid(false);
+    } else setLastNameValid(true);
+  }
+
   return (
     <div className="booking-form-wrapper">
       <h1>Booking for {restaurantBioInfo.name}</h1>
@@ -256,12 +272,12 @@ function MakeBookingForm({
                 <h2>+</h2>
               </button>
             </div>
-            <h5
-              style={{ opacity: 0 }}
+            <h6
+              style={{ opacity: 0, color: "rgb(191, 6, 6)" }}
               className={partySize == maxTableSize ? "appearing" : ""}
             >
               max. party size is {maxTableSize}
-            </h5>
+            </h6>
           </div>
 
           <h3>Available seating times:</h3>
@@ -311,8 +327,14 @@ function MakeBookingForm({
               name="booking-first-name"
               id="booking-first-name"
               value={contactFirstName}
-              onChange={(e) => setContactFirstName(e.target.value)}
+              onChange={(e) => handleFirstNameChange(e.target.value)}
             />
+            <h6
+              style={{ opacity: 0, color: "rgb(191, 6, 6)" }}
+              className={firstNameValid ? "" : "appearing"}
+            >
+              name must not contain numbers
+            </h6>
             <label htmlFor="booking-family-name">
               <h3>Family Name:</h3>
             </label>
@@ -321,8 +343,14 @@ function MakeBookingForm({
               name="booking-family-name"
               id="booking-family-name"
               value={contactFamilyName}
-              onChange={(e) => setContactFamilyName(e.target.value)}
+              onChange={(e) => handleFamilyNameChange(e.target.value)}
             />
+            <h6
+              style={{ opacity: 0, color: "rgb(191, 6, 6)" }}
+              className={lastNameValid ? "" : "appearing"}
+            >
+              name must not contain numbers
+            </h6>
             <label htmlFor="booking-email">
               <h3>Email Address:</h3>
             </label>
@@ -358,7 +386,9 @@ function MakeBookingForm({
           <div className="booking-form-confirm">
             <button
               className={
-                !detailsFilled ? "submit_button disabled" : "submit_button"
+                detailsFilled && firstNameValid && lastNameValid
+                  ? "submit_button"
+                  : "submit_button disabled"
               }
               popoverTarget="confirm-popover"
               disabled={!detailsFilled}

@@ -174,10 +174,6 @@ input[type=text]:focus {
   width: 60%;
 }
 
-.personal-details input {
-  margin-bottom: 20px;
-}
-
 .booking-day-selector {
   display: flex;
   flex-direction: column;
