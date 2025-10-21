@@ -11,7 +11,7 @@ import {
   filterByRestaurantNotes,
   formatDate,
   formatTimeSlot,
-} from "../helper.ts";
+} from "../-helper.ts";
 
 const mockData: Booking[] = [
   {
@@ -262,15 +262,15 @@ function BookingHistoryComponent() {
         <table style={{ width: "100%" }}>
           <thead>
             <tr>
-              <th style={{ width: "5%" }}>Time Slot</th>
-              <th style={{ width: "10%" }}>Date</th>
-              <th style={{ width: "5%" }}>Party Size</th>
-              <th style={{ width: "15%" }}>Name</th>
-              <th style={{ width: "10%" }}>Phone Number</th>
-              <th style={{ width: "15%" }}>Email</th>
-              <th style={{ width: "10%" }}>Attendance</th>
-              <th style={{ width: "15%" }}>Customer Notes</th>
-              <th style={{ width: "15%" }}>Restaurant Notes</th>
+              <th>Time Slot</th>
+              <th>Date</th>
+              <th>Party Size</th>
+              <th>Name</th>
+              <th>Phone Number</th>
+              <th>Email</th>
+              <th>Attendance</th>
+              <th>Customer Notes</th>
+              <th>Restaurant Notes</th>
             </tr>
           </thead>
           <tbody>

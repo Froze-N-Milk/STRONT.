@@ -5,7 +5,7 @@ import {
   type Booking,
   formatDate,
   formatTimeSlot,
-} from "../helper.ts";
+} from "../-helper.ts";
 
 export const Route = createFileRoute("/account/$restaurantid/FOHtracker/")({
   component: RouteComponent,
@@ -195,8 +195,7 @@ function RouteComponent() {
               <th>Time Slot</th>
               <th>Date</th>
               <th>Party Size</th>
-              <th>Given Name</th>
-              <th>Family Name</th>
+              <th>Name</th>
               <th>Phone Number</th>
               <th>Email</th>
               <th>Attendance</th>
@@ -211,8 +210,7 @@ function RouteComponent() {
                 <td>{formatTimeSlot(booking.time_slot)}</td>
                 <td>{formatDate(booking.booking_date)}</td>
                 <td>{booking.party_size}</td>
-                <td>{booking.given_name}</td>
-                <td>{booking.family_name}</td>
+                <td>{booking.given_name + " " + booking.family_name}</td>
                 <td>{booking.phone}</td>
                 <td>{booking.email}</td>
                 <td>{booking.attendance}</td>

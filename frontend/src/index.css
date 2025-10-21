@@ -391,6 +391,7 @@ th {
 
 td {
     padding: 10px 15px;
+    overflow-wrap: break-word;
     border-bottom: 1px solid #dddddd;
 }
 
