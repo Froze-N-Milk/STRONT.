@@ -8,7 +8,6 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
-	"plange/backend/lib"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -168,48 +167,39 @@ func setSessionToken(w http.ResponseWriter, email string, key *[32]byte) error {
 	return nil
 }
 
-// AuthMiddleware services an http endpoint to:
-// - check for authentication and respond appropriately if not authed
-// - extract authed user email for later use
-// - reissue token if it would expire in the next 30 mins
-type AuthMiddleware struct {
-	Mode AuthMode
-	Key  *[32]byte // 32 byte signing key for jwt session tokens
-}
+type AuthChecker func(http.ResponseWriter, *http.Request) (User, error)
 
-func (m *AuthMiddleware) Service(h lib.Handler[User]) http.Handler {
-	switch m.Mode {
+func MakeAuthChecker(
+	mode AuthMode,
+	key *[32]byte, // 32 byte signing key for jwt session tokens
+) AuthChecker {
+	var onErr func(w http.ResponseWriter)
+
+	switch mode {
 	case Api:
-		return authMiddleware(h, m.Key, func(w http.ResponseWriter) {
+		onErr = func(w http.ResponseWriter) {
 			w.WriteHeader(http.StatusUnauthorized)
-		})
+		}
 	case Frontend:
-		return authMiddleware(h, m.Key, func(w http.ResponseWriter) {
+		onErr = func(w http.ResponseWriter) {
 			w.Header().Add("Location", "/login")
 			w.WriteHeader(http.StatusSeeOther)
-		})
-	case SensitiveApi:
-		return authMiddleware(h, m.Key, func(w http.ResponseWriter) {
+		}
+	case SensitiveApi | SensitiveFrontend:
+		onErr = func(w http.ResponseWriter) {
 			w.WriteHeader(http.StatusForbidden)
-		})
-	case SensitiveFrontend:
-		return authMiddleware(h, m.Key, func(w http.ResponseWriter) {
-			w.WriteHeader(http.StatusForbidden)
-		})
+		}
 	default:
-		panic(fmt.Sprintf("unexpected api.AuthMode: %#v", m.Mode))
+		panic(fmt.Sprintf("unexpected api.AuthMode: %#v", mode))
 	}
-}
 
-// common AuthMiddleware behaviour
-func authMiddleware(h lib.Handler[User], key *[32]byte, onErr func(http.ResponseWriter)) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) (User, error) {
 		// get session token cookie, ensure that it exists
 		token, err := r.Cookie("session-token")
 		if err != nil || token.Value == "" {
 			slog.Error("session token not set", "url", r.URL, "error", err)
 			onErr(w)
-			return
+			return User{}, err
 		}
 
 		// validate the token
@@ -220,7 +210,7 @@ func authMiddleware(h lib.Handler[User], key *[32]byte, onErr func(http.Response
 			setSessionTokenCookie(w, "")
 			w.Header().Add("Clear-Site-Data", "\"*\"")
 			onErr(w)
-			return
+			return User{}, err
 		}
 
 		// if less than 30 mins remaining on auth lease, reissue
@@ -233,6 +223,6 @@ func authMiddleware(h lib.Handler[User], key *[32]byte, onErr func(http.Response
 
 		slog.Info("logged in as", "email", email)
 
-		h.ServeHTTP(User{email}, w, r)
-	})
+		return User{email}, nil
+	}
 }

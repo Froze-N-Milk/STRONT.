@@ -13,17 +13,17 @@ type AppContext struct {
 
 // AppMiddleware services an http endpoint to inject database access
 type AppMiddleware struct {
-	DB DBMiddleware
+	Ctx AppContext
 }
 
 func (m *AppMiddleware) Service(h lib.Handler[AppContext]) http.Handler {
-	return m.DB.Service(lib.HandlerFunc[*gorm.DB](func(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		h.ServeHTTP(
-			AppContext{db},
+			m.Ctx,
 			w,
 			r,
 		)
-	}))
+	})
 }
 
 // AuthedAppContext combines AppContext with authed user data
@@ -34,17 +34,23 @@ type AuthedAppContext struct {
 
 // AuthedAppMiddleware combines AppMiddleware with AuthMiddleware
 type AuthedAppMiddleware struct {
-	Auth AuthMiddleware
-	AppMiddleware
+	Auth AuthChecker
+	Ctx  AppContext
 }
 
 func (m *AuthedAppMiddleware) Service(h lib.Handler[AuthedAppContext]) http.Handler {
-	return m.Auth.Service(lib.HandlerFunc[User](func(user User, w http.ResponseWriter, r *http.Request) {
-		ctx := AuthedAppContext{}
-		ctx.User = user
-		m.AppMiddleware.Service(lib.HandlerFunc[AppContext](func(appContext AppContext, w http.ResponseWriter, r *http.Request) {
-			ctx.AppContext = appContext
-			h.ServeHTTP(ctx, w, r)
-		})).ServeHTTP(w, r)
-	}))
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		user, err := m.Auth(w, r)
+		if err != nil {
+			return
+		}
+		h.ServeHTTP(
+			AuthedAppContext{
+				User:       user,
+				AppContext: m.Ctx,
+			},
+			w,
+			r,
+		)
+	})
 }

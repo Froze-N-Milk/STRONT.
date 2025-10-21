@@ -98,11 +98,11 @@ SELECT * FROM occasion o
 JOIN availability a on a.id = o.availability_id
 WHERE
     o.availability_id = $2
-AND 
+AND
     (
 		o.close_date = $1 -- Check the exact date
-	OR 
-		( -- Check if any recurring dates 
+	OR
+		( -- Check if any recurring dates
 			yearly_recurring = TRUE
 			AND EXTRACT(DAY FROM close_date) = EXTRACT(DAY FROM $1)
 			AND EXTRACT(MONTH FROM close_date) = EXTRACT(MONTH FROM $1)
@@ -520,10 +520,7 @@ func (h *CancelBookingHandler) ServeHTTP(ctx AppContext, w http.ResponseWriter, 
 //		customer_notes: string,
 //		restaurant_notes: string
 //	}
-type GetUpcomingBookingsHandler struct {
-	DB     *gorm.DB
-	JWTKey *[32]byte
-}
+type GetUpcomingBookingsHandler struct {}
 
 type restaurantBookingResponse struct {
 	BookingID       uuid.UUID `json:"booking_id"`
@@ -574,33 +571,14 @@ ORDER BY b.booking_date`,
 	return bookings, nil
 }
 
-func (h *GetUpcomingBookingsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	// get session token cookie, ensure that it exists
-	token, err := r.Cookie("session-token")
-	if err != nil || token.Value == "" {
-		slog.Error("session token not set", "url", r.URL, "error", err)
-		w.WriteHeader(http.StatusUnauthorized)
-		return
-	}
-
-	// validate the token
-	email, _, err := ValidateJWT(token.Value, h.JWTKey)
-	if err != nil {
-		slog.Error("Invalid session token", "url", r.URL, "error", err)
-		// remove all site data
-		setSessionTokenCookie(w, "")
-		w.Header().Add("Clear-Site-Data", "\"*\"")
-		w.WriteHeader(http.StatusUnauthorized)
-		return
-	}
-
+func (h *GetUpcomingBookingsHandler) ServeHTTP(ctx AuthedAppContext, w http.ResponseWriter, r *http.Request) {
 	restaurantID, err := uuid.Parse(r.PathValue("restaurant"))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	response, err := h.handle(r.Context(), h.DB, restaurantID, User{email})
+	response, err := h.handle(r.Context(), ctx.DB, restaurantID, ctx.User)
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)

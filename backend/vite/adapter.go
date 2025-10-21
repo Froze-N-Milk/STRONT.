@@ -48,7 +48,7 @@ func (self *ViteAdapter) AddPublicAsset(path string) {
 	self.publicAssetPaths = append(self.publicAssetPaths, path)
 }
 
-func (self ViteAdapter) IntoHandler(middleware api.AuthMiddleware) *http.ServeMux {
+func (self ViteAdapter) IntoHandler(middleware api.AuthedAppMiddleware) *http.ServeMux {
 	res := http.NewServeMux()
 	res.Handle("/assets/", self.assets)
 	for _, path := range self.publicAssetPaths {
@@ -59,7 +59,7 @@ func (self ViteAdapter) IntoHandler(middleware api.AuthMiddleware) *http.ServeMu
 	}
 	for _, titleAndPath := range self.authedPaths {
 		h := self.makeViteHandler(titleAndPath.title, titleAndPath.path)
-		res.Handle(titleAndPath.path, middleware.Service(lib.HandlerFunc[api.User](func(ctx api.User, w http.ResponseWriter, r *http.Request) {
+		res.Handle(titleAndPath.path, middleware.Service(lib.HandlerFunc[api.AuthedAppContext](func(ctx api.AuthedAppContext, w http.ResponseWriter, r *http.Request) {
 			h.ServeHTTP(w, r)
 		})))
 	}

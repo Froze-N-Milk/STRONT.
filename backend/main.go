@@ -69,13 +69,14 @@ func main() {
 	}
 
 	appMiddleware := api.AppMiddleware{
-		DB: api.DBMiddleware{DB: db},
+		Ctx: api.AppContext{DB: db},
 	}
 	authedAppMiddleware := api.AuthedAppMiddleware{
-		Auth: api.AuthMiddleware{
-			Mode: api.Api,
-			Key:  &jwtKey,
-		},
+		Ctx: appMiddleware.Ctx,
+		Auth: api.MakeAuthChecker(
+			api.Api,
+			&jwtKey,
+		),
 	}
 
 	mux := http.NewServeMux()
@@ -84,9 +85,12 @@ func main() {
 	vite.Adapter.AddRoute("Sign Up - STRONT.", "/sign-up")
 	vite.Adapter.AddRoute("Make Booking - STRONT.", "/restaurants/{restaurantid}/make-booking")
 	vite.Adapter.AddAuthedRoute("Account - STRONT.", "/account")
-	mux.Handle("/", vite.Adapter.IntoHandler(api.AuthMiddleware{
-		Mode: api.Frontend,
-		Key:  &jwtKey,
+	mux.Handle("/", vite.Adapter.IntoHandler(api.AuthedAppMiddleware{
+		Ctx: appMiddleware.Ctx,
+		Auth: api.MakeAuthChecker(
+			api.Frontend,
+			&jwtKey,
+		),
 	}))
 
 	ctx := context.Background()
@@ -203,7 +207,7 @@ func main() {
 	appMux.Handle("POST /api/booking/create", &api.CreateOnlineBookingHandler{EmailHelper: emailHelper})
 	appMux.Handle("POST /api/booking/edit/{booking}", &api.UpdateBookingHandler{})
 	appMux.Handle("POST /api/booking/cancel/{booking}", &api.CancelBookingHandler{})
-	mux.Handle("GET /api/booking/upcoming/{restaurant}", &api.GetUpcomingBookingsHandler{DB: db, JWTKey: &jwtKey})
+	authedAppMux.Handle("GET /api/booking/upcoming/{restaurant}", &api.GetUpcomingBookingsHandler{})
 	authedAppMux.Handle("GET /api/booking/history/{restaurant}", &api.GetBookingHistoryHandler{})
 	authedAppMux.Handle("POST /api/booking/restaurant-notes/{booking}", &api.UpdateRestaurantNotesHandler{})
 	authedAppMux.Handle("POST /api/booking/attendance/{booking}", &api.UpdateAttendanceHandler{})
