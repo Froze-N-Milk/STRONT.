@@ -23,8 +23,8 @@ describe("booking-setting functions", () => {
   // formatHourMaskForTest
   test("formatHourMaskForTest: 09:00-21:00 yields non-zero", () => {
     const m = formatHourMaskForTest("09", "00", "21", "00");
-    expect(Number.isInteger(m)).toBe(true);
-    expect(m).toBeGreaterThan(0);
+    expect(typeof m).toBe("bigint");
+    expect(m > 0n).toBe(true);
   });
 
   test("formatHourMaskForTest: same open/close -> 0", () => {
