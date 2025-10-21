@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createFileRoute } from "@tanstack/react-router";
 import "./index.css";
 import {
@@ -8,6 +9,14 @@ import {
   type FormEvent,
 } from "react";
 import { Link } from "@tanstack/react-router";
+
+export function isValidRestaurantName(name: string): boolean {
+  return name.trim().length > 0;
+}
+
+export function isValidPassword(pwd: string, confirm: string): boolean {
+  return pwd.length >= 6 && pwd === confirm;
+}
 
 type Restaurant = {
   id: string;
