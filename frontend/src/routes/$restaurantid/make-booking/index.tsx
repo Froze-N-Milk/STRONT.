@@ -203,16 +203,16 @@ function MakeBookingForm({
 
   function handleFirstNameChange(value: string) {
     setContactFirstName(value);
-    if (/\d/.test(value)) {
-      setFirstNameValid(false);
-    } else setFirstNameValid(true);
+    if (/^[A-Za-z]+$/.test(value)) {
+      setFirstNameValid(true);
+    } else setFirstNameValid(false);
   }
 
   function handleFamilyNameChange(value: string) {
     setContactFamilyName(value);
-    if (/\d/.test(value)) {
-      setLastNameValid(false);
-    } else setLastNameValid(true);
+    if (/^[A-Za-z]+$/.test(value)) {
+      setLastNameValid(true);
+    } else setLastNameValid(false);
   }
 
   return (
@@ -333,7 +333,7 @@ function MakeBookingForm({
               style={{ opacity: 0, color: "rgb(191, 6, 6)" }}
               className={firstNameValid ? "" : "appearing"}
             >
-              name must not contain numbers
+              please enter a valid name
             </h6>
             <label htmlFor="booking-family-name">
               <h3>Family Name:</h3>
@@ -349,7 +349,7 @@ function MakeBookingForm({
               style={{ opacity: 0, color: "rgb(191, 6, 6)" }}
               className={lastNameValid ? "" : "appearing"}
             >
-              name must not contain numbers
+              please enter a valid name
             </h6>
             <label htmlFor="booking-email">
               <h3>Email Address:</h3>
