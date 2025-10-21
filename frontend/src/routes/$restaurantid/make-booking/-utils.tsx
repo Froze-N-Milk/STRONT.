@@ -1,4 +1,4 @@
-import type { Restaurant } from "../../-components/restaurantType";
+import type { Restaurant } from "../../-components/restaurant";
 
 export type BookingObj = {
   booking_id: string;
