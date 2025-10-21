@@ -29,7 +29,13 @@ function BookingConfirmContent() {
 
   return (
     <div
-      style={{ display: "flex", flexDirection: "column", alignItems: "center" }}
+      style={{
+        height: "70vh",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
     >
       <BookingSummary bookingData={bookingData} />
     </div>

@@ -13,6 +13,9 @@ export default function BookingSummary({
 }) {
   const bookingdate = new Date(bookingData.booking_date);
   const [bookingNotes, setBookingNotes] = useState(bookingData.customer_notes);
+  const [bookingNotesCache, setBookingNotesCache] = useState(
+    bookingData.customer_notes,
+  );
   const [restaurantInfo, setRestaurantInfo] = useState<Restaurant | null>(null);
 
   useEffect(() => {
@@ -37,6 +40,12 @@ export default function BookingSummary({
     });
   }
 
+  function checkNoNotes() {
+    if (bookingNotes == "") {
+      setBookingNotesCache("no booking notes");
+    }
+  }
+
   function prepareUpdate(newnotes: string) {
     const postData = {
       time_slot: bookingData.time_slot,
@@ -46,6 +55,12 @@ export default function BookingSummary({
     return JSON.stringify(postData);
   }
 
+  function abandonChanges() {
+    if (bookingNotes != "") {
+      setBookingNotes(bookingNotesCache);
+    }
+  }
+
   async function handleUpdateNotes() {
     const updatedBooking = prepareUpdate(bookingNotes);
     const res = await fetch("/api/booking/edit/" + bookingData.booking_id, {
@@ -53,9 +68,9 @@ export default function BookingSummary({
       headers: { "Content-Type": "application/json" },
       body: updatedBooking,
     });
-    if (res.redirected) {
-      document.getElementById("edit-popover")?.hidePopover();
-    }
+    console.log(res);
+    setBookingNotesCache(bookingNotes);
+    checkNoNotes();
   }
 
   if (restaurantInfo == null)
@@ -63,50 +78,68 @@ export default function BookingSummary({
 
   return (
     <div className="booking-summary">
-      <h2>Your Booking</h2>
-      <p>
-        For <b>{bookingData.party_size}</b> people at{" "}
-        <b>{restaurantInfo.name}</b>
-      </p>
-      <p>
-        <b>Date: </b>
-        {bookingdate.toLocaleDateString()}
-      </p>
-      <p>
-        <b>Time: </b>
-        {timeFromMaskValue(bookingData.time_slot)}
-      </p>
-      <p>
-        <b>Notes: </b>
-        {bookingNotes}{" "}
-        <button popoverTarget="edit-popover" className="edit-notes">
-          {" "}
-          edit
-        </button>
-      </p>
-      <div id="edit-popover" className="edit-notes-popover" popover="">
-        <div className="edit-notes-area">
-          <h4>Edit the notes for your booking</h4>
-          <textarea onChange={(e) => setBookingNotes(e.target.value)}>
-            {bookingNotes}
-          </textarea>
-          <div>
-            <button
-              className="submit_button"
-              onClick={handleUpdateNotes}
-              style={{ margin: 20 }}
-            >
-              Save
-            </button>
-            <button className="submit_button" style={{ margin: 20 }}>
-              Discard Changes
-            </button>
+      <div className="booking-summary-items">
+        <h2>Booking Summary</h2>
+        <p>
+          For <b>{bookingData.party_size}</b> people at{" "}
+          <b>{restaurantInfo.name}</b>
+        </p>
+        <p>
+          <b>Date: </b>
+          {bookingdate.toLocaleDateString()}
+        </p>
+        <p>
+          <b>Time: </b>
+          {timeFromMaskValue(bookingData.time_slot)}
+        </p>
+        <p style={{ marginTop: "10px" }}>
+          <b>Notes: </b>
+        </p>
+        <div className="notes-section">
+          <div className="notes-text">
+            <p>{bookingNotesCache} </p>
+          </div>
+          <button popoverTarget="edit-popover" className="edit-notes">
+            {" "}
+            edit
+          </button>
+        </div>
+        <div id="edit-popover" className="edit-notes-popover" popover="">
+          <div className="edit-notes-area">
+            <h4>Edit the notes for your booking</h4>
+            <textarea
+              placeholder="any dietary requirements, special requests, etc."
+              name="booking-notes"
+              id="booking-notes"
+              value={bookingNotes}
+              onChange={(e) => setBookingNotes(e.target.value)}
+            />
+            <div>
+              <button
+                className="submit_button"
+                onClick={handleUpdateNotes}
+                style={{ margin: 20 }}
+                popoverTarget="edit-popover"
+                popoverTargetAction="hide"
+              >
+                Save
+              </button>
+              <button
+                className="submit_button"
+                onClick={abandonChanges}
+                style={{ margin: 20 }}
+                popoverTarget="edit-popover"
+                popoverTargetAction="hide"
+              >
+                Discard Changes
+              </button>
+            </div>
           </div>
         </div>
+        <button className="submit_button" onClick={cancelTS}>
+          Cancel Booking
+        </button>
       </div>
-      <button className="submit_button" onClick={cancelTS}>
-        Cancel Booking
-      </button>
     </div>
   );
 }
