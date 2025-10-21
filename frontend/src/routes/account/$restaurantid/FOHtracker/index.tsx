@@ -42,18 +42,15 @@ function RouteComponent() {
       });
       if (!response.ok) throw new Error(response.status.toString());
 
-      setUpcomingData((prev) =>
-        prev
-          ? prev.map((b) =>
-              b.booking_id === id
-                ? {
-                    ...b,
-                    attendance: attendance,
-                  }
-                : b,
-            )
-          : null,
-      );
+      const refresh = await fetch(`/api/booking/upcoming/${restaurantId}`, {
+        method: "GET",
+      });
+
+      if (refresh.status == 200) {
+        setUpcomingData(await refresh.json());
+      } else {
+        throw new Error(response.status.toString());
+      }
     } catch (error) {
       console.error("Error cancelling booking: ", error);
     }
@@ -89,18 +86,15 @@ function RouteComponent() {
       );
       if (!response.ok) throw new Error(response.status.toString());
 
-      setUpcomingData((prev) =>
-        prev
-          ? prev.map((b) =>
-              b.booking_id === modalBookingId
-                ? {
-                    ...b,
-                    restaurant_notes: notesInput,
-                  }
-                : b,
-            )
-          : null,
-      );
+      const refresh = await fetch(`/api/booking/upcoming/${restaurantId}`, {
+        method: "GET",
+      });
+
+      if (refresh.status == 200) {
+        setUpcomingData(await refresh.json());
+      } else {
+        throw new Error(response.status.toString());
+      }
     } catch (error) {
       console.error(error);
     }
