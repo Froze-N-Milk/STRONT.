@@ -19,7 +19,7 @@ function RouteComponent() {
   const [notesInput, setNotesInput] = useState("");
   const [customerNotes, setCustomerNotes] = useState("no customer notes");
 
-  const [upcomingData, setUpcomingData] = useState<Booking[] | null>(null);
+  const [upcomingData, setUpcomingData] = useState<Booking[]>([]);
 
   useEffect(() => {
     fetch("/api/booking/upcoming/" + restaurantId, {
@@ -28,7 +28,7 @@ function RouteComponent() {
       if (r.status == 200) {
         setUpcomingData(await r.json());
       } else {
-        setUpcomingData(null);
+        setUpcomingData([]);
       }
     });
   }, [restaurantId]);
