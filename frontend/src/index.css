@@ -327,6 +327,15 @@ input[type=text]:focus {
   left: 35%;
 }
 
+input[type="date"] {
+  color: black;
+  background-color: white;
+  margin: 5px;
+  border-radius: 5px;
+  border: 1px solid #a4161a;
+  height: 2em;
+}
+
 .confirm-popover-contents {
   display: flex;
   flex-direction: column;

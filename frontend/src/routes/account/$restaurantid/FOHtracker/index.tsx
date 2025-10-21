@@ -203,8 +203,8 @@ function RouteComponent() {
             </tr>
           </thead>
           <tbody>
-            {upcomingData.map((booking, index) => (
-              <tr key={index}>
+            {upcomingData.map((booking) => (
+              <tr key={booking.booking_id}>
                 <td>{formatTimeSlot(booking.time_slot)}</td>
                 <td>{formatDate(booking.booking_date)}</td>
                 <td>{booking.party_size}</td>

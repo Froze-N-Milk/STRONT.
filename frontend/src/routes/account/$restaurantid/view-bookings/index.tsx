@@ -56,10 +56,6 @@ function BookingHistoryComponent() {
     min: "",
     max: "",
   });
-  const [creationDateRange, setCreationDateRange] = useState({
-    min: "",
-    max: "",
-  });
 
   const [historyData, setHistoryData] = useState<Booking[] | null>(null);
 
@@ -120,14 +116,6 @@ function BookingHistoryComponent() {
       ),
     );
 
-    filteredData = filteredData.filter((booking) =>
-      filterByDateRange(
-        booking.creation_date,
-        creationDateRange.min,
-        creationDateRange.max,
-      ),
-    );
-
     return filteredData.slice().sort((a, b) => {
       // Sort by booking date
       const dateComparison = a.booking_date - b.booking_date;
@@ -152,7 +140,6 @@ function BookingHistoryComponent() {
     custNotesSearchTerm,
     restNotesSearchTerm,
     bookingDateRange,
-    creationDateRange,
   ]);
 
   return (
@@ -193,7 +180,8 @@ function BookingHistoryComponent() {
         </nav>
       </div>
       <div style={{ width: "80vw", overflow: "scroll" }}>
-        <h3>Booking Search</h3>
+        <h2>Booking History</h2>
+        <h3>Search by Details</h3>
         <div className="search-fields">
           <input
             type="text"
@@ -226,7 +214,7 @@ function BookingHistoryComponent() {
             onChange={(e) => setRestNotesSearchTerm(e.target.value)}
           />
         </div>
-        <h3>Booking Date Range</h3>
+        <h3>Search by Date Range</h3>
         <label>From (Booking Date)</label>
         <input
           type="date"
@@ -243,22 +231,7 @@ function BookingHistoryComponent() {
             setBookingDateRange((prev) => ({ ...prev, max: e.target.value }))
           }
         />
-        <label>From (Creation Date)</label>
-        <input
-          type="date"
-          value={creationDateRange.min}
-          onChange={(e) =>
-            setCreationDateRange((prev) => ({ ...prev, min: e.target.value }))
-          }
-        />
-        <label>To (Creation Date)</label>
-        <input
-          type="date"
-          value={creationDateRange.max}
-          onChange={(e) =>
-            setCreationDateRange((prev) => ({ ...prev, min: e.target.value }))
-          }
-        />
+
         <table style={{ width: "100%" }}>
           <thead>
             <tr>
