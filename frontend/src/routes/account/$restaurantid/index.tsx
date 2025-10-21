@@ -1,14 +1,68 @@
 import { createFileRoute } from "@tanstack/react-router";
 import "./index.css";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 
-function Account() {
+type RestaurantUpdateRequest = {
+  id: string;
+  name: string;
+  description: string;
+  locationText: string;
+  tags: string[];
+  frontpageMarkdown?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+};
+
+function Profile() {
   const [tags, setTags] = useState<string[]>(["Tag", "Vegan"]);
   const [newTag, setNewTag] = useState("");
-  const [logo, setLogo] = useState<string | null>(null);
   const [address, setAddress] = useState("");
-  const { restaurantid } = Route.useParams();
+
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [shortDesc, setShortDesc] = useState("");
+  const [bio, setBio] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  const restaurantId =
+    new URLSearchParams(window.location.search).get("restaurantId") || "";
+
+  useEffect(() => {
+    if (!restaurantId) window.location.replace("/account");
+  }, [restaurantId]);
+
+  // Load restaurant original information
+  // Connected backend endpoint: GET /api/restaurant/{restaurantId}
+  useEffect(() => {
+    if (!restaurantId) return;
+    (async () => {
+      try {
+        setLoading(true);
+        setErr(null);
+        const res = await fetch(`/api/restaurant/${restaurantId}`, {
+          method: "GET",
+          credentials: "include",
+          headers: { Accept: "application/json" },
+        });
+        if (!res.ok) throw new Error(`Load failed: ${res.status}`);
+        const data = await res.json();
+        setName(data.name ?? "");
+        setShortDesc(data.description ?? "");
+        setAddress(data.locationText ?? "");
+        setTags(Array.isArray(data.tags) ? data.tags : []);
+        setBio(data.frontpageMarkdown ?? "");
+        setEmail(data.contactEmail ?? "");
+        setPhone(data.contactPhone ?? "");
+      } catch (e) {
+        setErr(e instanceof Error ? e.message : String(e));
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [restaurantId]);
 
   const canAdd = newTag.trim().length > 0 && !tags.includes(newTag.trim());
 
@@ -22,114 +76,131 @@ function Account() {
     setTags((list) => list.filter((t) => t !== tag));
   }
 
+  // Save restaurant profile information
+  // Connected backend endpoint: POST /api/restaurant/update
   async function onSave(e: React.FormEvent) {
     e.preventDefault();
-    // Backend：Submit /api/account/update
-    // Input：name, ownerName, email, contactNumber, address,
-  }
+    if (!restaurantId) return;
+    try {
+      setLoading(true);
+      setErr(null);
+      const payload: RestaurantUpdateRequest = {
+        id: restaurantId,
+        name,
+        description: shortDesc,
+        locationText: address,
+        tags,
+      };
 
-  function onLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const url = URL.createObjectURL(file);
-    setLogo(url);
-    // Backend：Upload（e.g. /api/account/upload-logo）Return URL
+      if (email.trim()) payload.contactEmail = email.trim();
+      if (phone.trim()) payload.contactPhone = phone.trim();
+      if (bio.trim()) payload.frontpageMarkdown = bio.trim();
+      const res = await fetch("/api/restaurant/update", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+      if (res.status === 401) {
+        window.location.href = "/login";
+        return;
+      }
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || `Save failed: ${res.status}`);
+      }
+      // optional success alert
+      // alert("Saved!");
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : String(e));
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
     <div className="acc-page">
       <div className="acc-shell">
-        <aside className="bks-side">
-          <nav className="bks-side-nav">
-            <Link to="/account" className="bks-side-link">
-              Back to Account
+        <aside className="acc-side">
+          <nav className="acc-side-nav">
+            <Link
+              to="/profile"
+              search={{ restaurantId }}
+              className="acc-side-link acc-active"
+            >
+              Profile
             </Link>
             <Link
-              to="/account/$restaurantid"
-              className="bks-side-link bks-active"
-              params={{ restaurantid: restaurantid }}
+              to="/booking"
+              search={{ restaurantId }}
+              className="acc-side-link"
             >
-              Edit Restaurant Profile
+              Booking
             </Link>
             <Link
-              to="/account/$restaurantid/booking-settings"
-              className="bks-side-link"
-              params={{ restaurantid: restaurantid }}
+              to="/booking-setting"
+              search={{ restaurantId }}
+              className="acc-side-link"
             >
-              Booking Settings
-            </Link>
-            <Link
-              to="/account/$restaurantid/view-bookings"
-              className="bks-side-link"
-              params={{ restaurantid: restaurantid }}
-            >
-              Bookings
-            </Link>
-            <Link
-              to="/account/$restaurantid/FOHtracker"
-              className="bks-side-link"
-              params={{ restaurantid: restaurantid }}
-            >
-              FOH Tracker
+              Booking Setting
             </Link>
           </nav>
+          <div className="side-footer">
+            <Link to="/account" className="acc-side-link">
+              ← Back to Dashboard
+            </Link>
+          </div>
         </aside>
 
         <main className="acc-main">
+          {loading && <div>Loading...</div>}
+          {err && <div style={{ color: "red" }}>{err}</div>}
           <form className="acc-card" onSubmit={onSave}>
-            <div className="acc-logo">
-              <label className="acc-logo-circle" htmlFor="acc-logo-input">
-                {logo ? (
-                  <img src={logo} alt="Logo preview" />
-                ) : (
-                  <>
-                    <span className="acc-logo-plus">+</span>
-                    <div className="acc-logo-sub">Add Your Restaurant LOGO</div>
-                  </>
-                )}
-                <input
-                  id="acc-logo-input"
-                  type="file"
-                  accept="image/*"
-                  onChange={onLogoChange}
-                  style={{ display: "none" }}
-                />
-              </label>
-            </div>
-
             <div className="acc-grid">
-              {/* Restaurant Name */}
               <label className="acc-field">
                 <span>Restaurant Name:</span>
                 <input
                   placeholder="Enter the restaurant name here"
                   required
                   maxLength={80}
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
                 />
               </label>
-              {/* Email Address */}
+
               <label className="acc-field">
                 <span>E-mail Address:</span>
                 <input
                   type="email"
                   required
                   placeholder="Enter the e-mail address here"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                 />
               </label>
-              {/* Phone Number */}
+
               <label className="acc-field">
                 <span>Phone Number:</span>
                 <input
                   placeholder="Enter the Contact Number here"
                   inputMode="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
                 />
               </label>
-              {/* Address */}
+
               <label className="acc-field acc-span-2">
                 <span>Restaurant Address:</span>
-                <input placeholder="Enter the restaurant address here" />
+                <input
+                  placeholder="Enter the restaurant address here"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                />
               </label>
-              {/* Maps Link */}
+
               <label className="acc-field">
                 <span>Google Maps:</span>
                 <div
@@ -142,7 +213,9 @@ function Account() {
                     onChange={(e) => setAddress(e.target.value)}
                   />
                   <a
-                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`}
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                      address,
+                    )}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     title="Select on Google Maps"
@@ -194,6 +267,8 @@ function Account() {
                 className="short-desc"
                 placeholder="Enter the restaurant BIO here"
                 rows={6}
+                value={shortDesc}
+                onChange={(e) => setShortDesc(e.target.value)}
               />
             </div>
 
@@ -203,6 +278,8 @@ function Account() {
                 className="bio-desc"
                 placeholder="Enter the restaurant BIO here"
                 rows={10}
+                value={bio}
+                onChange={(e) => setBio(e.target.value)}
               />
             </div>
 
@@ -219,6 +296,5 @@ function Account() {
 }
 
 export const Route = createFileRoute("/account/$restaurantid/")({
-  component: Account,
+  component: Profile,
 });
-export default Account;
