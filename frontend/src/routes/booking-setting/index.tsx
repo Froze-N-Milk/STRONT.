@@ -16,7 +16,7 @@ export function formatHourMaskForTest(
   startMinute: string,
   endHour: string,
   endMinute: string,
-): number {
+): bigint {
   const sh = Number(startHour);
   const sm = Number(startMinute);
   const eh = Number(endHour);
@@ -24,36 +24,36 @@ export function formatHourMaskForTest(
   const open = sh * 2 + Math.floor(sm / 30);
   const close = eh * 2 + Math.floor(em / 30);
   const len = Math.max(0, close - open);
-  if (len <= 0) return 0;
+  if (len <= 0) return 0n;
   const mask = ((1n << BigInt(len)) - 1n) << BigInt(open);
-  return Number(mask);
+  return mask;
 }
 
 export type UpdateAvailabilitiesRequestForTest = {
   id: string;
-  mondayHours: number;
-  tuesdayHours: number;
-  wednesdayHours: number;
-  thursdayHours: number;
-  fridayHours: number;
-  saturdayHours: number;
-  sundayHours: number;
+  mondayHours: bigint;
+  tuesdayHours: bigint;
+  wednesdayHours: bigint;
+  thursdayHours: bigint;
+  fridayHours: bigint;
+  saturdayHours: bigint;
+  sundayHours: bigint;
 };
 
 export function makeAvailabilitiesRequestForTest(
   restaurantId: string,
   selectedDays: Set<string>,
-  hourMask: number,
+  hourMask: bigint,
 ): UpdateAvailabilitiesRequestForTest {
   return {
     id: restaurantId,
-    mondayHours: selectedDays.has("monday") ? hourMask : 0,
-    tuesdayHours: selectedDays.has("tuesday") ? hourMask : 0,
-    wednesdayHours: selectedDays.has("wednesday") ? hourMask : 0,
-    thursdayHours: selectedDays.has("thursday") ? hourMask : 0,
-    fridayHours: selectedDays.has("friday") ? hourMask : 0,
-    saturdayHours: selectedDays.has("saturday") ? hourMask : 0,
-    sundayHours: selectedDays.has("sunday") ? hourMask : 0,
+    mondayHours: selectedDays.has("monday") ? hourMask : 0n,
+    tuesdayHours: selectedDays.has("tuesday") ? hourMask : 0n,
+    wednesdayHours: selectedDays.has("wednesday") ? hourMask : 0n,
+    thursdayHours: selectedDays.has("thursday") ? hourMask : 0n,
+    fridayHours: selectedDays.has("friday") ? hourMask : 0n,
+    saturdayHours: selectedDays.has("saturday") ? hourMask : 0n,
+    sundayHours: selectedDays.has("sunday") ? hourMask : 0n,
   };
 }
 
@@ -125,7 +125,7 @@ function BookingSettingPage() {
     });
   }
 
-  function formatHourMask(): number {
+  function formatHourMask(): bigint {
     const startHourInt = +startHour;
     const startMinuteInt = +startMinute;
     const endHourInt = +endHour;
@@ -135,10 +135,10 @@ function BookingSettingPage() {
     const closeSlot = endHourInt * 2 + Math.floor(endMinuteInt / 30);
 
     const length = Math.max(0, closeSlot - openSlot);
-    if (length <= 0) return 0;
+    if (length <= 0) return 0n;
 
     const mask = ((1n << BigInt(length)) - 1n) << BigInt(openSlot);
-    return Number(mask);
+    return mask;
   }
 
   // API request logic flow:
@@ -160,13 +160,13 @@ function BookingSettingPage() {
     try {
       const request: UpdateAvailabilitiesRequest = {
         id: restaurantId,
-        mondayHours: selectedDays.has("monday") ? hourMask : 0,
-        tuesdayHours: selectedDays.has("tuesday") ? hourMask : 0,
-        wednesdayHours: selectedDays.has("wednesday") ? hourMask : 0,
-        thursdayHours: selectedDays.has("thursday") ? hourMask : 0,
-        fridayHours: selectedDays.has("friday") ? hourMask : 0,
-        saturdayHours: selectedDays.has("saturday") ? hourMask : 0,
-        sundayHours: selectedDays.has("sunday") ? hourMask : 0,
+        mondayHours: selectedDays.has("monday") ? Number(hourMask) : 0,
+        tuesdayHours: selectedDays.has("tuesday") ? Number(hourMask) : 0,
+        wednesdayHours: selectedDays.has("wednesday") ? Number(hourMask) : 0,
+        thursdayHours: selectedDays.has("thursday") ? Number(hourMask) : 0,
+        fridayHours: selectedDays.has("friday") ? Number(hourMask) : 0,
+        saturdayHours: selectedDays.has("saturday") ? Number(hourMask) : 0,
+        sundayHours: selectedDays.has("sunday") ? Number(hourMask) : 0,
       };
 
       const response = await fetch(`/api/availability/update`, {
