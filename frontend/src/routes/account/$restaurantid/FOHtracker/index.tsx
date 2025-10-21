@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
   type Attendance,
@@ -152,105 +152,142 @@ function RouteComponent() {
   }
 
   return (
-    <div>
-      <table>
-        <thead>
-          <tr>
-            <th>Time Slot</th>
-            <th>Date</th>
-            <th>Party Size</th>
-            <th>Given Name</th>
-            <th>Family Name</th>
-            <th>Phone Number</th>
-            <th>Email</th>
-            <th>Attendance</th>
-            <th>Customer Notes</th>
-            <th>Restaurant Notes</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {upcomingData.map((booking) => (
+    <div style={{ display: "flex", gap: "20px", width: "max-content" }}>
+      <div className="bks-side">
+        <nav className="bks-side-nav">
+          <Link to="/account" className="bks-side-link">
+            Back to Account
+          </Link>
+          <Link
+            to="/account/$restaurantid"
+            className="bks-side-link"
+            params={{ restaurantid: restaurantId }}
+          >
+            Edit Restaurant Profile
+          </Link>
+          <Link
+            to="/account/$restaurantid/booking-settings"
+            className="bks-side-link"
+            params={{ restaurantid: restaurantId }}
+          >
+            Booking Settings
+          </Link>
+          <Link
+            to="/account/$restaurantid/view-bookings"
+            className="bks-side-link"
+            params={{ restaurantid: restaurantId }}
+          >
+            Bookings
+          </Link>
+          <Link
+            to="/account/$restaurantid/FOHtracker"
+            className="bks-side-link bks-active"
+            params={{ restaurantid: restaurantId }}
+          >
+            FOH Tracker
+          </Link>
+        </nav>
+      </div>
+      <div style={{ width: "80vw", overflow: "scroll" }}>
+        <table>
+          <thead>
             <tr>
-              <td>{formatTimeSlot(booking.time_slot)}</td>
-              <td>{formatDate(booking.booking_date)}</td>
-              <td>{booking.party_size}</td>
-              <td>{booking.given_name}</td>
-              <td>{booking.family_name}</td>
-              <td>{booking.phone}</td>
-              <td>{booking.email}</td>
-              <td>{booking.attendance}</td>
-              <td>{booking.customer_notes}</td>
-              <td>{booking.restaurant_notes}</td>
-              <td>
-                <div className="action-buttons">
-                  <button
-                    disabled={booking.attendance === "cancelled"}
-                    className="action-button checkin"
-                    onClick={() =>
-                      handleUpdateAttendance(booking.booking_id, "attended")
-                    }
-                  >
-                    Check In
-                  </button>
-                  <button
-                    disabled={booking.attendance === "cancelled"}
-                    className="action-button cancel"
-                    onClick={async () => {
-                      if (
-                        window.confirm(
-                          "Are you sure you want to cancel this booking?",
-                        )
-                      ) {
-                        await handleUpdateAttendance(
-                          booking.booking_id,
-                          "cancelled",
-                        );
-                      }
-                    }}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    className="action-button note"
-                    onClick={() => handleOpenNotesModal(booking.booking_id)}
-                  >
-                    Edit Notes
-                  </button>
-                </div>
-              </td>
+              <th>Time Slot</th>
+              <th>Date</th>
+              <th>Party Size</th>
+              <th>Given Name</th>
+              <th>Family Name</th>
+              <th>Phone Number</th>
+              <th>Email</th>
+              <th>Attendance</th>
+              <th style={{ padding: "12px 120px" }}>Customer Notes</th>
+              <th style={{ padding: "12px 120px" }}>Restaurant Notes</th>
+              <th>Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-      {isNotesModalOpen && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <h2 className="modal-title">Edit Restaurant Notes</h2>
-            <input
-              type="text"
-              value={notesInput}
-              onChange={(e) => setNotesInput(e.target.value)}
-              className="modal-text-field"
-              placeholder="Add notes here..."
-            />
-            <div className="modal-footer">
-              <button
-                className="modal-cancel modal-button"
-                onClick={handleCloseNotesModal}
-              >
-                Cancel
-              </button>
-              <button
-                className="modal-confirm modal-button"
-                onClick={handleSaveNotes}
-              >
-                Save
-              </button>
+          </thead>
+          <tbody>
+            {upcomingData.map((booking, index) => (
+              <tr key={index}>
+                <td>{formatTimeSlot(booking.time_slot)}</td>
+                <td>{formatDate(booking.booking_date)}</td>
+                <td>{booking.party_size}</td>
+                <td>{booking.given_name}</td>
+                <td>{booking.family_name}</td>
+                <td>{booking.phone}</td>
+                <td>{booking.email}</td>
+                <td>{booking.attendance}</td>
+                <td>{booking.customer_notes}</td>
+                <td>{booking.restaurant_notes}</td>
+                <td>
+                  <div className="action-buttons">
+                    <button
+                      disabled={booking.attendance === "cancelled"}
+                      className="action-button checkin"
+                      onClick={() =>
+                        handleUpdateAttendance(booking.booking_id, "attended")
+                      }
+                    >
+                      Check In
+                    </button>
+                    <button
+                      disabled={booking.attendance === "cancelled"}
+                      className="action-button cancel"
+                      onClick={async () => {
+                        if (
+                          window.confirm(
+                            "Are you sure you want to cancel this booking?",
+                          )
+                        ) {
+                          await handleUpdateAttendance(
+                            booking.booking_id,
+                            "cancelled",
+                          );
+                        }
+                      }}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      className="action-button note"
+                      onClick={() => handleOpenNotesModal(booking.booking_id)}
+                    >
+                      Edit Notes
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {isNotesModalOpen && (
+          <div className="modal-overlay">
+            <div className="modal-content">
+              <h2 className="modal-title">Edit Restaurant Notes</h2>
+              <input
+                type="text"
+                value={notesInput}
+                onChange={(e) => setNotesInput(e.target.value)}
+                className="modal-text-field"
+                placeholder="Add notes here..."
+              />
+              <div className="modal-footer">
+                <button
+                  className="modal-cancel modal-button"
+                  onClick={handleCloseNotesModal}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="modal-confirm modal-button"
+                  onClick={handleSaveNotes}
+                >
+                  Save
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import "./index.css";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -156,105 +156,140 @@ function BookingHistoryComponent() {
   ]);
 
   return (
-    <div>
-      <input
-        type="text"
-        placeholder="Search by Customer Name"
-        value={nameSearchTerm}
-        onChange={(e) => setNameSearchTerm(e.target.value)}
-      />
-      <input
-        type="text"
-        placeholder="Search by Customer Email"
-        value={emailSearchTerm}
-        onChange={(e) => setEmailSearchTerm(e.target.value)}
-      />
-      <input
-        type="text"
-        placeholder="Search by Customer Phone Number"
-        value={phoneSearchTerm}
-        onChange={(e) => setPhoneSearchTerm(e.target.value)}
-      />
-      <input
-        type="text"
-        placeholder="Search customer notes containing..."
-        value={custNotesSearchTerm}
-        onChange={(e) => setCustNotesSearchTerm(e.target.value)}
-      />
-      <input
-        type="text"
-        placeholder="Search restaurant notes containing..."
-        value={restNotesSearchTerm}
-        onChange={(e) => setRestNotesSearchTerm(e.target.value)}
-      />
-
-      <h3>Booking Date Range</h3>
-      <label>From (Booking Date)</label>
-      <input
-        type="date"
-        value={bookingDateRange.min}
-        onChange={(e) =>
-          setBookingDateRange((prev) => ({ ...prev, min: e.target.value }))
-        }
-      />
-      <label>To (Booking Date)</label>
-      <input
-        type="date"
-        value={bookingDateRange.max}
-        onChange={(e) =>
-          setBookingDateRange((prev) => ({ ...prev, max: e.target.value }))
-        }
-      />
-      <label>From (Creation Date)</label>
-      <input
-        type="date"
-        value={creationDateRange.min}
-        onChange={(e) =>
-          setCreationDateRange((prev) => ({ ...prev, min: e.target.value }))
-        }
-      />
-      <label>To (Creation Date)</label>
-      <input
-        type="date"
-        value={creationDateRange.max}
-        onChange={(e) =>
-          setCreationDateRange((prev) => ({ ...prev, min: e.target.value }))
-        }
-      />
-      <table>
-        <thead>
-          <tr>
-            <th>Time Slot</th>
-            <th>Date</th>
-            <th>Party Size</th>
-            <th>Given Name</th>
-            <th>Family Name</th>
-            <th>Phone Number</th>
-            <th>Email</th>
-            <th>Attendance</th>
-            <th>Creation Date</th>
-            <th>Customer Notes</th>
-            <th>Restaurant Notes</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredAndSortedBookings.map((booking) => (
+    <div style={{ display: "flex", gap: "20px", width: "max-content" }}>
+      <div className="bks-side">
+        <nav className="bks-side-nav">
+          <Link to="/account" className="bks-side-link">
+            Back to Account
+          </Link>
+          <Link
+            to="/account/$restaurantid"
+            className="bks-side-link"
+            params={{ restaurantid: restaurantId }}
+          >
+            Edit Restaurant Profile
+          </Link>
+          <Link
+            to="/account/$restaurantid/booking-settings"
+            className="bks-side-link"
+            params={{ restaurantid: restaurantId }}
+          >
+            Booking Settings
+          </Link>
+          <Link
+            to="/account/$restaurantid/view-bookings"
+            className="bks-side-link bks-active"
+            params={{ restaurantid: restaurantId }}
+          >
+            Bookings
+          </Link>
+          <Link
+            to="/account/$restaurantid/FOHtracker"
+            className="bks-side-link"
+            params={{ restaurantid: restaurantId }}
+          >
+            FOH Tracker
+          </Link>
+        </nav>
+      </div>
+      <div style={{ width: "80vw", overflow: "scroll" }}>
+        <h3>Booking Search</h3>
+        <div className="search-fields">
+          <input
+            type="text"
+            placeholder="Search by Customer Name"
+            value={nameSearchTerm}
+            onChange={(e) => setNameSearchTerm(e.target.value)}
+          />
+          <input
+            type="text"
+            placeholder="Search by Customer Email"
+            value={emailSearchTerm}
+            onChange={(e) => setEmailSearchTerm(e.target.value)}
+          />
+          <input
+            type="text"
+            placeholder="Search by Customer Phone Number"
+            value={phoneSearchTerm}
+            onChange={(e) => setPhoneSearchTerm(e.target.value)}
+          />
+          <input
+            type="text"
+            placeholder="Search customer notes containing..."
+            value={custNotesSearchTerm}
+            onChange={(e) => setCustNotesSearchTerm(e.target.value)}
+          />
+          <input
+            type="text"
+            placeholder="Search restaurant notes containing..."
+            value={restNotesSearchTerm}
+            onChange={(e) => setRestNotesSearchTerm(e.target.value)}
+          />
+        </div>
+        <h3>Booking Date Range</h3>
+        <label>From (Booking Date)</label>
+        <input
+          type="date"
+          value={bookingDateRange.min}
+          onChange={(e) =>
+            setBookingDateRange((prev) => ({ ...prev, min: e.target.value }))
+          }
+        />
+        <label>To (Booking Date)</label>
+        <input
+          type="date"
+          value={bookingDateRange.max}
+          onChange={(e) =>
+            setBookingDateRange((prev) => ({ ...prev, max: e.target.value }))
+          }
+        />
+        <label>From (Creation Date)</label>
+        <input
+          type="date"
+          value={creationDateRange.min}
+          onChange={(e) =>
+            setCreationDateRange((prev) => ({ ...prev, min: e.target.value }))
+          }
+        />
+        <label>To (Creation Date)</label>
+        <input
+          type="date"
+          value={creationDateRange.max}
+          onChange={(e) =>
+            setCreationDateRange((prev) => ({ ...prev, min: e.target.value }))
+          }
+        />
+        <table style={{ width: "100%" }}>
+          <thead>
             <tr>
-              <td>{formatTimeSlot(booking.time_slot)}</td>
-              <td>{formatDate(booking.booking_date)}</td>
-              <td>{booking.party_size}</td>
-              <td>{booking.given_name}</td>
-              <td>{booking.family_name}</td>
-              <td>{booking.phone}</td>
-              <td>{booking.email}</td>
-              <td>{booking.attendance}</td>
-              <td>{formatDate(booking.creation_date)}</td>
-              <td>{booking.customer_notes}</td>
-              <td>{booking.restaurant_notes}</td>
+              <th style={{ width: "5%" }}>Time Slot</th>
+              <th style={{ width: "10%" }}>Date</th>
+              <th style={{ width: "5%" }}>Party Size</th>
+              <th style={{ width: "15%" }}>Name</th>
+              <th style={{ width: "10%" }}>Phone Number</th>
+              <th style={{ width: "15%" }}>Email</th>
+              <th style={{ width: "10%" }}>Attendance</th>
+              <th style={{ width: "15%" }}>Customer Notes</th>
+              <th style={{ width: "15%" }}>Restaurant Notes</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {filteredAndSortedBookings.map((booking, index) => (
+              <tr key={index}>
+                <td>{formatTimeSlot(booking.time_slot)}</td>
+                <td>{formatDate(booking.booking_date)}</td>
+                <td>{booking.party_size}</td>
+                <td>{booking.given_name + " " + booking.family_name}</td>
+                <td>{booking.phone}</td>
+                <td>{booking.email}</td>
+                <td>{booking.attendance}</td>
+                <td>{booking.customer_notes}</td>
+                <td>{booking.restaurant_notes}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

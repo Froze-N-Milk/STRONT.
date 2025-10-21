@@ -387,8 +387,7 @@ function MakeBookingForm({
                 <h4>Email:</h4> <p>&nbsp;{contactEmail}</p>
               </div>
               <h4>Any additional notes:</h4>
-              <input
-                type="textarea"
+              <textarea
                 name="customer-notes"
                 id="customer-notes"
                 value={customerNotes}

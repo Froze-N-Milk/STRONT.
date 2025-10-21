@@ -136,9 +136,13 @@ export default function BookingSummary({
             </div>
           </div>
         </div>
-        <button className="submit_button" onClick={cancelTS}>
-          Cancel Booking
-        </button>
+        <div
+          style={{ display: "flex", width: "100%", justifyContent: "center" }}
+        >
+          <button className="submit_button" onClick={cancelTS}>
+            Cancel Booking
+          </button>
+        </div>
       </div>
     </div>
   );
