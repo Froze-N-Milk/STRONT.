@@ -28,23 +28,6 @@ export type Restaurant = {
 
 const errMsg = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
-const HALF_HOUR_SLOTS = 48;
-
-function slotLabel(slot: number): string {
-  const totalMinutes = slot * 30;
-  const hours24 = Math.floor(totalMinutes / 60) % 24;
-  const minutes = totalMinutes % 60;
-  const hours12 = hours24 % 12 === 0 ? 12 : hours24 % 12;
-  const period = hours24 >= 12 ? "PM" : "AM";
-  const minuteLabel = minutes.toString().padStart(2, "0");
-  return `${hours12}:${minuteLabel} ${period}`;
-}
-
-const SLOT_OPTIONS = Array.from({ length: HALF_HOUR_SLOTS }, (_, slot) => ({
-  value: String(slot),
-  label: slotLabel(slot),
-}));
-
 function formatDurationFromSlots(slots: number): string {
   if (slots <= 0) return "--";
   const minutes = slots * 30;
@@ -66,9 +49,6 @@ function BrowseRestaurants() {
   const [err, setErr] = React.useState<string | null>(null);
   const [q, setQ] = React.useState("");
   const [loading, setLoading] = React.useState(false);
-  const [dateFilter, setDateFilter] = React.useState("");
-  const [timeSlotFilter, setTimeSlotFilter] = React.useState("");
-  const [partySizeFilter, setPartySizeFilter] = React.useState("");
   const [searchError, setSearchError] = React.useState<string | null>(null);
   const [selectedTags, setSelectedTags] = React.useState<string[]>([]);
 
@@ -115,33 +95,6 @@ function BrowseRestaurants() {
     };
   }, []);
 
-  const isFiltering =
-    dateFilter.length > 0 ||
-    timeSlotFilter.length > 0 ||
-    partySizeFilter.length > 0 ||
-    selectedTags.length > 0;
-
-  const clearFilters = React.useCallback(() => {
-    setDateFilter("");
-    setTimeSlotFilter("");
-    setPartySizeFilter("");
-    setSelectedTags([]);
-    setSearchError(null);
-  }, []);
-
-  const handlePartySizeChange = React.useCallback((value: string) => {
-    if (value === "") {
-      setPartySizeFilter("");
-      setSearchError(null);
-      return;
-    }
-    const parsed = Number(value);
-    if (!Number.isNaN(parsed) && parsed > 0) {
-      setPartySizeFilter(String(Math.floor(parsed)));
-      setSearchError(null);
-    }
-  }, []);
-
   const availableTags = React.useMemo(() => {
     if (!restaurants) return [] as string[];
     const bucket = new Set<string>();
@@ -156,8 +109,6 @@ function BrowseRestaurants() {
   const filteredRestaurants = React.useMemo(() => {
     if (!restaurants) return [] as Restaurant[];
     const trimmedQuery = q.trim().toLowerCase();
-    const parsedPartySize = Number(partySizeFilter);
-
     return restaurants.filter((restaurant) => {
       if (
         selectedTags.length > 0 &&
@@ -181,19 +132,9 @@ function BrowseRestaurants() {
         }
       }
 
-      if (
-        partySizeFilter &&
-        !Number.isNaN(parsedPartySize) &&
-        restaurant.maxPartySize < parsedPartySize
-      ) {
-        return false;
-      }
-
-      // TODO: incorporate date/time availability filtering when data is present
-
       return true;
     });
-  }, [restaurants, selectedTags, q, partySizeFilter]);
+  }, [restaurants, selectedTags, q]);
 
   const toggleTag = React.useCallback((tag: string) => {
     setSelectedTags((current) =>
@@ -276,100 +217,15 @@ function BrowseRestaurants() {
           flexWrap: "wrap",
           gap: 16,
           alignItems: "stretch",
-          justifyContent: "space-between",
+          justifyContent: "flex-end",
           marginBottom: 24,
         }}
       >
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            gap: 12,
-            alignItems: "center",
-            minWidth: 240,
-          }}
-        >
-          <input
-            type="date"
-            value={dateFilter}
-            onChange={(e) => {
-              setDateFilter(e.target.value);
-              setSearchError(null);
-            }}
-            style={{
-              border: "1px solid #e5e5e5",
-              borderRadius: 12,
-              padding: "10px 12px",
-              background: "#fff",
-              color: "#111",
-            }}
-          />
-          <select
-            value={timeSlotFilter}
-            onChange={(e) => {
-              setTimeSlotFilter(e.target.value);
-              setSearchError(null);
-            }}
-            style={{
-              border: "1px solid #e5e5e5",
-              borderRadius: 12,
-              padding: "10px 12px",
-              background: "#fff",
-              color: "#111",
-              minWidth: 160,
-            }}
-          >
-            <option value="">Any time</option>
-            {SLOT_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-          <input
-            type="number"
-            min={1}
-            value={partySizeFilter}
-            onChange={(e) => handlePartySizeChange(e.target.value)}
-            placeholder="Party size"
-            style={{
-              border: "1px solid #e5e5e5",
-              borderRadius: 12,
-              padding: "10px 12px",
-              background: "#fff",
-              color: "#111",
-              width: 110,
-              height: 18,
-            }}
-          />
-          {isFiltering && (
-            <button
-              type="button"
-              onClick={clearFilters}
-              style={{
-                border: "1px solid #e5e5e5",
-                borderRadius: 12,
-                padding: "10px 16px",
-                background: "#f3f4f6",
-                color: "#111827",
-                cursor: "pointer",
-              }}
-            >
-              Clear
-            </button>
-          )}
-        </div>
-
         <form
           onSubmit={(e) => {
             e.preventDefault();
             const trimmed = q.trim();
-            const nextCanSearch =
-              trimmed.length > 0 ||
-              dateFilter.length > 0 ||
-              timeSlotFilter.length > 0 ||
-              partySizeFilter.length > 0 ||
-              selectedTags.length > 0;
+            const nextCanSearch = trimmed.length > 0 || selectedTags.length > 0;
             if (!nextCanSearch) {
               setSearchError(
                 "Please set at least one filter or keyword before searching.",
@@ -416,11 +272,7 @@ function BrowseRestaurants() {
         <div style={{ color: "#b91c1c", marginBottom: 16 }}>{searchError}</div>
       )}
 
-      {(q ||
-        dateFilter ||
-        timeSlotFilter ||
-        partySizeFilter ||
-        selectedTags.length > 0) && (
+      {(q || selectedTags.length > 0) && (
         <div
           style={{
             display: "flex",
@@ -434,21 +286,6 @@ function BrowseRestaurants() {
           {q && (
             <span>
               Keyword <strong>{q}</strong>
-            </span>
-          )}
-          {dateFilter && (
-            <span>
-              Date <strong>{dateFilter}</strong>
-            </span>
-          )}
-          {timeSlotFilter && (
-            <span>
-              Time <strong>{slotLabel(Number(timeSlotFilter))}</strong>
-            </span>
-          )}
-          {partySizeFilter && (
-            <span>
-              Party size <strong>{partySizeFilter}</strong>
             </span>
           )}
         </div>
