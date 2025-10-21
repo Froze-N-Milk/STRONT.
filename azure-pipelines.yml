@@ -23,8 +23,12 @@ variables:
 stages:
   - stage: BuildAndTest
     jobs:
-      - job: BuildTestJob
+      - job: BuildAndTest
         steps:
+          - script: |
+              make build
+            displayName: 'Building Code'
+
           - script: |
               make test
             displayName: 'Running Tests'
