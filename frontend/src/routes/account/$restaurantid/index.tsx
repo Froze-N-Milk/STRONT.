@@ -124,37 +124,41 @@ function Profile() {
   return (
     <div className="acc-page">
       <div className="acc-shell">
-        <aside className="acc-side">
-          <nav className="acc-side-nav">
-            <Link
-              to="/profile"
-              search={{ restaurantId }}
-              className="acc-side-link acc-active"
-            >
-              Profile
+        <div className="bks-side">
+          <nav className="bks-side-nav">
+            <Link to="/account" className="bks-side-link">
+              Back to Account
             </Link>
             <Link
-              to="/booking"
-              search={{ restaurantId }}
-              className="acc-side-link"
+              to="/account/$restaurantid"
+              className="bks-side-link"
+              params={{ restaurantid: restaurantId }}
             >
-              Booking
+              Edit Restaurant Profile
             </Link>
             <Link
-              to="/booking-setting"
-              search={{ restaurantId }}
-              className="acc-side-link"
+              to="/account/$restaurantid/booking-settings"
+              className="bks-side-link"
+              params={{ restaurantid: restaurantId }}
             >
-              Booking Setting
+              Booking Settings
+            </Link>
+            <Link
+              to="/account/$restaurantid/view-bookings"
+              className="bks-side-link"
+              params={{ restaurantid: restaurantId }}
+            >
+              Bookings
+            </Link>
+            <Link
+              to="/account/$restaurantid/FOHtracker"
+              className="bks-side-link bks-active"
+              params={{ restaurantid: restaurantId }}
+            >
+              FOH Tracker
             </Link>
           </nav>
-          <div className="side-footer">
-            <Link to="/account" className="acc-side-link">
-              ← Back to Dashboard
-            </Link>
-          </div>
-        </aside>
-
+        </div>
         <main className="acc-main">
           {loading && <div>Loading...</div>}
           {err && <div style={{ color: "red" }}>{err}</div>}
@@ -170,7 +174,6 @@ function Profile() {
                   onChange={(e) => setName(e.target.value)}
                 />
               </label>
-
               <label className="acc-field">
                 <span>E-mail Address:</span>
                 <input
@@ -181,7 +184,6 @@ function Profile() {
                   onChange={(e) => setEmail(e.target.value)}
                 />
               </label>
-
               <label className="acc-field">
                 <span>Phone Number:</span>
                 <input
@@ -191,7 +193,6 @@ function Profile() {
                   onChange={(e) => setPhone(e.target.value)}
                 />
               </label>
-
               <label className="acc-field acc-span-2">
                 <span>Restaurant Address:</span>
                 <input
@@ -200,7 +201,6 @@ function Profile() {
                   onChange={(e) => setAddress(e.target.value)}
                 />
               </label>
-
               <label className="acc-field">
                 <span>Google Maps:</span>
                 <div
@@ -226,7 +226,6 @@ function Profile() {
                 </div>
               </label>
             </div>
-
             <div className="acc-section">
               <div className="acc-section-title">Add Search Tags</div>
               <div className="acc-tags">
@@ -260,7 +259,6 @@ function Profile() {
                 </button>
               </div>
             </div>
-
             <div className="acc-section">
               <div className="acc-section-title">Short Description</div>
               <textarea
@@ -271,7 +269,6 @@ function Profile() {
                 onChange={(e) => setShortDesc(e.target.value)}
               />
             </div>
-
             <div className="acc-section">
               <div className="acc-section-title">BIO</div>
               <textarea
@@ -282,7 +279,6 @@ function Profile() {
                 onChange={(e) => setBio(e.target.value)}
               />
             </div>
-
             <div className="acc-actions">
               <button type="submit" className="acc-save">
                 Save
