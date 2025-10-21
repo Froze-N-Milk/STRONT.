@@ -1,40 +1,202 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import "./index.css";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type React from "react";
 
 function BookingPage() {
+  type Booking = {
+    id: string;
+    startsAt: string; // ISO string
+    firstName: string;
+    lastName: string;
+    email: string;
+    partySize: number;
+    phone?: string | null;
+    notes?: string | null;
+  };
+
+  type CreateBookingRequest = {
+    restaurantId: string;
+    date: string; // YYYY-MM-DD
+    time: string; // HH:mm
+    partySize: number;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone?: string;
+    notes?: string;
+    startsAt?: string; // optional ISO for backend convenience
+  };
+
+  function composeIso(dateStr: string, timeStr: string) {
+    return new Date(`${dateStr}T${timeStr}:00`).toISOString();
+  }
+
   const restaurantId =
     typeof window !== "undefined"
       ? (new URLSearchParams(window.location.search).get("restaurantId") ?? "")
       : "";
 
-  const [items, setItems] = useState(
-    Array.from({ length: 6 }).map((_, i) => ({ id: i + 1 })),
-  );
+  const [items, setItems] = useState<Booking[]>([]);
+
   const [modalOpen, setModalOpen] = useState(false);
 
+  // form states
+  const [date, setDate] = useState("");
+  const [time, setTime] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [partySize, setPartySize] = useState<string>("1");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [notes, setNotes] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!restaurantId) return;
+    (async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const res = await fetch(`/api/booking/upcoming/${restaurantId}`, {
+          credentials: "include",
+        });
+        if (!res.ok) throw new Error(await res.text());
+        const data = await res.json();
+        // Expecting an array of bookings; map defensively
+        const list: Booking[] = (
+          Array.isArray(data) ? data : data?.bookings || []
+        ).map((b: Record<string, unknown>) => ({
+          id: String(b.id ?? b.ID ?? b.bookingId ?? ""),
+          startsAt: b.startsAt ?? b.startTime ?? b.starts_at ?? "",
+          firstName: b.firstName ?? b.first_name ?? "",
+          lastName: b.lastName ?? b.last_name ?? "",
+          email: b.email ?? b.contactEmail ?? "",
+          partySize: Number(b.partySize ?? b.party_size ?? 0),
+          phone: b.phone ?? b.contactPhone ?? null,
+          notes: b.notes ?? null,
+        }));
+        setItems(list);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : String(e));
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [restaurantId]);
+
+  function resetForm() {
+    setDate("");
+    setTime("");
+    setFirstName("");
+    setLastName("");
+    setPartySize("1");
+    setEmail("");
+    setPhone("");
+    setNotes("");
+  }
+
   function onAdd() {
+    resetForm();
     setModalOpen(true);
   }
+
+  // For now open as create form; editing wiring can be added later
   function onEdit() {
     setModalOpen(true);
   }
-  function onRemove(id: number) {
-    if (confirm("Remove this booking?")) {
-      setItems((list) => list.filter((x) => x.id !== id));
-      // backend：DELETE /api/booking/:id
-    }
-  }
+
   function onClose() {
     setModalOpen(false);
   }
-  function onSave(e: React.FormEvent) {
+
+  async function onSave(e: React.FormEvent) {
     e.preventDefault();
-    // Backend: POST/PUT /api/booking
-    // date, time, customerName, guests, contact, confirmStatus,
-    // tableInfo, specialRequests, notes
-    setModalOpen(false);
+
+    // Basic client-side checks
+    if (!date || !time) {
+      alert("Please select date and time");
+      return;
+    }
+    if (!firstName || !lastName) {
+      alert("Please enter your name");
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      alert("Invalid email");
+      return;
+    }
+
+    const payload: CreateBookingRequest = {
+      restaurantId,
+      date,
+      time,
+      partySize: Number(partySize),
+      firstName,
+      lastName,
+      email,
+      phone: phone || undefined,
+      notes: notes || undefined,
+      startsAt: composeIso(date, time),
+    };
+
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await fetch("/api/booking/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      const data = await res.json();
+
+      // Merge new booking into list if an id is returned
+      const newItem: Booking = {
+        id: String(data?.id ?? data?.ID ?? Date.now()),
+        startsAt: payload.startsAt!,
+        firstName,
+        lastName,
+        email,
+        partySize: Number(partySize),
+        phone: phone || null,
+        notes: notes || null,
+      };
+      setItems((prev) => [newItem, ...prev]);
+      setModalOpen(false);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+      alert(
+        `Failed to create booking: ${e instanceof Error ? e.message : String(e)}`,
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function onRemove(id: string) {
+    if (!id) return;
+    const ok = confirm("Remove (cancel) this booking?");
+    if (!ok) return;
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await fetch(`/api/booking/cancel/${id}`, {
+        method: "POST",
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error(await res.text());
+      setItems((list) => list.filter((x) => x.id !== id));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+      alert(
+        `Failed to cancel booking: ${e instanceof Error ? e.message : String(e)}`,
+      );
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -84,6 +246,9 @@ function BookingPage() {
           </select>
         </div>
 
+        {loading && <div className="bk-hint">Loading…</div>}
+        {error && <div className="bk-error">{error}</div>}
+
         <section className="bk-cards">
           {items.map((it) => (
             <article key={it.id} className="bk-card">
@@ -97,18 +262,23 @@ function BookingPage() {
               </div>
               <div className="bk-card-line">
                 <strong>Date:</strong>{" "}
+                {new Date(it.startsAt).toLocaleDateString()}
               </div>
               <div className="bk-card-line">
                 <strong>Time:</strong>{" "}
+                {new Date(it.startsAt).toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
               </div>
               <div className="bk-card-line">
-                <strong>Customer Name:</strong>{" "}
+                <strong>Customer Name:</strong> {it.firstName} {it.lastName}
               </div>
               <div className="bk-card-line">
-                <strong>Email:</strong>{" "}
+                <strong>Email:</strong> {it.email}
               </div>
               <div className="bk-card-line">
-                <strong>Number of Guests:</strong>{" "}
+                <strong>Number of Guests:</strong> {it.partySize}
               </div>
             </article>
           ))}
@@ -131,35 +301,67 @@ function BookingPage() {
               <div className="bk-form-grid">
                 <label>
                   <span>Date:</span>
-                  <input placeholder="" />
+                  <input
+                    type="date"
+                    required
+                    value={date}
+                    onChange={(e) => setDate(e.target.value)}
+                  />
                 </label>
                 <label>
                   <span>Time:</span>
-                  <input placeholder="" />
+                  <input
+                    type="time"
+                    required
+                    value={time}
+                    onChange={(e) => setTime(e.target.value)}
+                  />
                 </label>
                 <label>
                   <span>First Name:</span>
-                  <input placeholder="" />
+                  <input
+                    required
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                  />
                 </label>
                 <label>
                   <span>Last Name:</span>
-                  <input placeholder="" />
+                  <input
+                    required
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                  />
                 </label>
                 <label>
                   <span>Party size (number of guests):</span>
-                  <input placeholder="" />
+                  <input
+                    type="number"
+                    min={1}
+                    required
+                    value={partySize}
+                    onChange={(e) => setPartySize(e.target.value)}
+                  />
                 </label>
                 <label>
                   <span>E-mail:</span>
-                  <input placeholder="" />
+                  <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
                 </label>
                 <label>
                   <span>Phone number (optional):</span>
-                  <input placeholder="" />
+                  <input
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                  />
                 </label>
                 <label>
                   <span>Booking Status:</span>
-                  <select defaultValue="">
+                  <select defaultValue="" disabled>
                     <option value="" disabled>
                       Select status
                     </option>
@@ -174,7 +376,11 @@ function BookingPage() {
 
                 <label className="bk-span-2">
                   <span>Notes / Additional Info:</span>
-                  <textarea rows={5} />
+                  <textarea
+                    rows={5}
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                  />
                 </label>
               </div>
               <div className="bk-actions">
