@@ -773,23 +773,15 @@ type updateAttendanceRequest struct {
 }
 
 func (h *UpdateAttendanceHandler) handle(ctx context.Context, db *gorm.DB, request updateAttendanceRequest, bookingId uuid.UUID, user User) error {
-	booking, err := gorm.G[model.Booking](db).Raw(`
-SELECT * FROM booking b
-    JOIN restaurant r ON r.id = b.restaurant_id
-    JOIN account a ON a.id = r.account_id
-WHERE a.email = $2
-	AND b.id = $1
-`, bookingId, user.Email).Take(ctx)
-
-	if err != nil {
-		return err
-	}
-
-	booking.Attendance = request.Attendance
-
-	db.Save(&booking)
-
-	return nil
+	return gorm.G[model.Booking](db).Exec(ctx, `
+UPDATE booking AS b
+SET attendance = $2
+FROM restaurant AS r
+	JOIN account a ON a.id = r.account_id
+WHERE
+    b.id = $1
+	AND b.restaurant_id = r.id
+`, bookingId, request.Attendance)
 }
 
 func (h *UpdateAttendanceHandler) ServeHTTP(ctx AuthedAppContext, w http.ResponseWriter, r *http.Request) {
