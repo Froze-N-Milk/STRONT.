@@ -1,66 +1,53 @@
-import { test, expect, describe } from "vitest";
-import BookingSettingPage from "./index";
+import { describe, test, expect } from "vitest";
+import {
+  toggleDayForTest,
+  formatHourMaskForTest,
+  makeAvailabilitiesRequestForTest,
+} from "./index";
 
-test("BookingSettingPage component is defined", () => {
-  expect(typeof BookingSettingPage).toBe("function");
-});
-
-test("duration options include 60/90/120", () => {
-  const durations = [60, 90, 120];
-  expect(durations).toContain(60);
-  expect(durations).toContain(90);
-  expect(durations).toContain(120);
-});
-
-describe("toggle selected days (Set behavior)", () => {
-  test("add then remove a day", () => {
-    const selected = new Set<string>();
-    selected.add("Fri");
-    expect(selected.has("Fri")).toBe(true);
-    selected.delete("Fri");
-    expect(selected.has("Fri")).toBe(false);
-  });
-});
-
-describe("opening hours/minutes ranges", () => {
-  test("hours: 24 options from 00 to 23", () => {
-    const HOURS = Array.from({ length: 24 }, (_, i) =>
-      String(i).padStart(2, "0"),
-    );
-    expect(HOURS.length).toBe(24);
-    expect(HOURS.at(0)).toBe("00");
-    expect(HOURS.at(-1)).toBe("23");
+describe("booking-setting functions", () => {
+  // toggleDayForTest
+  test("toggleDayForTest: flip existing day", () => {
+    const prev = new Set(["monday", "tuesday"]);
+    const next = toggleDayForTest(prev, "monday");
+    expect(next.has("monday")).toBe(false);
+    expect(next.has("tuesday")).toBe(true);
   });
 
-  test("minutes: 60 options from 00 to 59", () => {
-    const MINUTES = Array.from({ length: 60 }, (_, i) =>
-      String(i).padStart(2, "0"),
-    );
-    expect(MINUTES.length).toBe(60);
-    expect(MINUTES.at(0)).toBe("00");
-    expect(MINUTES.at(-1)).toBe("59");
+  test("toggleDayForTest: add missing day", () => {
+    const prev = new Set<string>();
+    const next = toggleDayForTest(prev, "wednesday");
+    expect(next.has("wednesday")).toBe(true);
   });
-});
 
-test("default time range is valid (start < end)", () => {
-  const startHour = "09",
-    startMinute = "00";
-  const endHour = "21",
-    endMinute = "00";
-  const start = Number(startHour) * 60 + Number(startMinute);
-  const end = Number(endHour) * 60 + Number(endMinute);
-  expect(end).toBeGreaterThan(start);
-});
+  // formatHourMaskForTest
+  test("formatHourMaskForTest: 09:00-21:00 yields non-zero", () => {
+    const m = formatHourMaskForTest("09", "00", "21", "00");
+    expect(Number.isInteger(m)).toBe(true);
+    expect(m).toBeGreaterThan(0);
+  });
 
-test("active class applied when selected timeSlot matches", () => {
-  const timeSlot = 90;
-  const m = 90;
-  const cls = `bks-day ${timeSlot === m ? "active" : ""}`.trim();
-  expect(cls.includes("active")).toBe(true);
-});
+  test("formatHourMaskForTest: same open/close -> 0", () => {
+    const m = formatHourMaskForTest("09", "00", "09", "00");
+    expect(m).toBe(0);
+  });
 
-test("nav links carry restaurantId via search params", () => {
-  const restaurantId = "rest-123";
-  const sp = new URLSearchParams({ restaurantId }).toString();
-  expect(sp).toBe("restaurantId=rest-123");
+  test("formatHourMaskForTest: different span yields different mask", () => {
+    const a = formatHourMaskForTest("09", "00", "21", "00");
+    const b = formatHourMaskForTest("10", "00", "21", "00");
+    expect(a).not.toBe(b);
+  });
+
+  // makeAvailabilitiesRequestForTest
+  test("makeAvailabilitiesRequestForTest: builds day masks correctly", () => {
+    const days = new Set(["monday", "friday", "sunday"]);
+    const mask = formatHourMaskForTest("10", "00", "18", "00");
+    const body = makeAvailabilitiesRequestForTest("rid-1", days, mask);
+
+    expect(body.id).toBe("rid-1");
+    expect(body.mondayHours).toBe(mask);
+    expect(body.tuesdayHours).toBe(0);
+    expect(body.fridayHours).toBe(mask);
+    expect(body.sundayHours).toBe(mask);
+  });
 });

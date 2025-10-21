@@ -1,7 +1,61 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createFileRoute, Link } from "@tanstack/react-router";
 import "./index.css";
 import type { FormEvent } from "react";
 import { useState, useEffect } from "react";
+
+export function toggleDayForTest(prev: Set<string>, day: string): Set<string> {
+  const next = new Set(prev);
+  if (next.has(day)) next.delete(day);
+  else next.add(day);
+  return next;
+}
+
+export function formatHourMaskForTest(
+  startHour: string,
+  startMinute: string,
+  endHour: string,
+  endMinute: string,
+): number {
+  const sh = Number(startHour);
+  const sm = Number(startMinute);
+  const eh = Number(endHour);
+  const em = Number(endMinute);
+  const open = sh * 2 + Math.floor(sm / 30);
+  const close = eh * 2 + Math.floor(em / 30);
+  const len = Math.max(0, close - open);
+  if (len <= 0) return 0;
+  const mask = ((1n << BigInt(len)) - 1n) << BigInt(open);
+  return Number(mask);
+}
+
+export type UpdateAvailabilitiesRequestForTest = {
+  id: string;
+  mondayHours: number;
+  tuesdayHours: number;
+  wednesdayHours: number;
+  thursdayHours: number;
+  fridayHours: number;
+  saturdayHours: number;
+  sundayHours: number;
+};
+
+export function makeAvailabilitiesRequestForTest(
+  restaurantId: string,
+  selectedDays: Set<string>,
+  hourMask: number,
+): UpdateAvailabilitiesRequestForTest {
+  return {
+    id: restaurantId,
+    mondayHours: selectedDays.has("monday") ? hourMask : 0,
+    tuesdayHours: selectedDays.has("tuesday") ? hourMask : 0,
+    wednesdayHours: selectedDays.has("wednesday") ? hourMask : 0,
+    thursdayHours: selectedDays.has("thursday") ? hourMask : 0,
+    fridayHours: selectedDays.has("friday") ? hourMask : 0,
+    saturdayHours: selectedDays.has("saturday") ? hourMask : 0,
+    sundayHours: selectedDays.has("sunday") ? hourMask : 0,
+  };
+}
 
 export type UpdateAvailabilitiesRequest = {
   id: string;
