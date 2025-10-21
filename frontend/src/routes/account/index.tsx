@@ -34,10 +34,13 @@ function Account() {
   const [newRestaurantImage, setNewRestaurantImage] = useState<string | null>(
     null,
   );
+  const [newRestaurantFile, setNewRestaurantFile] = useState<File | null>(null);
+
   const [newPwd, setNewPwd] = useState("");
   const [confirmPwd, setConfirmPwd] = useState("");
 
-  // Connected backend endpoint: GET /api/account/restaurants
+  // List my own restaurants
+  // 1.Connected backend endpoint: GET /api/account/restaurants
   useEffect(() => {
     let alive = true;
     (async () => {
@@ -87,6 +90,7 @@ function Account() {
     setShowRemoveConfirm(true);
   };
 
+  // Delete restaurant
   // Connected backend endpoint: POST /api/restaurant/delete
   const handleConfirmRemove = async () => {
     if (!restaurantToRemove) return;
@@ -117,6 +121,7 @@ function Account() {
     }
   };
 
+  // Create new restaurant
   // Connected backend endpoint: POST /api/restaurant/create
   const handleNewRestaurant = async (e: FormEvent) => {
     e.preventDefault();
@@ -129,13 +134,27 @@ function Account() {
       });
       if (res.ok) {
         const newRestaurant = await res.json();
+
+        if (newRestaurantFile) {
+          const fd = new FormData();
+          fd.append("id", newRestaurant.id);
+          fd.append("image", newRestaurantFile);
+
+          await fetch("/api/restaurant/update", {
+            method: "POST",
+            credentials: "include",
+            body: fd,
+          });
+        }
+
         setList((prev) => (prev ? [...prev, newRestaurant] : [newRestaurant]));
         setShowNewModal(false);
         setNewRestaurantName("");
         setNewRestaurantImage(null);
+        setNewRestaurantFile(null);
       }
     } catch {
-      void 0; // keep block non-empty for eslint
+      void 0;
     }
   };
 
@@ -144,14 +163,38 @@ function Account() {
     if (!file) return;
     const url = URL.createObjectURL(file);
     setNewRestaurantImage(url);
+    setNewRestaurantFile(file);
   };
 
+  // Save account settings
+  // Connected backend endpoint: POST /api/account/update
   const handleSaveSettings = async (e: FormEvent) => {
     e.preventDefault();
-    if (newPwd && newPwd === confirmPwd && newPwd.length >= 6) {
+    if (!newPwd || newPwd !== confirmPwd || newPwd.length < 6) return;
+
+    try {
+      const res = await fetch("/api/account/update", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: newPwd }),
+      });
+
+      if (res.status === 401) {
+        window.location.href = "/login";
+        return;
+      }
+      if (!res.ok) {
+        const msg = await res.text();
+        setErr(`Password update failed: ${res.status} ${msg}`);
+        return;
+      }
+
       setNewPwd("");
       setConfirmPwd("");
       setShowSettingsModal(false);
+    } catch (e) {
+      setErr(`Password update failed: ${String(e)}`);
     }
   };
 
