@@ -143,7 +143,7 @@ function BookingSettingPage() {
             </Link>
             <Link
               to="/account/$restaurantid/booking-settings"
-              className="bks-side-link"
+              className="bks-side-link bks-active"
               params={{ restaurantid: restaurantId }}
             >
               Booking Settings
@@ -157,7 +157,7 @@ function BookingSettingPage() {
             </Link>
             <Link
               to="/account/$restaurantid/FOHtracker"
-              className="bks-side-link bks-active"
+              className="bks-side-link"
               params={{ restaurantid: restaurantId }}
             >
               FOH Tracker

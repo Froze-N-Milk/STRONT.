@@ -52,7 +52,7 @@ function Profile() {
               </Link>
               <Link
                 to="/account/$restaurantid"
-                className="bks-side-link"
+                className="bks-side-link bks-active"
                 params={{ restaurantid: restaurantId }}
               >
                 Edit Restaurant Profile
@@ -73,7 +73,7 @@ function Profile() {
               </Link>
               <Link
                 to="/account/$restaurantid/FOHtracker"
-                className="bks-side-link bks-active"
+                className="bks-side-link"
                 params={{ restaurantid: restaurantId }}
               >
                 FOH Tracker
@@ -234,7 +234,7 @@ function Profile() {
             />
           </div>
           <div className="acc-actions">
-            <button className="acc-save" onClick={() => onSave()}>
+            <button className="submit_button" onClick={() => onSave()}>
               Save
             </button>
           </div>
