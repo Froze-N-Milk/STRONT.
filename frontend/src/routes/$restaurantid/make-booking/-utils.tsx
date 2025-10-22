@@ -1,4 +1,4 @@
-import type { Restaurant } from "../../-components/restaurantType";
+import type { Restaurant } from "../../-components/restaurant";
 
 export type BookingObj = {
   booking_id: string;
@@ -18,6 +18,8 @@ export function parseRestaurantInfo(strontinfo: string) {
   const parsedStront: Restaurant = {
     id: strontJSON.id,
     name: strontJSON.name,
+    email: strontJSON.email ?? null,
+    phone: strontJSON.phone ?? null,
     description: strontJSON.description,
     locationText: strontJSON.locationText,
     locationUrl: strontJSON.locationUrl,

@@ -4,7 +4,7 @@ import {
   timeFromMaskValue,
   type BookingObj,
 } from "../$restaurantid/make-booking/-utils";
-import type { Restaurant } from "./restaurantType";
+import type { Restaurant } from "./restaurant";
 
 export default function BookingSummary({
   bookingData,

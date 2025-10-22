@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { parseRestaurantInfo, timeFromMaskValue } from "./-utils";
-import type { Restaurant } from "../../-components/restaurantType";
+import type { Restaurant } from "../../-components/restaurant";
 
 export const Route = createFileRoute("/$restaurantid/make-booking/")({
   component: BookingPageContent,
