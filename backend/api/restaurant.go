@@ -18,6 +18,8 @@ import (
 type restaurantDetails struct {
 	ID                uuid.UUID `json:"id"`
 	Name              string    `json:"name"`
+	Email             string    `json:"email"`
+	Phone             string    `json:"phone"`
 	Description       string    `json:"description"`
 	LocationText      string    `json:"locationText"`
 	LocationUrl       string    `json:"locationUrl"`
@@ -31,6 +33,8 @@ type restaurantDetails struct {
 func (lhs restaurantDetails) Equal(rhs restaurantDetails) bool {
 	return lhs.ID == rhs.ID &&
 		lhs.Name == rhs.Name &&
+		lhs.Email == rhs.Email &&
+		lhs.Phone == rhs.Phone &&
 		lhs.Description == rhs.Description &&
 		lhs.LocationText == rhs.LocationText &&
 		lhs.LocationUrl == rhs.LocationUrl &&
@@ -211,6 +215,8 @@ func (h *DeleteRestaurantHandler) ServeHTTP(ctx AuthedAppContext, w http.Respons
 //	expects: {
 //		id: string,
 //		name: string,
+//		email: string,
+//		phone: string,
 //		description: string,
 //		locationText: string,
 //		locationUrl: string,
@@ -240,6 +246,8 @@ func (*UpdateRestaurantHandler) handle(
 UPDATE restaurant
 SET
 	name = ?,
+	email = ?,
+	phone = ?,
 	description = ?,
 	location_text = ?,
 	location_url = ?,
@@ -254,6 +262,8 @@ WHERE restaurant.id = ?
 	AND restaurant.account_id = account.id
 RETURNING 0`,
 		restaurant.Name,
+		restaurant.Email,
+		restaurant.Phone,
 		restaurant.Description,
 		restaurant.LocationText,
 		restaurant.LocationUrl,
@@ -303,6 +313,8 @@ func (h *UpdateRestaurantHandler) ServeHTTP(ctx AuthedAppContext, w http.Respons
 //	returns: {
 //		id: string,
 //		name: string,
+//		email: string,
+//		phone: string,
 //		description: string,
 //		locationText: string,
 //		locationUrl: string,
@@ -332,6 +344,8 @@ func (*BrowseRestaurantsHandler) handle(
 		res[i] = restaurantDetails{
 			ID:                restaurant.ID,
 			Name:              restaurant.Name,
+			Email:             restaurant.Email,
+			Phone:             restaurant.Phone,
 			Description:       restaurant.Description,
 			LocationText:      restaurant.LocationText,
 			LocationUrl:       restaurant.LocationUrl,
@@ -369,6 +383,8 @@ func (h *BrowseRestaurantsHandler) ServeHTTP(ctx AppContext, w http.ResponseWrit
 //	returns: {
 //		id: string,
 //		name: string,
+//		email: string,
+//		phone: string,
 //		description: string,
 //		locationText: string,
 //		locationUrl: string,
@@ -399,6 +415,8 @@ WHERE id = ?`, id).First(ctx)
 	return restaurantDetails{
 		ID:                restaurant.ID,
 		Name:              restaurant.Name,
+		Email:             restaurant.Email,
+		Phone:             restaurant.Phone,
 		Description:       restaurant.Description,
 		LocationText:      restaurant.LocationText,
 		LocationUrl:       restaurant.LocationUrl,
