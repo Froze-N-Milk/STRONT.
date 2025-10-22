@@ -29,13 +29,7 @@ export type Restaurant = {
 const errMsg = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
 function formatDurationFromSlots(slots: number): string {
-  if (slots <= 0) return "--";
-  const minutes = slots * 30;
-  const hours = Math.floor(minutes / 60);
-  const remainder = minutes % 60;
-  if (hours > 0 && remainder > 0) return `${hours}h ${remainder}m`;
-  if (hours > 0) return `${hours}h`;
-  return `${minutes}m`;
+  return `${slots * 30} min`;
 }
 
 export const Route = createFileRoute("/")({
