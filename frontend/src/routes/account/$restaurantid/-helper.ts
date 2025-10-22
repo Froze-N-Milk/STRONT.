@@ -107,23 +107,17 @@ export const normaliseDate = (
   return timestamp;
 };
 
-export const filterByDateRange = (
-  timestamp: number,
-  minDateString: string,
-  maxDateString: string,
-): boolean => {
-  const minTimestamp = normaliseDate(minDateString, "min");
-  const maxTimestamp = normaliseDate(maxDateString, "max");
-
-  let passesMin = true;
-  if (minTimestamp !== null) {
-    passesMin = timestamp >= minTimestamp;
-  }
-
-  let passesMax = true;
-  if (maxTimestamp !== null) {
-    passesMax = timestamp <= maxTimestamp;
-  }
-
-  return passesMin && passesMax;
-};
+export function filterByDateRange(
+  bookingdate: number,
+  mindate: string,
+  maxdate: string,
+) {
+  if (mindate != "" && maxdate != "") {
+    const mindateParsed = new Date(mindate);
+    const maxdateParsed = new Date(maxdate);
+    const bookingdateParsed = new Date(bookingdate);
+    return (
+      mindateParsed <= bookingdateParsed && bookingdateParsed <= maxdateParsed
+    );
+  } else return true;
+}

@@ -81,7 +81,7 @@ function RouteComponent() {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ "restaurant-notes": notesInput }),
+          body: JSON.stringify({ restaurant_notes: notesInput }),
         },
       );
       if (!response.ok) throw new Error(response.status.toString());
@@ -215,7 +215,10 @@ function RouteComponent() {
                 <td>
                   <div className="action-buttons">
                     <button
-                      disabled={booking.attendance === "cancelled"}
+                      disabled={
+                        booking.attendance === "cancelled" ||
+                        booking.attendance === "attended"
+                      }
                       className="action-button checkin"
                       onClick={() =>
                         handleUpdateAttendance(booking.booking_id, "attended")
@@ -224,7 +227,10 @@ function RouteComponent() {
                       Check In
                     </button>
                     <button
-                      disabled={booking.attendance === "cancelled"}
+                      disabled={
+                        booking.attendance === "cancelled" ||
+                        booking.attendance === "attended"
+                      }
                       className="action-button cancel"
                       onClick={async () => {
                         if (

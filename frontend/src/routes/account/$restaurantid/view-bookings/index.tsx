@@ -13,37 +13,6 @@ import {
   formatTimeSlot,
 } from "../-helper.ts";
 
-const mockData: Booking[] = [
-  {
-    booking_id: "11111111-1111-1111-1111-111111111111",
-    given_name: "Big",
-    family_name: "Missile",
-    phone: "0411111111",
-    email: "kill@me.lol",
-    party_size: 4,
-    booking_date: 0,
-    time_slot: 3,
-    creation_date: 0,
-    customer_notes: "pemis",
-    restaurant_notes: "asdfhjlk",
-    attendance: "pending",
-  },
-  {
-    booking_id: "22222222-2222-2222-2222-222222222222",
-    given_name: "Small",
-    family_name: "Gun",
-    phone: "0422222222",
-    email: "kill@you.lol",
-    party_size: 5,
-    booking_date: 2345987542982,
-    time_slot: 14,
-    creation_date: 234598754298,
-    customer_notes: "asdfhjkl",
-    restaurant_notes: "asdfhjlk",
-    attendance: "cancelled",
-  },
-];
-
 function BookingHistoryComponent() {
   const restaurantId = Route.useParams().restaurantid;
 
@@ -52,10 +21,8 @@ function BookingHistoryComponent() {
   const [phoneSearchTerm, setPhoneSearchTerm] = useState("");
   const [custNotesSearchTerm, setCustNotesSearchTerm] = useState("");
   const [restNotesSearchTerm, setRestNotesSearchTerm] = useState("");
-  const [bookingDateRange, setBookingDateRange] = useState({
-    min: "",
-    max: "",
-  });
+  const [bookingDateRangeMin, setBookingDateRangeMin] = useState("");
+  const [bookingDateRangeMax, setBookingDateRangeMax] = useState("");
 
   const [historyData, setHistoryData] = useState<Booking[] | null>(null);
 
@@ -71,7 +38,7 @@ function BookingHistoryComponent() {
 
         if (result.length < 1) {
           console.log("Set mock data");
-          initialData = [...mockData];
+          initialData = [];
         } else {
           initialData = result;
         }
@@ -111,8 +78,8 @@ function BookingHistoryComponent() {
     filteredData = filteredData.filter((booking) =>
       filterByDateRange(
         booking.booking_date,
-        bookingDateRange.min,
-        bookingDateRange.max,
+        bookingDateRangeMin,
+        bookingDateRangeMax,
       ),
     );
 
@@ -139,7 +106,8 @@ function BookingHistoryComponent() {
     phoneSearchTerm,
     custNotesSearchTerm,
     restNotesSearchTerm,
-    bookingDateRange,
+    bookingDateRangeMin,
+    bookingDateRangeMax,
   ]);
 
   return (
@@ -182,7 +150,7 @@ function BookingHistoryComponent() {
       <div style={{ width: "80vw", overflow: "scroll" }}>
         <h2>Booking History</h2>
         <h3>Search by Details</h3>
-        <div className="search-fields">
+        <div className="search-fields" style={{ paddingTop: "5px" }}>
           <input
             type="text"
             placeholder="Search by Customer Name"
@@ -214,22 +182,18 @@ function BookingHistoryComponent() {
             onChange={(e) => setRestNotesSearchTerm(e.target.value)}
           />
         </div>
-        <h3>Search by Date Range</h3>
+        <h3 style={{ paddingTop: "10px" }}>Search by Date Range</h3>
         <label>From (Booking Date)</label>
         <input
           type="date"
-          value={bookingDateRange.min}
-          onChange={(e) =>
-            setBookingDateRange((prev) => ({ ...prev, min: e.target.value }))
-          }
+          value={bookingDateRangeMin}
+          onChange={(e) => setBookingDateRangeMin(e.target.value)}
         />
         <label>To (Booking Date)</label>
         <input
           type="date"
-          value={bookingDateRange.max}
-          onChange={(e) =>
-            setBookingDateRange((prev) => ({ ...prev, max: e.target.value }))
-          }
+          value={bookingDateRangeMax}
+          onChange={(e) => setBookingDateRangeMax(e.target.value)}
         />
 
         <table style={{ width: "100%" }}>
