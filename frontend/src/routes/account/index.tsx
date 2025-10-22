@@ -1,4 +1,3 @@
-/* eslint-disable react-refresh/only-export-components */
 import { createFileRoute } from "@tanstack/react-router";
 import "./index.css";
 import {
@@ -9,14 +8,6 @@ import {
   type FormEvent,
 } from "react";
 import { Link } from "@tanstack/react-router";
-
-export function isValidRestaurantName(name: string): boolean {
-  return name.trim().length > 0;
-}
-
-export function isValidPassword(pwd: string, confirm: string): boolean {
-  return pwd.length >= 6 && pwd === confirm;
-}
 
 type Restaurant = {
   id: string;
@@ -248,9 +239,9 @@ function Account() {
           {filtered.map((r) => (
             <Link
               key={r.id}
-              to="/profile"
-              search={{ restaurantId: r.id }}
+              to="/account/$restaurantid"
               className="link-reset"
+              params={{ restaurantid: r.id }}
             >
               <div className="restaurant-card">
                 <div className="card-image-wrapper">
