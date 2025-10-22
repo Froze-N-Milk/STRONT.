@@ -45,9 +45,9 @@ stages:
               testResultsFiles: 'frontend/vite-test-junit.xml'
               testRunTitle: 'Publishing Frontend Test Results'
 
-  - stage: PublishImage
+  - stage: PublishImageAndDeploy
     dependsOn: BuildAndTest
-    condition: succeeded()
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
     jobs:
       - job: PushContainerImage
         steps:
@@ -65,3 +65,11 @@ stages:
               tags: |
                 $(Build.BuildId)
                 latest
+      - job: Deploy
+        steps:
+          - task: AzureWebAppContainer@1
+            inputs:
+              azureSubscription: 'StrontWebApp'
+              appName: 'stront-rest'
+              resourceGroupName: 'Stront'
+              imageName: 'stront-hye4c0bebmcahjdy.azurecr.io/stront:latest'
