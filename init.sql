@@ -140,7 +140,7 @@ VALUES
  '### About Us
 Our food is so undeniably British that most people can’t keep it down.
 Perfect if you’re looking for an unforgettable (and slightly regrettable) dining experience.
-Fish, chips, mushy peas, and guaranteed regret in every bite.',8,20,90,'{"british", "vomit-inducing"}'),
+Fish, chips, mushy peas, and guaranteed regret in every bite.',8,20,3,'{"british", "vomit-inducing"}'),
 -- Derulo
 ('66666666-6666-6666-6666-666666666666','44444444-4444-4444-4444-444444444444','55555555-5555-5555-5555-555555555555',
  'Derulo’s Midnight Munchies','derulo.dines@example.com','+1 305-555-0101','Celebrity-owned late-night hotspot serving dishes with rhythm and soul.',
@@ -148,27 +148,27 @@ Fish, chips, mushy peas, and guaranteed regret in every bite.',8,20,90,'{"britis
  '## Welcome to Derulo’s Midnight Munchies 🎤
 Jason Derulo’s culinary stage — open when the rest of the world sleeps.
 Expect flashy cocktails, remixed comfort food, and live mic moments where Jason himself might sing your order.
-Come hungry, leave singing “Jason Deruuulooooo!”.',12,50,120,'{"celebrity-owned", "late-night", "derulo"}'),
+Come hungry, leave singing “Jason Deruuulooooo!”.',12,50,4,'{"celebrity-owned", "late-night", "derulo"}'),
 -- Kamal
 ('99999999-9999-9999-9999-999999999999','77777777-7777-7777-7777-777777777777','88888888-8888-8888-8888-888888888888',
  'Kamal’s Aussie Steakhouse','kamal.steakhouse@example.com','+61 2 5555 1212','All the steaks, all the Kamals.',
  'Sydney, Australia','https://goo.gl/maps/fakekamalsteakhouse',
  '### Kamal’s Aussie Steakhouse
 Every staff member is named Kamal.
-Expect premium steaks, zero surprises (except maybe their names).',10,30,120,'{"steakhouse", "australian", "kamal"}'),
+Expect premium steaks, zero surprises (except maybe their names).',10,30,4,'{"steakhouse", "australian", "kamal"}'),
 -- Pâtisserie Chaos
 ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa','aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa','99999999-9999-9999-9999-999999999998',
  'Pâtisserie Chaos','patisserie.chaos@example.com','+33 1 2345 6789','Over-the-top French desserts.',
  'Paris, France','https://goo.gl/maps/fakepatisserie',
  '### Pâtisserie Chaos
 Croissants that could collapse your will to live, macarons that might start a small fire in your mouth.
-Bon appétit, if you dare.',6,15,90,'{"french", "dessert", "chaotic"}'),
+Bon appétit, if you dare.',6,15,3,'{"french", "dessert", "chaotic"}'),
 -- Vegan Vortex
 ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb','bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb','aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaab',
  'Vegan Vortex','vegan.vortex@example.com','+44 20 1234 5678','Experimental plant-based cuisine.',
  'London, UK','https://goo.gl/maps/fakeveganvortex',
  '### Vegan Vortex
-Where kale meets chaos. Only the brave leave smiling. No animals harmed, some egos destroyed.',8,20,60, '{"vegan", "experimental", "plant-based"}');
+Where kale meets chaos. Only the brave leave smiling. No animals harmed, some egos destroyed.',8,20,2, '{"vegan", "experimental", "plant-based"}');
 
 -- ===== EXTRA BOOKINGS: James Chrongus, Michael Cuxley, Bruce Bloje, Marques Brownlee =====
 
