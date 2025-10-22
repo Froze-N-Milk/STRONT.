@@ -290,11 +290,11 @@ INSERT INTO booking (id, contact_id, restaurant_id, party_size, booking_date, ti
 	appMux.Handle("GET /api/booking/{booking}", &api.GetBookingByIDHandler{})
 	appMux.Handle("POST /api/booking/create", &api.CreateOnlineBookingHandler{EmailHelper: emailHelper})
 	appMux.Handle("POST /api/booking/edit/{booking}", &api.UpdateBookingHandler{})
-	appMux.Handle("POST /api/booking/cancel/{booking}", &api.CancelBookingHandler{})
+	appMux.Handle("POST /api/booking/cancel/{booking}", &api.CancelBookingHandler{EmailHelper: emailHelper})
 	authedAppMux.Handle("GET /api/booking/upcoming/{restaurant}", &api.GetUpcomingBookingsHandler{})
 	authedAppMux.Handle("GET /api/booking/history/{restaurant}", &api.GetBookingHistoryHandler{})
 	authedAppMux.Handle("POST /api/booking/restaurant-notes/{booking}", &api.UpdateRestaurantNotesHandler{})
-	authedAppMux.Handle("POST /api/booking/attendance/{booking}", &api.UpdateAttendanceHandler{})
+	authedAppMux.Handle("POST /api/booking/attendance/{booking}", &api.UpdateAttendanceHandler{EmailHelper: emailHelper})
 
 	server := http.Server{
 		Addr:    hostString,
