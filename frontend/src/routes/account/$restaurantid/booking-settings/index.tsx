@@ -1,6 +1,7 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+//import { createFileRoute } from "@tanstack/react-router";
 import "./index.css";
 import { useEffect, useState } from "react";
+import type { Restaurant } from "../-helper.ts";
 
 export type UpdateAvailabilitiesRequest = {
   id: string;
@@ -14,43 +15,24 @@ export type UpdateAvailabilitiesRequest = {
 };
 
 function BookingSettingPage() {
-  const [existingRestaurant, setExistingRestaurant] = useState<Record<
-    string,
-    unknown
-  > | null>(null);
-  const [maxPartySize, setMaxPartySize] = useState<number | "">("");
-  const [bookingCapacity, setBookingCapacity] = useState<number | "">("");
+  //const restaurantId = Route.useParams().restaurantid;
+  const restaurantId = "";
 
-  const restaurantId =
-    typeof window !== "undefined"
-      ? (new URLSearchParams(window.location.search).get("restaurantId") ?? "")
-      : "";
+  const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
 
   useEffect(() => {
-    if (!restaurantId) return;
-    (async () => {
-      try {
-        const res = await fetch(
-          `/api/restaurant/details?restaurantId=${encodeURIComponent(restaurantId)}`,
-        );
-        if (!res.ok) throw new Error(String(res.status));
-        const data = await res.json();
-        setExistingRestaurant(data);
-        // Pre-fill People & Table if available
-        if (typeof data?.maxPartySize === "number")
-          setMaxPartySize(data.maxPartySize);
-        if (typeof data?.bookingCapacity === "number")
-          setBookingCapacity(data.bookingCapacity);
-        if (typeof data?.bookingLength === "number")
-          setTimeSlot(data.bookingLength);
-      } catch (e) {
-        console.error("Failed to load restaurant details:", e);
+    fetch(`/api/restaurant/${restaurantId}`, {
+      method: "GET",
+    }).then(async (r) => {
+      if (r.status == 200) {
+        setRestaurant(await r.json());
+      } else {
+        setRestaurant(null);
       }
-    })();
+    });
   }, [restaurantId]);
 
   const [selectedDays, setSelectedDays] = useState<Set<string>>(new Set());
-  const [timeSlot, setTimeSlot] = useState<number | null>(null);
   const HOURS = Array.from({ length: 24 }, (_, i) =>
     String(i).padStart(2, "0"),
   ); // 00-23
@@ -97,8 +79,8 @@ function BookingSettingPage() {
   // MAKE SURE TO RETAIN EVERYTHING ELSE. This API endpoint expects the full restaurant details,
   // so you need to send back everything like the ID, name, description, etc. You don't want to change these,
   // keep them the same as when you received the details for this restaurant.
-  async function onSaveSettings(e: FormEvent) {
-    e.preventDefault();
+  async function onSaveSettings() {
+    // e.preventDefault();
     const hourMask = formatHourMask();
     // Optional: ensure a booking duration has been chosen; if not, leave existing value
     // (Backend will keep prior setting if this is undefined.)
@@ -123,21 +105,11 @@ function BookingSettingPage() {
       if (!response.ok) throw new Error(response.status.toString());
 
       // Update restaurant-level settings (booking length, capacities)
-      const restaurantUpdatePayload: Record<string, unknown> = {
-        ...(existingRestaurant ?? {}),
-        id: restaurantId,
-      };
-      if (typeof timeSlot === "number")
-        restaurantUpdatePayload.bookingLength = timeSlot;
-      if (typeof maxPartySize === "number")
-        restaurantUpdatePayload.maxPartySize = maxPartySize;
-      if (typeof bookingCapacity === "number")
-        restaurantUpdatePayload.bookingCapacity = bookingCapacity;
 
       const res2 = await fetch(`/api/restaurant/update`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(restaurantUpdatePayload),
+        body: JSON.stringify(restaurant),
       });
       if (!res2.ok) throw new Error(res2.status.toString());
     } catch (error) {
@@ -145,38 +117,49 @@ function BookingSettingPage() {
     }
   }
 
+  if (restaurant == null) {
+    return <p>Something went wrong</p>;
+  }
+
   return (
     <div className="bks-page">
-      <aside className="bks-side">
-        <nav className="bks-side-nav">
-          <Link
-            to="/profile"
-            search={{ restaurantId }}
-            className="bks-side-link"
-          >
-            Profile
-          </Link>
-          <Link
-            to="/booking"
-            search={{ restaurantId }}
-            className="bks-side-link"
-          >
-            Booking
-          </Link>
-          <Link
-            to="/booking-setting"
-            search={{ restaurantId }}
-            className="bks-side-link bks-active"
-          >
-            Booking Setting
-          </Link>
-        </nav>
-        <div className="bks-side-footer">
-          <Link to="/account" className="bks-side-link">
-            ← Back to Dashboard
-          </Link>
+      <div style={{ display: "flex", gap: "20px", width: "max-content" }}>
+        <div className="bks-side">
+          <nav className="bks-side-nav">
+            {/*<Link to="/account" className="bks-side-link">
+                        Back to Account
+                    </Link>
+                    <Link
+                        to="/account/$restaurantid"
+                        className="bks-side-link"
+                        params={{ restaurantid: restaurantId }}
+                    >
+                        Edit Restaurant Profile
+                    </Link>
+                    <Link
+                        to="/account/$restaurantid/booking-settings"
+                        className="bks-side-link"
+                        params={{ restaurantid: restaurantId }}
+                    >
+                        Booking Settings
+                    </Link>
+                    <Link
+                        to="/account/$restaurantid/view-bookings"
+                        className="bks-side-link"
+                        params={{ restaurantid: restaurantId }}
+                    >
+                        Bookings
+                    </Link>
+                    <Link
+                        to="/account/$restaurantid/FOHtracker"
+                        className="bks-side-link bks-active"
+                        params={{ restaurantid: restaurantId }}
+                    >
+                        FOH Tracker
+                    </Link>*/}
+          </nav>
         </div>
-      </aside>
+      </div>
 
       <main className="bks-main">
         <form className="bks-card" onSubmit={onSaveSettings}>
@@ -187,15 +170,17 @@ function BookingSettingPage() {
               <label>
                 <span>Booking Duration:</span>
                 <div className="bks-days">
-                  {[60, 90, 120].map((m) => (
+                  {[2, 3, 4].map((m) => (
                     <button
                       key={m}
                       type="button"
-                      className={`bks-day ${timeSlot === m ? "active" : ""}`}
-                      aria-pressed={timeSlot === m}
-                      onClick={() => setTimeSlot(m)}
+                      className={`bks-day ${restaurant.bookingLength === m ? "active" : ""}`}
+                      aria-pressed={restaurant.bookingLength === m}
+                      onClick={() =>
+                        setRestaurant({ ...restaurant, bookingLength: m })
+                      }
                     >
-                      {m} min
+                      {m * 30} min
                     </button>
                   ))}
                 </div>
@@ -284,23 +269,31 @@ function BookingSettingPage() {
                 <input
                   type="number"
                   min={1}
-                  value={maxPartySize}
-                  onChange={(e) => {
-                    const v = e.target.value;
-                    setMaxPartySize(v === "" ? "" : Math.max(1, Number(v)));
-                  }}
+                  value={restaurant.maxPartySize}
+                  onChange={(e) =>
+                    setRestaurant({
+                      ...restaurant,
+                      maxPartySize: !isNaN(Number(e.target.value))
+                        ? Number(e.target.value)
+                        : 0,
+                    })
+                  }
                 />
               </label>
               <label>
-                <span>Maximum Number of Tables:</span>
+                <span>Maximum Concurrent Bookings:</span>
                 <input
                   type="number"
                   min={0}
-                  value={bookingCapacity}
-                  onChange={(e) => {
-                    const v = e.target.value;
-                    setBookingCapacity(v === "" ? "" : Math.max(0, Number(v)));
-                  }}
+                  value={restaurant.bookingCapacity}
+                  onChange={(e) =>
+                    setRestaurant({
+                      ...restaurant,
+                      bookingCapacity: !isNaN(Number(e.target.value))
+                        ? Number(e.target.value)
+                        : 0,
+                    })
+                  }
                 />
               </label>
             </div>
@@ -317,10 +310,10 @@ function BookingSettingPage() {
   );
 }
 
-export const Route = createFileRoute(
+/*export const Route = createFileRoute(
   "/account/$restaurantid/booking-settings/",
 )({
   component: BookingSettingPage,
-});
+});*/
 
 export default BookingSettingPage;

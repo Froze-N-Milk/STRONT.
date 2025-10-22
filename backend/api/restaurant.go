@@ -376,7 +376,7 @@ func (h *BrowseRestaurantsHandler) ServeHTTP(ctx AppContext, w http.ResponseWrit
 	}
 }
 
-// RestaurantsDetailsHandler fetches the details of a single restaurant
+// RestaurantDetailsHandler fetches the details of a single restaurant
 //
 // expects: .../{restaurant}: restaurant id path-param
 //
