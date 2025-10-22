@@ -22,9 +22,8 @@ RUN CGO_ENABLED=0 go build -o /go-app backend/main.go
 RUN chown root:root /go-app \
  && chmod +x /go-app
 
-FROM scratch AS runner
+FROM rockylinux/rockylinux:10-minimal AS runner
 
-COPY --from=rockylinux:9-minimal /usr/share/zoneinfo /usr/share/zoneinfo
 COPY --from=backend-build /go-app /app/stront
 
 ENTRYPOINT ["/app/stront"]
