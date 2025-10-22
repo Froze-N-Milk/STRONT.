@@ -117,6 +117,8 @@ func SeedDB(db *gorm.DB) SeedData {
 		AccountID:       account.ID,
 		AvailabilityID:  availability.ID,
 		Name:            "My Restaurant",
+		Email:           "my-restaurant@example.com",
+		Phone:           "+XX XXX XXX XXX",
 		Description:     "This is a restaurant",
 		LocationText:    "123 Apple St, Sydney NSW 2000",
 		MaxPartySize:    5,

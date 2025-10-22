@@ -40,6 +40,8 @@ func TestUpdateRestaurant(t *testing.T) {
 			err := h.handle(s.Ctx, db, s.Account.Email, restaurantDetails{
 				ID:                s.Restaurant.ID,
 				Name:              "",
+				Email:             "",
+				Phone:             "",
 				Description:       "",
 				LocationText:      "",
 				LocationUrl:       "",
@@ -58,6 +60,8 @@ func TestUpdateRestaurant(t *testing.T) {
 			err := h.handle(s.Ctx, db, s.Account.Email, restaurantDetails{
 				ID:                uuid.MustParse("ffffffff-ffff-ffff-ffff-ffffffffffff"),
 				Name:              "",
+				Email:             "",
+				Phone:             "",
 				Description:       "",
 				LocationText:      "",
 				LocationUrl:       "",
@@ -139,6 +143,8 @@ func TestBrowseRestaurants(t *testing.T) {
 		expected := restaurantDetails{
 			ID:                s.Restaurant.ID,
 			Name:              s.Restaurant.Name,
+			Email:             s.Restaurant.Email,
+			Phone:             s.Restaurant.Phone,
 			Description:       s.Restaurant.Description,
 			LocationText:      s.Restaurant.LocationText,
 			LocationUrl:       s.Restaurant.LocationUrl,
@@ -171,6 +177,8 @@ func TestRestaurantDetails(t *testing.T) {
 			expected := restaurantDetails{
 				ID:                s.Restaurant.ID,
 				Name:              s.Restaurant.Name,
+				Email:             s.Restaurant.Email,
+				Phone:             s.Restaurant.Phone,
 				Description:       s.Restaurant.Description,
 				LocationText:      s.Restaurant.LocationText,
 				LocationUrl:       s.Restaurant.LocationUrl,
