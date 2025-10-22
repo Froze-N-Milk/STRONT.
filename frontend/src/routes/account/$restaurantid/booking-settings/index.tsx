@@ -1,9 +1,9 @@
-//import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import "./index.css";
 import { useEffect, useState } from "react";
 import type { Restaurant } from "../-helper.ts";
 
-export type UpdateAvailabilitiesRequest = {
+export type Availability = {
   id: string;
   mondayHours: number;
   tuesdayHours: number;
@@ -15,10 +15,10 @@ export type UpdateAvailabilitiesRequest = {
 };
 
 function BookingSettingPage() {
-  //const restaurantId = Route.useParams().restaurantid;
-  const restaurantId = "";
+  const restaurantId = Route.useParams().restaurantid;
 
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
+  const [availability, setAvailability] = useState<Availability | null>(null);
 
   useEffect(() => {
     fetch(`/api/restaurant/${restaurantId}`, {
@@ -26,8 +26,13 @@ function BookingSettingPage() {
     }).then(async (r) => {
       if (r.status == 200) {
         setRestaurant(await r.json());
-      } else {
-        setRestaurant(null);
+      }
+    });
+    fetch(`/api/availability/${restaurantId}`, {
+      method: "GET",
+    }).then(async (r) => {
+      if (r.status == 200) {
+        setAvailability(await r.json());
       }
     });
   }, [restaurantId]);
@@ -80,12 +85,10 @@ function BookingSettingPage() {
   // so you need to send back everything like the ID, name, description, etc. You don't want to change these,
   // keep them the same as when you received the details for this restaurant.
   async function onSaveSettings() {
-    // e.preventDefault();
+    console.log("Saving settings");
     const hourMask = formatHourMask();
-    // Optional: ensure a booking duration has been chosen; if not, leave existing value
-    // (Backend will keep prior setting if this is undefined.)
     try {
-      const request: UpdateAvailabilitiesRequest = {
+      setAvailability({
         id: restaurantId,
         mondayHours: selectedDays.has("monday") ? Number(hourMask) : 0,
         tuesdayHours: selectedDays.has("tuesday") ? Number(hourMask) : 0,
@@ -94,12 +97,14 @@ function BookingSettingPage() {
         fridayHours: selectedDays.has("friday") ? Number(hourMask) : 0,
         saturdayHours: selectedDays.has("saturday") ? Number(hourMask) : 0,
         sundayHours: selectedDays.has("sunday") ? Number(hourMask) : 0,
-      };
+      });
+
+      console.log(JSON.stringify(availability));
 
       const response = await fetch(`/api/availability/update`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(request),
+        body: JSON.stringify(availability),
       });
 
       if (!response.ok) throw new Error(response.status.toString());
@@ -113,7 +118,7 @@ function BookingSettingPage() {
       });
       if (!res2.ok) throw new Error(res2.status.toString());
     } catch (error) {
-      console.error("Error updating restaurant availabilities: ", error);
+      console.error("Error updating restaurant details: ", error);
     }
   }
 
@@ -126,194 +131,192 @@ function BookingSettingPage() {
       <div style={{ display: "flex", gap: "20px", width: "max-content" }}>
         <div className="bks-side">
           <nav className="bks-side-nav">
-            {/*<Link to="/account" className="bks-side-link">
-                        Back to Account
-                    </Link>
-                    <Link
-                        to="/account/$restaurantid"
-                        className="bks-side-link"
-                        params={{ restaurantid: restaurantId }}
-                    >
-                        Edit Restaurant Profile
-                    </Link>
-                    <Link
-                        to="/account/$restaurantid/booking-settings"
-                        className="bks-side-link"
-                        params={{ restaurantid: restaurantId }}
-                    >
-                        Booking Settings
-                    </Link>
-                    <Link
-                        to="/account/$restaurantid/view-bookings"
-                        className="bks-side-link"
-                        params={{ restaurantid: restaurantId }}
-                    >
-                        Bookings
-                    </Link>
-                    <Link
-                        to="/account/$restaurantid/FOHtracker"
-                        className="bks-side-link bks-active"
-                        params={{ restaurantid: restaurantId }}
-                    >
-                        FOH Tracker
-                    </Link>*/}
+            <Link to="/account" className="bks-side-link">
+              Back to Account
+            </Link>
+            <Link
+              to="/account/$restaurantid"
+              className="bks-side-link"
+              params={{ restaurantid: restaurantId }}
+            >
+              Edit Restaurant Profile
+            </Link>
+            <Link
+              to="/account/$restaurantid/booking-settings"
+              className="bks-side-link"
+              params={{ restaurantid: restaurantId }}
+            >
+              Booking Settings
+            </Link>
+            <Link
+              to="/account/$restaurantid/view-bookings"
+              className="bks-side-link"
+              params={{ restaurantid: restaurantId }}
+            >
+              Bookings
+            </Link>
+            <Link
+              to="/account/$restaurantid/FOHtracker"
+              className="bks-side-link bks-active"
+              params={{ restaurantid: restaurantId }}
+            >
+              FOH Tracker
+            </Link>
           </nav>
         </div>
       </div>
 
       <main className="bks-main">
-        <form className="bks-card" onSubmit={onSaveSettings}>
-          {/* Time */}
-          <section className="bks-section">
-            <div className="bks-title no-line">Time:</div>
-            <div className="bks-grid">
-              <label>
-                <span>Booking Duration:</span>
-                <div className="bks-days">
-                  {[2, 3, 4].map((m) => (
-                    <button
-                      key={m}
-                      type="button"
-                      className={`bks-day ${restaurant.bookingLength === m ? "active" : ""}`}
-                      aria-pressed={restaurant.bookingLength === m}
-                      onClick={() =>
-                        setRestaurant({ ...restaurant, bookingLength: m })
-                      }
-                    >
-                      {m * 30} min
-                    </button>
+        {/* Time */}
+        <section className="bks-section">
+          <div className="bks-title no-line">Time:</div>
+          <div className="bks-grid">
+            <label>
+              <span>Booking Duration:</span>
+              <div className="bks-days">
+                {[2, 3, 4].map((m) => (
+                  <button
+                    key={m}
+                    type="button"
+                    className={`bks-day ${restaurant.bookingLength === m ? "active" : ""}`}
+                    aria-pressed={restaurant.bookingLength === m}
+                    onClick={() =>
+                      setRestaurant({ ...restaurant, bookingLength: m })
+                    }
+                  >
+                    {m * 30} min
+                  </button>
+                ))}
+              </div>
+            </label>
+            <label>
+              <span>Opening Hours:</span>
+              <div className="bks-inline">
+                {/* Start time */}
+                <select
+                  value={startHour}
+                  onChange={(e) => setStartHour(e.target.value)}
+                >
+                  {HOURS.map((h) => (
+                    <option key={h} value={h}>
+                      {h}
+                    </option>
                   ))}
-                </div>
-              </label>
-              <label>
-                <span>Opening Hours:</span>
-                <div className="bks-inline">
-                  {/* Start time */}
-                  <select
-                    value={startHour}
-                    onChange={(e) => setStartHour(e.target.value)}
-                  >
-                    {HOURS.map((h) => (
-                      <option key={h} value={h}>
-                        {h}
-                      </option>
-                    ))}
-                  </select>
-                  :
-                  <select
-                    value={startMinute}
-                    onChange={(e) => setStartMinute(e.target.value)}
-                  >
-                    {MINUTES.map((m) => (
-                      <option key={m} value={m}>
-                        {m}
-                      </option>
-                    ))}
-                  </select>
-                  <span className="bks-dash" />
-                  {/* End time */}
-                  <select
-                    value={endHour}
-                    onChange={(e) => setEndHour(e.target.value)}
-                  >
-                    {HOURS.map((h) => (
-                      <option key={h} value={h}>
-                        {h}
-                      </option>
-                    ))}
-                  </select>
-                  :
-                  <select
-                    value={endMinute}
-                    onChange={(e) => setEndMinute(e.target.value)}
-                  >
-                    {MINUTES.map((m) => (
-                      <option key={m} value={m}>
-                        {m}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </label>
-              <label className="bks-span-2">
-                <span>Opening Dates:</span>
-                <div className="bks-days">
-                  {[
-                    ["monday", "Mon"],
-                    ["tuesday", "Tue"],
-                    ["wednesday", "Wed"],
-                    ["thursday", "Thur"],
-                    ["friday", "Fri"],
-                    ["saturday", "Sat"],
-                    ["sunday", "Sun"],
-                  ].map(([key, label]) => (
-                    <button
-                      key={key}
-                      type="button"
-                      onClick={() => toggleDay(key)}
-                      className={`bks-day ${selectedDays.has(key) ? "active" : ""}`}
-                    >
-                      {label}
-                    </button>
+                </select>
+                :
+                <select
+                  value={startMinute}
+                  onChange={(e) => setStartMinute(e.target.value)}
+                >
+                  {MINUTES.map((m) => (
+                    <option key={m} value={m}>
+                      {m}
+                    </option>
                   ))}
-                </div>
-              </label>
-            </div>
-          </section>
-
-          <section className="bks-section">
-            <div className="bks-title">People & Table:</div>
-            <div className="bks-grid">
-              <label>
-                <span>Maximum Party Size:</span>
-                <input
-                  type="number"
-                  min={1}
-                  value={restaurant.maxPartySize}
-                  onChange={(e) =>
-                    setRestaurant({
-                      ...restaurant,
-                      maxPartySize: !isNaN(Number(e.target.value))
-                        ? Number(e.target.value)
-                        : 0,
-                    })
-                  }
-                />
-              </label>
-              <label>
-                <span>Maximum Concurrent Bookings:</span>
-                <input
-                  type="number"
-                  min={0}
-                  value={restaurant.bookingCapacity}
-                  onChange={(e) =>
-                    setRestaurant({
-                      ...restaurant,
-                      bookingCapacity: !isNaN(Number(e.target.value))
-                        ? Number(e.target.value)
-                        : 0,
-                    })
-                  }
-                />
-              </label>
-            </div>
-          </section>
-
-          <div className="bks-actions">
-            <button className="bks-primary" type="submit">
-              Save
-            </button>
+                </select>
+                <span className="bks-dash" />
+                {/* End time */}
+                <select
+                  value={endHour}
+                  onChange={(e) => setEndHour(e.target.value)}
+                >
+                  {HOURS.map((h) => (
+                    <option key={h} value={h}>
+                      {h}
+                    </option>
+                  ))}
+                </select>
+                :
+                <select
+                  value={endMinute}
+                  onChange={(e) => setEndMinute(e.target.value)}
+                >
+                  {MINUTES.map((m) => (
+                    <option key={m} value={m}>
+                      {m}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </label>
+            <label className="bks-span-2">
+              <span>Opening Dates:</span>
+              <div className="bks-days">
+                {[
+                  ["monday", "Mon"],
+                  ["tuesday", "Tue"],
+                  ["wednesday", "Wed"],
+                  ["thursday", "Thur"],
+                  ["friday", "Fri"],
+                  ["saturday", "Sat"],
+                  ["sunday", "Sun"],
+                ].map(([key, label]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => toggleDay(key)}
+                    className={`bks-day ${selectedDays.has(key) ? "active" : ""}`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </label>
           </div>
-        </form>
+        </section>
+
+        <section className="bks-section">
+          <div className="bks-title">People & Table:</div>
+          <div className="bks-grid">
+            <label>
+              <span>Maximum Party Size:</span>
+              <input
+                type="number"
+                min={1}
+                value={restaurant.maxPartySize}
+                onChange={(e) =>
+                  setRestaurant({
+                    ...restaurant,
+                    maxPartySize: !isNaN(Number(e.target.value))
+                      ? Number(e.target.value)
+                      : 0,
+                  })
+                }
+              />
+            </label>
+            <label>
+              <span>Maximum Concurrent Bookings:</span>
+              <input
+                type="number"
+                min={0}
+                value={restaurant.bookingCapacity}
+                onChange={(e) =>
+                  setRestaurant({
+                    ...restaurant,
+                    bookingCapacity: !isNaN(Number(e.target.value))
+                      ? Number(e.target.value)
+                      : 0,
+                  })
+                }
+              />
+            </label>
+          </div>
+        </section>
+
+        <div className="bks-actions">
+          <button className="bks-primary" onClick={() => onSaveSettings()}>
+            Save
+          </button>
+        </div>
       </main>
     </div>
   );
 }
 
-/*export const Route = createFileRoute(
+export const Route = createFileRoute(
   "/account/$restaurantid/booking-settings/",
 )({
   component: BookingSettingPage,
-});*/
+});
 
 export default BookingSettingPage;
