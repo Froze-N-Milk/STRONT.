@@ -186,6 +186,39 @@ INSERT INTO booking (id, contact_id, restaurant_id, party_size, booking_date, ti
 (gen_random_uuid(), '00000000-0000-0000-0000-000000000007', $1, 5, '2025-10-24', 21, '2025-10-08 10:30:00+00', 'pending', 'Birthday dinner.', '')
 `, restaurant.ID).Find(ctx)
 
+
+// ===== BOOKINGS (all before 2025-10-21) =====
+		gorm.G[any](db).Raw(`
+INSERT INTO booking (id, contact_id, restaurant_id, party_size, booking_date, time_slot, creation_date, attendance, customer_notes, restaurant_notes) VALUES
+-- James Chrongus
+(gen_random_uuid(), '00000000-0000-0000-0000-000000000008', $1, 2, '2025-10-19', 18, '2025-10-10 13:20:00+00', 'attended', 'Casual dinner outing.', ''),
+(gen_random_uuid(), '00000000-0000-0000-0000-000000000008', $1, 4, '2025-10-18', 19, '2025-10-05 17:00:00+00', 'pending', 'Group dinner.', ''),
+(gen_random_uuid(), '00000000-0000-0000-0000-000000000008', $1, 3, '2025-10-16', 20, '2025-10-03 11:35:00+00', 'no-show', 'Forgot booking.', ''),
+(gen_random_uuid(), '00000000-0000-0000-0000-000000000008', $1, 2, '2025-09-28', 21, '2025-09-15 09:25:00+00', 'attended', 'Weekend dinner.', ''),
+(gen_random_uuid(), '00000000-0000-0000-0000-000000000008', $1, 5, '2025-09-22', 18, '2025-09-12 08:40:00+00', 'cancelled', 'Had to cancel.', ''),
+
+-- Michael Cuxley
+(gen_random_uuid(), '00000000-0000-0000-0000-000000000009', $1, 3, '2025-10-19', 17, '2025-10-09 15:45:00+00', 'pending', 'Dinner with coworkers.', ''),
+(gen_random_uuid(), '00000000-0000-0000-0000-000000000009', $1, 2, '2025-10-14', 19, '2025-10-01 19:10:00+00', 'attended', 'Evening meal.', ''),
+(gen_random_uuid(), '00000000-0000-0000-0000-000000000009', $1, 4, '2025-10-10', 20, '2025-09-30 10:05:00+00', 'no-show', 'Missed booking.', ''),
+(gen_random_uuid(), '00000000-0000-0000-0000-000000000009', $1, 2, '2025-09-25', 18, '2025-09-18 16:55:00+00', 'attended', 'Lunch with a client.', ''),
+(gen_random_uuid(), '00000000-0000-0000-0000-000000000009', $1, 6, '2025-09-15', 19, '2025-09-05 12:00:00+00', 'cancelled', 'Rescheduled meeting.', ''),
+
+-- Bruce Bloje
+(gen_random_uuid(), '00000000-0000-0000-0000-000000000010', $1, 1, '2025-10-12', 13, '2025-09-28 18:10:00+00', 'attended', 'Solo lunch.', ''),
+(gen_random_uuid(), '00000000-0000-0000-0000-000000000010', $1, 2, '2025-10-11', 17, '2025-09-27 14:20:00+00', 'pending', 'Late dinner.', ''),
+(gen_random_uuid(), '00000000-0000-0000-0000-000000000010', $1, 3, '2025-10-07', 18, '2025-09-25 11:15:00+00', 'cancelled', 'Unable to attend.', ''),
+(gen_random_uuid(), '00000000-0000-0000-0000-000000000010', $1, 2, '2025-09-30', 19, '2025-09-21 09:40:00+00', 'no-show', 'Did not arrive.', ''),
+(gen_random_uuid(), '00000000-0000-0000-0000-000000000010', $1, 5, '2025-09-20', 20, '2025-09-08 16:25:00+00', 'attended', 'Birthday dinner.', ''),
+
+-- Marques Brownlee
+(gen_random_uuid(), '00000000-0000-0000-0000-000000000011', $1, 2, '2025-10-17', 18, '2025-10-05 10:05:00+00', 'attended', 'Dinner and tech talk.', ''),
+(gen_random_uuid(), '00000000-0000-0000-0000-000000000011', $1, 4, '2025-10-15', 19, '2025-10-02 13:40:00+00', 'pending', 'Filming crew dinner.', ''),
+(gen_random_uuid(), '00000000-0000-0000-0000-000000000011', $1, 3, '2025-10-08', 20, '2025-09-29 17:50:00+00', 'no-show', 'Travel conflict.', ''),
+(gen_random_uuid(), '00000000-0000-0000-0000-000000000011', $1, 6, '2025-09-24', 17, '2025-09-14 12:25:00+00', 'attended', 'Business dinner.', ''),
+(gen_random_uuid(), '00000000-0000-0000-0000-000000000011', $1, 5, '2025-09-10', 21, '2025-09-01 11:30:00+00', 'cancelled', 'Meeting ran late.', '');
+`, restaurant.ID).Find(ctx)
+
 	}
 
 	emailHelper := api.EmailHelper{
