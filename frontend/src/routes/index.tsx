@@ -49,7 +49,6 @@ function BrowseRestaurants() {
   const [err, setErr] = React.useState<string | null>(null);
   const [q, setQ] = React.useState("");
   const [loading, setLoading] = React.useState(false);
-  const [searchError, setSearchError] = React.useState<string | null>(null);
   const [selectedTags, setSelectedTags] = React.useState<string[]>([]);
 
   React.useEffect(() => {
@@ -225,14 +224,6 @@ function BrowseRestaurants() {
           onSubmit={(e) => {
             e.preventDefault();
             const trimmed = q.trim();
-            const nextCanSearch = trimmed.length > 0 || selectedTags.length > 0;
-            if (!nextCanSearch) {
-              setSearchError(
-                "Please set at least one filter or keyword before searching.",
-              );
-              return;
-            }
-            setSearchError(null);
             setQ(trimmed);
           }}
           style={{
@@ -248,7 +239,6 @@ function BrowseRestaurants() {
             value={q}
             onChange={(e) => {
               setQ(e.target.value);
-              setSearchError(null);
             }}
             placeholder="Search by name / description / location"
             style={{
@@ -261,24 +251,17 @@ function BrowseRestaurants() {
               outline: "none",
             }}
           />
-          <button type="submit" className="submit_button search-button">
-            <span aria-hidden className="search-button__icon" />
-            Search
-          </button>
         </form>
       </div>
 
-      {searchError && (
-        <div style={{ color: "#b91c1c", marginBottom: 16 }}>{searchError}</div>
-      )}
-
-      {(q || selectedTags.length > 0) && (
+      {(q || selectedTags.length > 0 || availableTags.length > 0) && (
         <div
           style={{
             display: "flex",
             flexWrap: "wrap",
-            gap: 12,
-            marginBottom: 16,
+            gap: 8,
+            marginBottom: 24,
+            alignItems: "center",
             color: "#374151",
             fontSize: 14,
           }}
@@ -288,18 +271,6 @@ function BrowseRestaurants() {
               Keyword <strong>{q}</strong>
             </span>
           )}
-        </div>
-      )}
-
-      {availableTags.length > 0 && (
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            gap: 8,
-            marginBottom: 24,
-          }}
-        >
           {availableTags.map((tag) => {
             const isActive = selectedTags.includes(tag);
             return (
