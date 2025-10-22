@@ -45,7 +45,7 @@ stages:
               testResultsFiles: 'frontend/vite-test-junit.xml'
               testRunTitle: 'Publishing Frontend Test Results'
 
-  - stage: PublishImageAndDeploy
+  - stage: PublishImage
     dependsOn: BuildAndTest
     condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
     jobs:
@@ -65,6 +65,12 @@ stages:
               tags: |
                 $(Build.BuildId)
                 latest
+
+  - stage: Deploy
+    dependsOn: PublishImage
+    condition: succeeded()
+    # condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+    jobs:
       - job: Deploy
         steps:
           - task: AzureWebAppContainer@1
