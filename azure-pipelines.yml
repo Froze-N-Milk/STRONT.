@@ -45,23 +45,23 @@ stages:
               testResultsFiles: 'frontend/vite-test-junit.xml'
               testRunTitle: 'Publishing Frontend Test Results'
 
-#  - stage: PublishImage
-#    dependsOn: BuildAndTest
-#    condition: succeeded()
-#    jobs:
-#      - job: PushImageJob
-#        steps:
-#          - task: Docker@2
-#            inputs:
-#              command: 'login'
-#              containerRegistry: '' # TODO: Add container registry details here
-#
-#          - script: |
-#              docker build -t $(IMAGE_NAME):latest --target runner .
-#            displayName: 'Build Final Runner Image'
-#
-#          - task: Docker@2
-#            inputs:
-#              command: 'push'
-#              repository: '' # TODO: Add container registry stuff here
-#              tags: 'latest'
+  - stage: PublishImage
+    dependsOn: BuildAndTest
+    condition: succeeded()
+    jobs:
+      - job: PushContainerImage
+        steps:
+          - task: Docker@2
+            inputs:
+              command: 'login'
+              containerRegistry: 'StrontContainerRegistry'
+
+          - task: Docker@2
+            inputs:
+              command: 'buildAndPush'
+              repository: 'stront'
+              dockerfile: '**/Dockerfile'
+              containerRegistry: 'StrontContainerRegistry'
+              tags: |
+                $(Build.BuildId)
+                latest
