@@ -111,7 +111,7 @@ func (*UpdateAvailabilitiesHandler) handle(
 	request updateRestaurantAvailabilitiesRequest,
 ) error {
 	result := gorm.WithResult()
-	err := gorm.G[model.Availability](db, result).Exec(ctx, `
+	err := gorm.G[any](db, result).Exec(ctx, `
 WITH authed AS (
 	SELECT availability.id
 	FROM availability
@@ -148,7 +148,7 @@ WHERE availability.id = authed.id`,
 		return err
 	}
 
-	if result.RowsAffected != 1 {
+	if result.RowsAffected == 0 {
 		return invalidRestaurantRequestError{}
 	}
 

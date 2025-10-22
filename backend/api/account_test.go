@@ -50,7 +50,7 @@ func TestDeleteAccount(t *testing.T) {
 				t.Errorf("Deleted too many accounts")
 			}
 		})
-		t.Run("Delete Non-exitant Account", func(t *testing.T) {
+		t.Run("Delete Non-Existent Account", func(t *testing.T) {
 			i, err := h.handle(s.Ctx, db, "a")
 			if err != nil {
 				t.Errorf("Unexpected query error")
@@ -174,7 +174,7 @@ func TestUpdateAccount(t *testing.T) {
 			}
 			_, _ = h.handle(s.Ctx, db, "a", s.Account)
 		})
-		t.Run("Update Non-exitant Account", func(t *testing.T) {
+		t.Run("Update Non-Existent Account", func(t *testing.T) {
 			i, err := h.handle(s.Ctx, db, "a", model.Account{
 				Email: "b",
 			})

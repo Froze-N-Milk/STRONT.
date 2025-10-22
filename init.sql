@@ -169,3 +169,33 @@ Bon appétit, if you dare.',6,15,90,'{"french", "dessert", "chaotic"}'),
  'London, UK','https://goo.gl/maps/fakeveganvortex',
  '### Vegan Vortex
 Where kale meets chaos. Only the brave leave smiling. No animals harmed, some egos destroyed.',8,20,60, '{"vegan", "experimental", "plant-based"}');
+
+-- ===== EXTRA BOOKINGS: James Chrongus, Michael Cuxley, Bruce Bloje, Marques Brownlee =====
+
+-- Customer contact records
+INSERT INTO customer_contact (id, given_name, family_name, phone, email) VALUES
+('00000000-0000-0000-0000-000000000008', 'James', 'Chrongus', '+1 555-0108', 'james.chrongus@example.com'),
+('00000000-0000-0000-0000-000000000009', 'Michael', 'Cuxley', '+1 555-0109', 'michael.cuxley@example.com'),
+('00000000-0000-0000-0000-000000000010', 'Bruce', 'Bloje', '+1 555-0110', 'bruce.bloje@example.com'),
+('00000000-0000-0000-0000-000000000011', 'Marques', 'Brownlee', '+1 555-0111', 'marques.brownlee@example.com'),
+('00000000-0000-0000-0000-000000000012', 'LeBron', 'James', '+1 555-0112', 'lebron.james@example.com'),
+('00000000-0000-0000-0000-000000000013', 'Stephen', 'Curry', '+1 555-0113', 'stephen.curry@example.com'),
+('00000000-0000-0000-0000-000000000014', 'Michael', 'Jordan', '+1 555-0114', 'michael.jordan@example.com'),
+('00000000-0000-0000-0000-000000000015', 'Kobe', 'Bryant', '+1 555-0115', 'kobe.bryant@example.com'),
+('00000000-0000-0000-0000-000000000016', 'Shaquille', 'ONeal', '+1 555-0116', 'shaquille.oneal@example.com'),
+('00000000-0000-0000-0000-000000000017', 'Tim', 'Duncan', '+1 555-0117', 'tim.duncan@example.com'),
+('00000000-0000-0000-0000-000000000018', 'Kevin', 'Durant', '+1 555-0118', 'kevin.durant@example.com'),
+('00000000-0000-0000-0000-000000000019', 'Giannis', 'Antetokounmpo', '+1 555-0119', 'giannis.antetokounmpo@example.com'),
+('00000000-0000-0000-0000-000000000020', 'Luka', 'Doncic', '+1 555-0120', 'luka.doncic@example.com'),
+('00000000-0000-0000-0000-000000000021', 'Nikola', 'Jokic', '+1 555-0121', 'nikola.jokic@example.com'),
+('00000000-0000-0000-0000-000000000022', 'Kawhi', 'Leonard', '+1 555-0122', 'kawhi.leonard@example.com'),
+('00000000-0000-0000-0000-000000000023', 'James', 'Harden', '+1 555-0123', 'james.harden@example.com'),
+('00000000-0000-0000-0000-000000000024', 'Allen', 'Iverson', '+1 555-0124', 'allen.iverson@example.com'),
+('00000000-0000-0000-0000-000000000025', 'Chris', 'Paul', '+1 555-0125', 'chris.paul@example.com'),
+('00000000-0000-0000-0000-000000000026', 'Jayson', 'Tatum', '+1 555-0126', 'jayson.tatum@example.com'),
+('00000000-0000-0000-0000-000000000027', 'Anthony', 'Davis', '+1 555-0127', 'anthony.davis@example.com'),
+('00000000-0000-0000-0000-000000000028', 'Dirk', 'Nowitzki', '+1 555-0128', 'dirk.nowitzki@example.com'),
+('00000000-0000-0000-0000-000000000029', 'Dennis', 'Rodman', '+1 555-0129', 'dennis.rodman@example.com'),
+('00000000-0000-0000-0000-000000000030', 'Magic', 'Johnson', '+1 555-0130', 'magic.johnson@example.com'),
+('00000000-0000-0000-0000-000000000031', 'Gabriel', 'Utsekz', '+1 555-0131', 'gabriel.utsekz@example.com');
+

@@ -13,6 +13,12 @@ import (
 	"gorm.io/gorm"
 )
 
+type invalidBookingRequestError struct{}
+
+func (invalidBookingRequestError) Error() string {
+	return "No such booking"
+}
+
 type bookingRequest struct {
 	RestaurantID  uuid.UUID
 	GivenName     string
@@ -147,27 +153,21 @@ AND
 type GetBookingByIDHandler struct{}
 
 func (h *GetBookingByIDHandler) handle(ctx context.Context, db *gorm.DB, bookingId uuid.UUID) (bookingRequest, error) {
-	booking, err := gorm.G[model.Booking](db).Where("id = ?", bookingId).First(ctx)
-	if err != nil {
-		return bookingRequest{}, err
-	}
-
-	contact, err := gorm.G[model.CustomerContact](db).Where("id = ?", booking.ContactID).First(ctx)
-	if err != nil {
-		return bookingRequest{}, err
-	}
-
-	return bookingRequest{
-		RestaurantID:  booking.RestaurantID,
-		GivenName:     contact.GivenName,
-		FamilyName:    contact.FamilyName,
-		Phone:         contact.Phone,
-		Email:         contact.Email,
-		PartySize:     booking.PartySize,
-		BookingDate:   booking.BookingDate,
-		TimeSlot:      booking.TimeSlot,
-		CustomerNotes: booking.CustomerNotes,
-	}, nil
+	return gorm.G[bookingRequest](db).Raw(`
+SELECT
+	booking.restaurant_id,
+	customer_contact.given_name,
+	customer_contact.family_name,
+	customer_contact.phone,
+	customer_contact.email,
+	booking.party_size,
+	booking.booking_date,
+	booking.time_slot,
+	booking.customer_notes
+FROM booking
+JOIN customer_contact
+ON customer_contact.id = booking.contact_id
+WHERE booking.id = ?`, bookingId).Take(ctx)
 }
 
 func (h *GetBookingByIDHandler) ServeHTTP(ctx AppContext, w http.ResponseWriter, r *http.Request) {
@@ -382,7 +382,7 @@ AND account.id = restaurant.account_id`,
 //
 // # No auth required
 //
-// GET /api/booking/edit/{booking}
+// POST /api/booking/edit/{booking}
 //
 // expects:
 //
@@ -399,6 +399,11 @@ type updateBookingRequest struct {
 }
 
 func (h *UpdateBookingHandler) handle(ctx context.Context, db *gorm.DB, request updateBookingRequest, bookingId uuid.UUID) error {
+	// TODO:
+	gorm.G[any](db).Raw(`
+UPDATE
+	`)
+
 	booking, err := gorm.G[model.Booking](db).Where("id = ?", bookingId).First(ctx)
 	if err != nil {
 		return err
@@ -461,14 +466,19 @@ func (h *UpdateBookingHandler) ServeHTTP(ctx AppContext, w http.ResponseWriter, 
 type CancelBookingHandler struct{}
 
 func (h *CancelBookingHandler) handle(ctx context.Context, db *gorm.DB, bookingID uuid.UUID) error {
-	booking, err := gorm.G[model.Booking](db).Where("id = ?", bookingID).First(ctx)
+	rows, err := gorm.G[any](db).Raw(`
+UPDATE booking
+SET attendance = "cancelled"
+WHERE id = ?
+RETURNING 0`, bookingID).Find(ctx)
+
 	if err != nil {
 		return err
 	}
 
-	booking.Attendance = "cancelled"
-
-	db.Save(&booking)
+	if len(rows) == 0 {
+		return invalidBookingRequestError{}
+	}
 
 	return nil
 }
@@ -703,15 +713,25 @@ type updateRestaurantNotesRequest struct {
 }
 
 func (h *UpdateRestaurantNotesHandler) handle(ctx context.Context, db *gorm.DB, request updateRestaurantNotesRequest, bookingId uuid.UUID, user User) error {
-	return gorm.G[model.Booking](db).Exec(ctx, `
-UPDATE booking AS b
-SET restaurant_notes = $2
-FROM restaurant AS r 
-	JOIN account a ON a.id = r.account_id
-WHERE
-    b.id = $1
-	AND a.email = $3
-`, bookingId, request.RestaurantNotes, user.Email)
+	rows, err := gorm.G[any](db).Raw(`
+UPDATE booking
+SET restaurant_notes = ?
+FROM restaurant
+JOIN account
+ON account.id = restaurant.account_id
+WHERE booking.id = ?
+AND account.email = ?
+RETURNING 0`, request.RestaurantNotes, bookingId, user.Email).Find(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	if len(rows) == 0 {
+		return invalidBookingRequestError{}
+	}
+
+	return nil
 }
 
 func (h *UpdateRestaurantNotesHandler) ServeHTTP(ctx AuthedAppContext, w http.ResponseWriter, r *http.Request) {
@@ -733,6 +753,7 @@ func (h *UpdateRestaurantNotesHandler) ServeHTTP(ctx AuthedAppContext, w http.Re
 
 	if err != nil {
 		db.Rollback()
+		slog.Error("unable to update restaurant notes", "err", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -748,8 +769,6 @@ func (h *UpdateRestaurantNotesHandler) ServeHTTP(ctx AuthedAppContext, w http.Re
 
 // UpdateAttendanceHandler updates the attendance for the specified booking in the database
 //
-// # No auth required
-//
 // POST /api/booking/attendance/{booking}
 //
 // expects:
@@ -763,15 +782,24 @@ type updateAttendanceRequest struct {
 }
 
 func (h *UpdateAttendanceHandler) handle(ctx context.Context, db *gorm.DB, request updateAttendanceRequest, bookingId uuid.UUID, user User) error {
-	return gorm.G[model.Booking](db).Exec(ctx, `
-UPDATE booking AS b
-SET attendance = $2
-FROM restaurant AS r
-	JOIN account a ON a.id = r.account_id
-WHERE
-    b.id = $1
-	AND a.email = $3
-`, bookingId, request.Attendance, user.Email)
+	rows, err := gorm.G[any](db).Raw(`
+UPDATE booking
+SET attendance = ?
+FROM restaurant
+JOIN account ON account.id = restaurant.account_id
+WHERE booking.id = ?
+AND account.email = ?
+RETURNING 0`, request.Attendance, bookingId, user.Email).Find(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	if len(rows) == 0 {
+		return invalidBookingRequestError{}
+	}
+
+	return nil
 }
 
 func (h *UpdateAttendanceHandler) ServeHTTP(ctx AuthedAppContext, w http.ResponseWriter, r *http.Request) {
