@@ -72,4 +72,4 @@ stages:
               azureSubscription: 'StrontWebApp'
               appName: 'stront-rest'
               resourceGroupName: 'Stront'
-              imageName: 'stront-hye4c0bebmcahjdy.azurecr.io/stront:latest'
+              imageName: 'stront-hye4c0bebmcahjdy.azurecr.io/stront:$(Build.BuildId)'
