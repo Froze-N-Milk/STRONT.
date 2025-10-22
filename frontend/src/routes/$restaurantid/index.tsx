@@ -8,7 +8,7 @@ import "../index.css";
 import * as React from "react";
 import ReactMarkdown from "react-markdown";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { type Restaurant } from "../-restaurant.ts";
+import { type Restaurant } from "../-components/restaurant.ts";
 
 const errMsg = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
@@ -211,6 +211,28 @@ function RestaurantDetail() {
               )}
             </div>
           </header>
+
+          {(restaurant.phone || restaurant.email) && (
+            <section
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 6,
+                fontSize: 14,
+                color: "#374151",
+              }}
+            >
+              {restaurant.phone && <span>Phone: {restaurant.phone}</span>}
+              {restaurant.email && (
+                <a
+                  href={`mailto:${restaurant.email}`}
+                  style={{ color: "#a4161a", wordBreak: "break-word" }}
+                >
+                  {restaurant.email}
+                </a>
+              )}
+            </section>
+          )}
 
           <section
             style={{

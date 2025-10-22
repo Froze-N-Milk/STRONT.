@@ -16,6 +16,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 export type Restaurant = {
   id: string; // UUID
   name: string;
+  email: string | null;
+  phone: string | null;
   description: string | null;
   locationText: string | null;
   locationUrl: string | null;
@@ -346,6 +348,28 @@ function BrowseRestaurants() {
                 <p style={{ margin: 0, color: "#4b5563" }}>
                   {restaurant.description || "No description yet."}
                 </p>
+
+                {(restaurant.email || restaurant.phone) && (
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: 12,
+                      fontSize: 13,
+                      color: "#4b5563",
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    {restaurant.phone && <span>{restaurant.phone}</span>}
+                    {restaurant.email && (
+                      <a
+                        href={`mailto:${restaurant.email}`}
+                        style={{ color: "#a4161a" }}
+                      >
+                        {restaurant.email}
+                      </a>
+                    )}
+                  </div>
+                )}
 
                 <div
                   style={{

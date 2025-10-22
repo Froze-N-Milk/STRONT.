@@ -18,6 +18,8 @@ export function parseRestaurantInfo(strontinfo: string) {
   const parsedStront: Restaurant = {
     id: strontJSON.id,
     name: strontJSON.name,
+    email: strontJSON.email ?? null,
+    phone: strontJSON.phone ?? null,
     description: strontJSON.description,
     locationText: strontJSON.locationText,
     locationUrl: strontJSON.locationUrl,
