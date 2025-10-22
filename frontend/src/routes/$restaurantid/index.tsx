@@ -6,8 +6,9 @@
 import "../../index.css";
 import "../index.css";
 import * as React from "react";
+import ReactMarkdown from "react-markdown";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import type { Restaurant } from "../index";
+import { type Restaurant } from "../-restaurant.ts";
 
 const errMsg = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
@@ -257,21 +258,15 @@ function RestaurantDetail() {
           )}
 
           <section>
-            <h2 style={{ margin: "12px 0", fontSize: 20, fontWeight: 600 }}>
-              About Us
-            </h2>
-            <p
+            <div
               style={{
                 margin: 0,
                 color: "#4B5563",
-                lineHeight: 1.6,
                 whiteSpace: "pre-wrap",
               }}
             >
-              {restaurant.frontpageMarkdown ||
-                restaurant.description ||
-                "No overview added yet."}
-            </p>
+              <ReactMarkdown>{restaurant.frontpageMarkdown}</ReactMarkdown>
+            </div>
           </section>
         </div>
 
