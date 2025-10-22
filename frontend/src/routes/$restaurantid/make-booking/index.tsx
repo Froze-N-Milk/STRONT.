@@ -203,14 +203,14 @@ function MakeBookingForm({
 
   function handleFirstNameChange(value: string) {
     setContactFirstName(value);
-    if (/^[A-Za-z]+$/.test(value)) {
+    if (/^[A-Za-z-]+$/.test(value)) {
       setFirstNameValid(true);
     } else setFirstNameValid(false);
   }
 
   function handleFamilyNameChange(value: string) {
     setContactFamilyName(value);
-    if (/^[A-Za-z]+$/.test(value)) {
+    if (/^[A-Za-z-]+$/.test(value)) {
       setLastNameValid(true);
     } else setLastNameValid(false);
   }
