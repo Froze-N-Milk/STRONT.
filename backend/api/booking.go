@@ -399,11 +399,6 @@ type updateBookingRequest struct {
 }
 
 func (h *UpdateBookingHandler) handle(ctx context.Context, db *gorm.DB, request updateBookingRequest, bookingId uuid.UUID) error {
-	// TODO:
-	gorm.G[any](db).Raw(`
-UPDATE
-	`)
-
 	booking, err := gorm.G[model.Booking](db).Where("id = ?", bookingId).First(ctx)
 	if err != nil {
 		return err
@@ -463,24 +458,42 @@ func (h *UpdateBookingHandler) ServeHTTP(ctx AppContext, w http.ResponseWriter, 
 
 //region Cancel Booking
 
-type CancelBookingHandler struct{}
+type CancelBookingHandler struct{
+	EmailHelper EmailHelper
+}
 
-func (h *CancelBookingHandler) handle(ctx context.Context, db *gorm.DB, bookingID uuid.UUID) error {
-	rows, err := gorm.G[any](db).Raw(`
+func (h *CancelBookingHandler) handle(ctx context.Context, db *gorm.DB, bookingID uuid.UUID) (model.Booking, error) {
+	rows, err := gorm.G[model.Booking](db).Raw(`
 UPDATE booking
-SET attendance = "cancelled"
+SET attendance = 'cancelled'
 WHERE id = ?
-RETURNING 0`, bookingID).Find(ctx)
+RETURNING booking.*`, bookingID).Find(ctx)
 
 	if err != nil {
-		return err
+		return model.Booking{}, err
 	}
 
 	if len(rows) == 0 {
-		return invalidBookingRequestError{}
+		return model.Booking{}, invalidBookingRequestError{}
 	}
 
-	return nil
+	contact, err := gorm.G[model.CustomerContact](db).Raw(`
+SELECT customer_contact.*
+FROM customer_contact
+JOIN booking
+ON booking.id = ?
+AND booking.contact_id = customer_contact.id
+`, bookingID).Take(ctx)
+
+	if err != nil {
+		return model.Booking{}, err
+	}
+
+	booking := rows[0]
+
+	booking.Contact = &contact
+
+	return booking, nil
 }
 
 func (h *CancelBookingHandler) ServeHTTP(ctx AppContext, w http.ResponseWriter, r *http.Request) {
@@ -491,7 +504,22 @@ func (h *CancelBookingHandler) ServeHTTP(ctx AppContext, w http.ResponseWriter, 
 	}
 
 	db := ctx.DB.Session(&gorm.Session{SkipDefaultTransaction: true}).Begin()
-	err = h.handle(r.Context(), db, bookingID)
+	booking, err := h.handle(r.Context(), db, bookingID)
+
+	if err != nil {
+		db.Rollback()
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	meta, err := gorm.G[struct{ Email, Name string }](db).Raw(`
+SELECT account.email, restaurant.name
+FROM account
+JOIN booking
+ON booking.id = ?
+JOIN restaurant
+ON restaurant.id = booking.restaurant_id
+AND account.id = restaurant.account_id`,
+		bookingID).First(r.Context())
 
 	if err != nil {
 		db.Rollback()
@@ -502,6 +530,23 @@ func (h *CancelBookingHandler) ServeHTTP(ctx AppContext, w http.ResponseWriter, 
 	db.Commit()
 
 	w.WriteHeader(http.StatusOK)
+
+	// send notification emails
+	date := booking.BookingDate.Add(time.Duration(booking.TimeSlot*30) * time.Minute)
+
+	go slog.Debug("restaurant email", "error", h.EmailHelper.NotifyRestaurant(BookingNotification{
+		Mailbox: Mailbox{
+			address: meta.Email,
+		},
+		ID:             booking.ID,
+		RestaurantName: meta.Name,
+		Attendance:     booking.Attendance,
+		CustomerName:   booking.Contact.GivenName,
+		Date:           date,
+		Duration:       time.Duration(booking.TimeSlot) * 30 * time.Minute,
+		PartySize:      booking.PartySize,
+		Notes:          booking.CustomerNotes,
+	}))
 }
 
 //endregion
@@ -776,30 +821,48 @@ func (h *UpdateRestaurantNotesHandler) ServeHTTP(ctx AuthedAppContext, w http.Re
 //	{
 //		attendance: string
 //	}
-type UpdateAttendanceHandler struct{}
+type UpdateAttendanceHandler struct {
+	EmailHelper EmailHelper
+}
 type updateAttendanceRequest struct {
 	Attendance string `json:"attendance"`
 }
 
-func (h *UpdateAttendanceHandler) handle(ctx context.Context, db *gorm.DB, request updateAttendanceRequest, bookingId uuid.UUID, user User) error {
-	rows, err := gorm.G[any](db).Raw(`
+func (h *UpdateAttendanceHandler) handle(ctx context.Context, db *gorm.DB, request updateAttendanceRequest, bookingId uuid.UUID, user User) (model.Booking, error) {
+	rows, err := gorm.G[model.Booking](db).Raw(`
 UPDATE booking
 SET attendance = ?
 FROM restaurant
 JOIN account ON account.id = restaurant.account_id
 WHERE booking.id = ?
 AND account.email = ?
-RETURNING 0`, request.Attendance, bookingId, user.Email).Find(ctx)
+RETURNING booking.*`, request.Attendance, bookingId, user.Email).Find(ctx)
 
 	if err != nil {
-		return err
+		return model.Booking{}, err
 	}
 
 	if len(rows) == 0 {
-		return invalidBookingRequestError{}
+		return model.Booking{}, invalidBookingRequestError{}
 	}
 
-	return nil
+	contact, err := gorm.G[model.CustomerContact](db).Raw(`
+SELECT customer_contact.*
+FROM customer_contact
+JOIN booking
+ON booking.id = ?
+AND booking.contact_id = customer_contact.id
+`, bookingId).Take(ctx)
+
+	if err != nil {
+		return model.Booking{}, err
+	}
+
+	booking := rows[0]
+
+	booking.Contact = &contact
+
+	return booking, nil
 }
 
 func (h *UpdateAttendanceHandler) ServeHTTP(ctx AuthedAppContext, w http.ResponseWriter, r *http.Request) {
@@ -817,7 +880,23 @@ func (h *UpdateAttendanceHandler) ServeHTTP(ctx AuthedAppContext, w http.Respons
 	}
 
 	db := ctx.DB.Session(&gorm.Session{SkipDefaultTransaction: true}).Begin()
-	err = h.handle(r.Context(), db, request, bookingId, ctx.User)
+	booking, err := h.handle(r.Context(), db, request, bookingId, ctx.User)
+
+	if err != nil {
+		db.Rollback()
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	meta, err := gorm.G[struct{ Email, Name string }](db).Raw(`
+SELECT account.email, restaurant.name
+FROM account
+JOIN booking
+ON booking.id = ?
+JOIN restaurant
+ON restaurant.id = booking.restaurant_id
+AND account.id = restaurant.account_id`,
+		bookingId).First(r.Context())
 
 	if err != nil {
 		db.Rollback()
@@ -828,6 +907,25 @@ func (h *UpdateAttendanceHandler) ServeHTTP(ctx AuthedAppContext, w http.Respons
 	db.Commit()
 
 	w.WriteHeader(http.StatusOK)
+
+	// send notification emails
+	date := booking.BookingDate.Add(time.Duration(booking.TimeSlot*30) * time.Minute)
+
+	// run in go routines to not block each other, or blocking this handler
+	go slog.Debug("customer email", "error", h.EmailHelper.NotifyCustomer(BookingNotification{
+		Mailbox: Mailbox{
+			name:    booking.Contact.GivenName,
+			address: booking.Contact.Email,
+		},
+		ID:             booking.ID,
+		RestaurantName: meta.Name,
+		Attendance:     booking.Attendance,
+		CustomerName:   booking.Contact.GivenName,
+		Date:           date,
+		Duration:       time.Duration(booking.TimeSlot) * 30 * time.Minute,
+		PartySize:      booking.PartySize,
+		Notes:          booking.CustomerNotes,
+	}))
 }
 
 //endregion
