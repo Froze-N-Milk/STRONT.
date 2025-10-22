@@ -150,7 +150,7 @@ func (h *CreateRestaurantHandler) ServeHTTP(ctx AuthedAppContext, w http.Respons
 	// success, commit changes and redirect to the new restaurant page for further editing
 	db.Commit()
 
-	w.Header().Add("Location", fmt.Sprintf("/restaurant/%s", restaurant.ID))
+	w.Header().Add("Location", fmt.Sprintf("/account/%s", restaurant.ID))
 	w.WriteHeader(http.StatusSeeOther)
 }
 
