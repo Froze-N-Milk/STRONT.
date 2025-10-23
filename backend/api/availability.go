@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"log/slog"
 	"net/http"
 	"plange/backend/model"
 	"time"
@@ -134,7 +135,7 @@ func (h *GetRawAvailabilitiesHandler) ServeHTTP(ctx AuthedAppContext, w http.Res
 	}
 
 	db.Commit()
-	json.NewEncoder(w).Encode(rawAvailabilities {
+	json.NewEncoder(w).Encode(rawAvailabilities{
 		ID:                availability.ID,
 		MondayHourMask:    availability.MondayHourMask,
 		TuesdayHourMask:   availability.TuesdayHourMask,
@@ -206,6 +207,7 @@ WHERE availability.id = authed.id`,
 }
 
 func (h *UpdateAvailabilitiesHandler) ServeHTTP(ctx AuthedAppContext, w http.ResponseWriter, r *http.Request) {
+	slog.Info("Updating availabilities")
 	request := rawAvailabilities{}
 	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
@@ -216,6 +218,7 @@ func (h *UpdateAvailabilitiesHandler) ServeHTTP(ctx AuthedAppContext, w http.Res
 	err = h.handle(r.Context(), ctx.DB, ctx.User.Email, request)
 
 	if errors.Is(err, invalidRestaurantRequestError{}) {
+		slog.Debug("invalid restaurant")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
