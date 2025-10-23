@@ -1,112 +1,338 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
 import "./index.css";
+import { useState, useEffect, useMemo, type FormEvent } from "react";
+import { Link } from "@tanstack/react-router";
 
-function AccountSetting() {
+type Restaurant = {
+  id: string;
+  name: string;
+  description: string | null;
+  locationText: string | null;
+  locationUrl: string | null;
+  frontpageMarkdown: string | null;
+};
+
+const errMsg = (e: unknown) => (e instanceof Error ? e.message : String(e));
+
+function Account() {
+  const [list, setList] = useState<Restaurant[] | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+  const [q, setQ] = useState("");
+  const [showNewModal, setShowNewModal] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
+  const [restaurantToRemove, setRestaurantToRemove] = useState<string | null>(
+    null,
+  );
+  const [newRestaurantName, setNewRestaurantName] = useState("");
+
   const [newPwd, setNewPwd] = useState("");
   const [confirmPwd, setConfirmPwd] = useState("");
-  const [saving, setSaving] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const canSave = newPwd.trim().length >= 6 && newPwd === confirmPwd;
 
-  async function onSave(e: React.FormEvent) {
-    e.preventDefault();
-    if (!canSave) return;
-    setSaving(true);
+  // List my own restaurants
+  // 1.Connected backend endpoint: GET /api/account/restaurants
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        setErr(null);
+
+        const res = await fetch("/api/account/restaurants", {
+          credentials: "include",
+        });
+
+        if (res.status === 401) {
+          window.location.href = "/login";
+          return;
+        }
+
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data: Restaurant[] = await res.json();
+        if (alive) setList(data);
+      } catch (e) {
+        if (alive) setErr(String(e));
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const filtered = useMemo((): Restaurant[] | null => {
+    if (!list) return null;
+    const key = q.trim().toLowerCase();
+    if (!key) return list;
+    return list.filter((r) => {
+      const hay = [
+        r.name,
+        r.description ?? "",
+        r.locationText ?? "",
+        r.locationUrl ?? "",
+      ]
+        .join(" ")
+        .toLowerCase();
+      return hay.includes(key);
+    });
+  }, [list, q]);
+
+  const handleRemoveClick = (id: string) => {
+    setRestaurantToRemove(id);
+    setShowRemoveConfirm(true);
+  };
+
+  // Delete restaurant
+  // Connected backend endpoint: POST /api/restaurant/delete
+  const handleConfirmRemove = async () => {
+    if (!restaurantToRemove) return;
+
     try {
+      const res = await fetch("/api/restaurant/delete", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: restaurantToRemove }),
+      });
+
+      if (res.ok) {
+        setList(
+          (prev) => prev?.filter((r) => r.id !== restaurantToRemove) ?? null,
+        );
+      } else if (res.status === 401) {
+        window.location.href = "/login";
+        return;
+      } else {
+        setErr(`HTTP ${res.status}`);
+      }
+    } catch (e) {
+      setErr(String(e));
+    } finally {
+      setShowRemoveConfirm(false);
+      setRestaurantToRemove(null);
+    }
+  };
+
+  // Create new restaurant
+  // Connected backend endpoint: POST /api/restaurant/create
+  const handleNewRestaurant = async (e: FormEvent) => {
+    e.preventDefault();
+
+    const res = await fetch("/api/restaurant/create", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: newRestaurantName.trim(),
+        maxPartySize: 5,
+        bookingCapacity: 50,
+        bookingLength: 2,
+      }),
+    });
+    console.log(res);
+    if (res.redirected) {
+      setShowNewModal(false);
+      setNewRestaurantName("");
+      window.location.assign(res.url);
+    }
+  };
+
+  // Save account settings
+  // Connected backend endpoint: POST /api/account/update
+  const handleSaveSettings = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!newPwd || newPwd !== confirmPwd || newPwd.length < 6) return;
+
+    try {
+      const res = await fetch("/api/account/update", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: newPwd }),
+      });
+
+      if (res.status === 401) {
+        window.location.href = "/login";
+        return;
+      }
+      if (!res.ok) {
+        const msg = await res.text();
+        setErr(`Password update failed: ${res.status} ${msg}`);
+        return;
+      }
+
       setNewPwd("");
       setConfirmPwd("");
-    } finally {
-      setSaving(false);
+      setShowSettingsModal(false);
+    } catch (e) {
+      setErr(`Password update failed: ${String(e)}`);
     }
-  }
-
-  async function onConfirmDelete() {
-    setShowDeleteConfirm(false);
-  }
+  };
 
   return (
-    <div className="acc-page setting-page">
-      <div className="acc-shell">
-        <aside className="acc-side">
-          <nav className="acc-side-nav"></nav>
-        </aside>
-
-        <main className="acc-main">
-          <form className="acc-card" onSubmit={onSave}>
-            <div className="acc-section">
-              <div className="acc-section-title">Change Password</div>
-              <div className="acc-grid">
-                <label className="acc-field">
-                  <span>New Password:</span>
-                  <input
-                    type="password"
-                    placeholder="Enter your new password"
-                    value={newPwd}
-                    onChange={(e) => setNewPwd(e.target.value)}
-                  />
-                </label>
-                <label className="acc-field">
-                  <span>Confirm Password:</span>
-                  <input
-                    type="password"
-                    placeholder="Enter your new password again"
-                    value={confirmPwd}
-                    onChange={(e) => setConfirmPwd(e.target.value)}
-                  />
-                </label>
-              </div>
-              {/* simple noti */}
-              {newPwd && confirmPwd && newPwd !== confirmPwd && (
-                <p style={{ color: "#b32121", marginTop: 8 }}>
-                  Passwords do not match.
-                </p>
-              )}
-              {newPwd && newPwd.length < 6 && (
-                <p style={{ color: "#b32121", marginTop: 8 }}>
-                  Password should be at least 6 characters.
-                </p>
-              )}
-            </div>
-
-            <div className="set-actions">
-              <button
-                type="button"
-                className="acc-delete"
-                onClick={() => setShowDeleteConfirm(true)}
-              >
-                Delete Restaurant
-              </button>
-              <button
-                type="submit"
-                className="acc-save"
-                disabled={!canSave || saving}
-              >
-                {saving ? "Saving..." : "Save"}
-              </button>
-            </div>
-          </form>
-        </main>
+    <div className="browse-root">
+      <div className="toolbar">
+        <button
+          className="toolbar-icon-btn"
+          onClick={() => setShowNewModal(true)}
+          title="Add New Restaurant"
+        >
+          +
+        </button>
+        <input
+          className="toolbar-search"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="Search"
+        />
+        <button
+          className="toolbar-icon-btn"
+          onClick={() => setShowSettingsModal(true)}
+          title="Settings"
+          style={{ fontSize: "28px" }}
+        >
+          ⚙
+        </button>
       </div>
 
-      {showDeleteConfirm && (
-        <div className="acc-modal" role="dialog" aria-modal>
-          <div className="acc-modal-card">
-            <div className="acc-modal-title">
-              Are you sure to delete the Restaurant?
+      {err && (
+        <div className="status-error">
+          Failed to load restaurants: {errMsg(err)}
+        </div>
+      )}
+      {!err && list === null && <div className="status-muted">Loading…</div>}
+      {!err && list?.length === 0 && (
+        <div className="status-muted">No restaurants yet.</div>
+      )}
+
+      {filtered && filtered.length > 0 && (
+        <div className="browse-grid">
+          {filtered.map((r) => (
+            <Link
+              key={r.id}
+              to="/account/$restaurantid"
+              className="link-reset"
+              params={{ restaurantid: r.id }}
+            >
+              <div className="restaurant-card">
+                <div className="card-image-wrapper">
+                  <button
+                    className="card-remove-btn"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleRemoveClick(r.id);
+                    }}
+                  >
+                    Remove
+                  </button>
+                </div>
+                <div className="card-content">
+                  <div className="card-title">{r.name}</div>
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
+
+      {showNewModal && (
+        <div className="overlay" onClick={() => setShowNewModal(false)}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+            <h2 className="modal-title">New Restaurant</h2>
+            <form onSubmit={handleNewRestaurant}>
+              <div className="form-field">
+                <label className="form-label">Restaurant Name:</label>
+                <input
+                  className="form-input"
+                  value={newRestaurantName}
+                  onChange={(e) => setNewRestaurantName(e.target.value)}
+                  placeholder="Enter restaurant name"
+                  required
+                />
+              </div>
+
+              <div className="modal-actions">
+                <button type="submit" className="btn-primary">
+                  Save
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showSettingsModal && (
+        <div className="overlay" onClick={() => setShowSettingsModal(false)}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+            <h2 className="modal-title">Account Setting</h2>
+            <form onSubmit={handleSaveSettings}>
+              <div className="settings-form-grid">
+                <div className="form-field">
+                  <label className="form-label">New Password:</label>
+                  <input
+                    type="password"
+                    className="form-input"
+                    value={newPwd}
+                    onChange={(e) => setNewPwd(e.target.value)}
+                    placeholder="Enter your new password"
+                  />
+                </div>
+                <div className="form-field">
+                  <label className="form-label">Confirm Password:</label>
+                  <input
+                    type="password"
+                    className="form-input"
+                    value={confirmPwd}
+                    onChange={(e) => setConfirmPwd(e.target.value)}
+                    placeholder="Enter your new password again"
+                  />
+                  {newPwd && confirmPwd && newPwd !== confirmPwd && (
+                    <div className="error-text">Passwords do not match.</div>
+                  )}
+                  {newPwd && newPwd.length > 0 && newPwd.length < 6 && (
+                    <div className="error-text">
+                      Password should be at least 6 characters.
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="modal-actions modal-actions--split">
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() => setShowSettingsModal(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btn-primary"
+                  disabled={
+                    !newPwd || newPwd.length < 6 || newPwd !== confirmPwd
+                  }
+                >
+                  Save
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showRemoveConfirm && (
+        <div className="overlay" onClick={() => setShowRemoveConfirm(false)}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+            <div className="confirm-text">
+              Are you sure to remove this restaurant?
             </div>
-            <p className="acc-modal-desc">
-              Once deleted, your Restaurant and all related records will be
-              permanently removed.
-            </p>
-            <div className="acc-modal-actions">
+            <div className="modal-actions">
               <button
-                className="acc-btn-light"
-                onClick={() => setShowDeleteConfirm(false)}
+                className="btn-secondary"
+                onClick={() => setShowRemoveConfirm(false)}
               >
                 No
               </button>
-              <button className="acc-btn-danger" onClick={onConfirmDelete}>
+              <button className="btn-primary" onClick={handleConfirmRemove}>
                 Yes
               </button>
             </div>
@@ -118,6 +344,5 @@ function AccountSetting() {
 }
 
 export const Route = createFileRoute("/account/")({
-  component: AccountSetting,
+  component: Account,
 });
-export default AccountSetting;

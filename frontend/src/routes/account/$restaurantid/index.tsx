@@ -1,14 +1,80 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createFileRoute } from "@tanstack/react-router";
 import "./index.css";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import type React from "react";
 import { Link } from "@tanstack/react-router";
+import type { Restaurant } from "../../-components/restaurant";
 
-function Account() {
+export function canAddTagCandidate(newTag: string, tags: string[]): boolean {
+  const trimmed = newTag.trim();
+  return trimmed.length > 0 && !tags.includes(trimmed);
+}
+
+export function normalizeTagInput(s: string): string {
+  return s.trim();
+}
+
+export function shouldIncludeOptional(value: string): boolean {
+  return value.trim().length > 0;
+}
+
+function Profile() {
   const [tags, setTags] = useState<string[]>(["Tag", "Vegan"]);
   const [newTag, setNewTag] = useState("");
-  const [logo, setLogo] = useState<string | null>(null);
   const [address, setAddress] = useState("");
+
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [shortDesc, setShortDesc] = useState("");
+  const [bio, setBio] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [mapsLink, setMapsLink] = useState("");
+  const [maxPartySize, setMaxPartySize] = useState(5);
+  const [bookingCapacity, setBookingCapacity] = useState(50);
+  const [bookingLength, setBookingLength] = useState(2);
+
   const { restaurantid } = Route.useParams();
+
+  useEffect(() => {
+    if (!restaurantid) window.location.replace("/account");
+  }, [restaurantid]);
+
+  // Load restaurant original information
+  // Connected backend endpoint: GET /api/restaurant/{restaurantId}
+  useEffect(() => {
+    if (!restaurantid) return;
+    (async () => {
+      try {
+        setLoading(true);
+        setErr(null);
+        const res = await fetch(`/api/restaurant/${restaurantid}`, {
+          method: "GET",
+          credentials: "include",
+          headers: { Accept: "application/json" },
+        });
+        if (!res.ok) throw new Error(`Load failed: ${res.status}`);
+        const data = await res.json();
+        setName(data.name ?? "");
+        setShortDesc(data.description ?? "");
+        setAddress(data.locationText ?? "");
+        setMapsLink(data.locationUrl ?? "");
+        setTags(Array.isArray(data.tags) ? data.tags : []);
+        setBio(data.frontpageMarkdown ?? "");
+        setEmail(data.contactEmail ?? "");
+        setPhone(data.contactPhone ?? "");
+        setMaxPartySize(data.maxPartySize ?? 5);
+        setBookingCapacity(data.bookingCapacity ?? 50);
+        setBookingLength(data.bookingLength ?? 2);
+      } catch (e) {
+        setErr(e instanceof Error ? e.message : String(e));
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [restaurantid]);
 
   const canAdd = newTag.trim().length > 0 && !tags.includes(newTag.trim());
 
@@ -22,25 +88,60 @@ function Account() {
     setTags((list) => list.filter((t) => t !== tag));
   }
 
+  // Save restaurant profile information
+  // Connected backend endpoint: POST /api/restaurant/update
   async function onSave(e: React.FormEvent) {
     e.preventDefault();
-    // Backend：Submit /api/account/update
-    // Input：name, ownerName, email, contactNumber, address,
-  }
-
-  function onLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const url = URL.createObjectURL(file);
-    setLogo(url);
-    // Backend：Upload（e.g. /api/account/upload-logo）Return URL
+    if (!restaurantid) return;
+    try {
+      setLoading(true);
+      setErr(null);
+      const payload: Restaurant = {
+        id: restaurantid,
+        name: name,
+        email: email,
+        phone: phone,
+        description: shortDesc,
+        locationText: address,
+        locationUrl: mapsLink,
+        frontpageMarkdown: bio,
+        maxPartySize: maxPartySize,
+        bookingCapacity: bookingCapacity,
+        bookingLength: bookingLength,
+        tags: tags,
+      };
+      const res = await fetch("/api/restaurant/update", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+      if (res.status === 401) {
+        window.location.href = "/login";
+        return;
+      }
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || `Save failed: ${res.status}`);
+      }
+      window.location.reload();
+      // optional success alert
+      // alert("Saved!");
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : String(e));
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
     <div className="acc-page">
       <div className="acc-shell">
-        <aside className="bks-side">
-          <nav className="bks-side-nav">
+        <aside className="acc-side">
+          <nav className="acc-side-nav">
             <Link to="/account" className="bks-side-link">
               Back to Account
             </Link>
@@ -73,63 +174,57 @@ function Account() {
               FOH Tracker
             </Link>
           </nav>
+          <div className="side-footer">
+            <Link to="/account" className="acc-side-link">
+              ← Back to Dashboard
+            </Link>
+          </div>
         </aside>
 
         <main className="acc-main">
+          {loading && <div>Loading...</div>}
+          {err && <div style={{ color: "red" }}>{err}</div>}
           <form className="acc-card" onSubmit={onSave}>
-            <div className="acc-logo">
-              <label className="acc-logo-circle" htmlFor="acc-logo-input">
-                {logo ? (
-                  <img src={logo} alt="Logo preview" />
-                ) : (
-                  <>
-                    <span className="acc-logo-plus">+</span>
-                    <div className="acc-logo-sub">Add Your Restaurant LOGO</div>
-                  </>
-                )}
-                <input
-                  id="acc-logo-input"
-                  type="file"
-                  accept="image/*"
-                  onChange={onLogoChange}
-                  style={{ display: "none" }}
-                />
-              </label>
-            </div>
-
             <div className="acc-grid">
-              {/* Restaurant Name */}
               <label className="acc-field">
                 <span>Restaurant Name:</span>
                 <input
                   placeholder="Enter the restaurant name here"
-                  required
                   maxLength={80}
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
                 />
               </label>
-              {/* Email Address */}
+
               <label className="acc-field">
                 <span>E-mail Address:</span>
                 <input
                   type="email"
-                  required
                   placeholder="Enter the e-mail address here"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                 />
               </label>
-              {/* Phone Number */}
+
               <label className="acc-field">
                 <span>Phone Number:</span>
                 <input
                   placeholder="Enter the Contact Number here"
                   inputMode="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
                 />
               </label>
-              {/* Address */}
+
               <label className="acc-field acc-span-2">
                 <span>Restaurant Address:</span>
-                <input placeholder="Enter the restaurant address here" />
+                <input
+                  placeholder="Enter the restaurant address here"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                />
               </label>
-              {/* Maps Link */}
+
               <label className="acc-field">
                 <span>Google Maps:</span>
                 <div
@@ -137,19 +232,9 @@ function Account() {
                 >
                   <input
                     placeholder="Enter google maps link for your restaurant."
-                    required
-                    value={address}
-                    onChange={(e) => setAddress(e.target.value)}
+                    value={mapsLink}
+                    onChange={(e) => setMapsLink(e.target.value)}
                   />
-                  <a
-                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    title="Select on Google Maps"
-                    style={{ fontSize: "20px", textDecoration: "none" }}
-                  >
-                    📍
-                  </a>
                 </div>
               </label>
             </div>
@@ -194,6 +279,8 @@ function Account() {
                 className="short-desc"
                 placeholder="Enter the restaurant BIO here"
                 rows={6}
+                value={shortDesc}
+                onChange={(e) => setShortDesc(e.target.value)}
               />
             </div>
 
@@ -203,11 +290,13 @@ function Account() {
                 className="bio-desc"
                 placeholder="Enter the restaurant BIO here"
                 rows={10}
+                value={bio}
+                onChange={(e) => setBio(e.target.value)}
               />
             </div>
 
             <div className="acc-actions">
-              <button type="submit" className="acc-save">
+              <button type="submit" className="submit_button">
                 Save
               </button>
             </div>
@@ -219,6 +308,7 @@ function Account() {
 }
 
 export const Route = createFileRoute("/account/$restaurantid/")({
-  component: Account,
+  component: Profile,
 });
-export default Account;
+
+export default Profile;

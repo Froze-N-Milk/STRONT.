@@ -15,6 +15,21 @@ export type Booking = {
   attendance: Attendance;
 };
 
+export type Restaurant = {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  description: string;
+  locationText: string;
+  locationUrl: string;
+  frontpageMarkdown: string;
+  maxPartySize: number;
+  bookingCapacity: number;
+  bookingLength: number;
+  tags: string[];
+};
+
 export const filterByName = (booking: Booking, searchTerm: string): boolean => {
   if (!searchTerm) {
     return true;
