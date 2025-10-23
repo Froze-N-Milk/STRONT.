@@ -4,44 +4,11 @@ import "./index.css";
 import { useState, useEffect } from "react";
 import type React from "react";
 import { Link } from "@tanstack/react-router";
-
-type RestaurantUpdateRequest = {
-  id: string;
-  name: string;
-  description: string;
-  locationText: string;
-  tags: string[];
-  frontpageMarkdown?: string;
-  contactEmail?: string;
-  contactPhone?: string;
-};
+import type { Restaurant } from "../../-components/restaurant";
 
 export function canAddTagCandidate(newTag: string, tags: string[]): boolean {
   const trimmed = newTag.trim();
   return trimmed.length > 0 && !tags.includes(trimmed);
-}
-
-export function makeUpdatePayload(
-  id: string,
-  name: string,
-  shortDesc: string,
-  address: string,
-  tags: string[],
-  email: string,
-  phone: string,
-  bio: string,
-): RestaurantUpdateRequest {
-  const payload: RestaurantUpdateRequest = {
-    id,
-    name,
-    description: shortDesc,
-    locationText: address,
-    tags,
-  };
-  if (email.trim()) payload.contactEmail = email.trim();
-  if (phone.trim()) payload.contactPhone = phone.trim();
-  if (bio.trim()) payload.frontpageMarkdown = bio.trim();
-  return payload;
 }
 
 export function normalizeTagInput(s: string): string {
@@ -64,6 +31,10 @@ function Profile() {
   const [bio, setBio] = useState("");
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [mapsLink, setMapsLink] = useState("");
+  const [maxPartySize, setMaxPartySize] = useState(5);
+  const [bookingCapacity, setBookingCapacity] = useState(50);
+  const [bookingLength, setBookingLength] = useState(2);
 
   const { restaurantid } = Route.useParams();
 
@@ -89,10 +60,14 @@ function Profile() {
         setName(data.name ?? "");
         setShortDesc(data.description ?? "");
         setAddress(data.locationText ?? "");
+        setMapsLink(data.locationUrl ?? "");
         setTags(Array.isArray(data.tags) ? data.tags : []);
         setBio(data.frontpageMarkdown ?? "");
         setEmail(data.contactEmail ?? "");
         setPhone(data.contactPhone ?? "");
+        setMaxPartySize(data.maxPartySize ?? 5);
+        setBookingCapacity(data.bookingCapacity ?? 50);
+        setBookingLength(data.bookingLength ?? 2);
       } catch (e) {
         setErr(e instanceof Error ? e.message : String(e));
       } finally {
@@ -121,17 +96,20 @@ function Profile() {
     try {
       setLoading(true);
       setErr(null);
-      const payload: RestaurantUpdateRequest = {
+      const payload: Restaurant = {
         id: restaurantid,
-        name,
+        name: name,
+        email: email,
+        phone: phone,
         description: shortDesc,
         locationText: address,
-        tags,
+        locationUrl: mapsLink,
+        frontpageMarkdown: bio,
+        maxPartySize: maxPartySize,
+        bookingCapacity: bookingCapacity,
+        bookingLength: bookingLength,
+        tags: tags,
       };
-
-      if (email.trim()) payload.contactEmail = email.trim();
-      if (phone.trim()) payload.contactPhone = phone.trim();
-      if (bio.trim()) payload.frontpageMarkdown = bio.trim();
       const res = await fetch("/api/restaurant/update", {
         method: "POST",
         credentials: "include",
@@ -211,7 +189,6 @@ function Profile() {
                 <span>Restaurant Name:</span>
                 <input
                   placeholder="Enter the restaurant name here"
-                  required
                   maxLength={80}
                   value={name}
                   onChange={(e) => setName(e.target.value)}
@@ -222,7 +199,6 @@ function Profile() {
                 <span>E-mail Address:</span>
                 <input
                   type="email"
-                  required
                   placeholder="Enter the e-mail address here"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -255,21 +231,9 @@ function Profile() {
                 >
                   <input
                     placeholder="Enter google maps link for your restaurant."
-                    required
                     value={address}
-                    onChange={(e) => setAddress(e.target.value)}
+                    onChange={(e) => setMapsLink(e.target.value)}
                   />
-                  <a
-                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                      address,
-                    )}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    title="Select on Google Maps"
-                    style={{ fontSize: "20px", textDecoration: "none" }}
-                  >
-                    📍
-                  </a>
                 </div>
               </label>
             </div>
