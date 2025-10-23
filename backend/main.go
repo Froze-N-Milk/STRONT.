@@ -287,7 +287,7 @@ INSERT INTO booking (id, contact_id, restaurant_id, party_size, booking_date, ti
 	authedAppMux.Handle("POST /api/restaurant/occasion/delete", &api.DeleteOccasionHandler{})
 	authedAppMux.Handle("POST /api/restaurant/occasion/update", &api.UpdateOccasionHandler{})
 
-	appMux.Handle("GET /booking/cal/{id}", &api.BookingIcsHandler{LocalHost: vite.IsDev})
+	appMux.Handle("GET /bookings/cal/{id}", &api.BookingIcsHandler{LocalHost: vite.IsDev})
 	appMux.Handle("GET /api/booking/{booking}", &api.GetBookingByIDHandler{})
 	appMux.Handle("POST /api/booking/create", &api.CreateOnlineBookingHandler{EmailHelper: emailHelper})
 	appMux.Handle("POST /api/booking/edit/{booking}", &api.UpdateBookingHandler{})
