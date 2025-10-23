@@ -1,9 +1,63 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createFileRoute, Link } from "@tanstack/react-router";
 import "./index.css";
-import { useEffect, useState } from "react";
-import type { Restaurant } from "../-helper.ts";
+import type { FormEvent } from "react";
+import { useState, useEffect } from "react";
 
-export type Availability = {
+export function toggleDayForTest(prev: Set<string>, day: string): Set<string> {
+  const next = new Set(prev);
+  if (next.has(day)) next.delete(day);
+  else next.add(day);
+  return next;
+}
+
+export function formatHourMaskForTest(
+  startHour: string,
+  startMinute: string,
+  endHour: string,
+  endMinute: string,
+): bigint {
+  const sh = Number(startHour);
+  const sm = Number(startMinute);
+  const eh = Number(endHour);
+  const em = Number(endMinute);
+  const open = sh * 2 + Math.floor(sm / 30);
+  const close = eh * 2 + Math.floor(em / 30);
+  const len = Math.max(0, close - open);
+  if (len <= 0) return 0n;
+  const mask = ((1n << BigInt(len)) - 1n) << BigInt(open);
+  return mask;
+}
+
+export type UpdateAvailabilitiesRequestForTest = {
+  id: string;
+  mondayHours: bigint;
+  tuesdayHours: bigint;
+  wednesdayHours: bigint;
+  thursdayHours: bigint;
+  fridayHours: bigint;
+  saturdayHours: bigint;
+  sundayHours: bigint;
+};
+
+export function makeAvailabilitiesRequestForTest(
+  restaurantId: string,
+  selectedDays: Set<string>,
+  hourMask: bigint,
+): UpdateAvailabilitiesRequestForTest {
+  return {
+    id: restaurantId,
+    mondayHours: selectedDays.has("monday") ? hourMask : 0n,
+    tuesdayHours: selectedDays.has("tuesday") ? hourMask : 0n,
+    wednesdayHours: selectedDays.has("wednesday") ? hourMask : 0n,
+    thursdayHours: selectedDays.has("thursday") ? hourMask : 0n,
+    fridayHours: selectedDays.has("friday") ? hourMask : 0n,
+    saturdayHours: selectedDays.has("saturday") ? hourMask : 0n,
+    sundayHours: selectedDays.has("sunday") ? hourMask : 0n,
+  };
+}
+
+export type UpdateAvailabilitiesRequest = {
   id: string;
   mondayHours: number;
   tuesdayHours: number;
@@ -15,29 +69,40 @@ export type Availability = {
 };
 
 function BookingSettingPage() {
-  const restaurantId = Route.useParams().restaurantid;
+  const [existingRestaurant, setExistingRestaurant] = useState<Record<
+    string,
+    unknown
+  > | null>(null);
+  const [maxPartySize, setMaxPartySize] = useState<number | "">("");
+  const [bookingCapacity, setBookingCapacity] = useState<number | "">("");
 
-  const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
-  const [availability, setAvailability] = useState<Availability | null>(null);
+  const { restaurantid } = Route.useParams();
 
   useEffect(() => {
-    fetch(`/api/restaurant/${restaurantId}`, {
-      method: "GET",
-    }).then(async (r) => {
-      if (r.status == 200) {
-        setRestaurant(await r.json());
+    if (!restaurantid) return;
+    (async () => {
+      try {
+        const res = await fetch(
+          `/api/restaurant/details?restaurantId=${encodeURIComponent(restaurantid)}`,
+        );
+        if (!res.ok) throw new Error(String(res.status));
+        const data = await res.json();
+        setExistingRestaurant(data);
+        // Pre-fill People & Table if available
+        if (typeof data?.maxPartySize === "number")
+          setMaxPartySize(data.maxPartySize);
+        if (typeof data?.bookingCapacity === "number")
+          setBookingCapacity(data.bookingCapacity);
+        if (typeof data?.bookingLength === "number")
+          setTimeSlot(data.bookingLength);
+      } catch (e) {
+        console.error("Failed to load restaurant details:", e);
       }
-    });
-    fetch(`/api/availability/${restaurantId}`, {
-      method: "GET",
-    }).then(async (r) => {
-      if (r.status == 200) {
-        setAvailability(await r.json());
-      }
-    });
-  }, [restaurantId]);
+    })();
+  }, [restaurantid]);
 
   const [selectedDays, setSelectedDays] = useState<Set<string>>(new Set());
+  const [timeSlot, setTimeSlot] = useState<number | null>(null);
   const HOURS = Array.from({ length: 24 }, (_, i) =>
     String(i).padStart(2, "0"),
   ); // 00-23
@@ -84,12 +149,14 @@ function BookingSettingPage() {
   // MAKE SURE TO RETAIN EVERYTHING ELSE. This API endpoint expects the full restaurant details,
   // so you need to send back everything like the ID, name, description, etc. You don't want to change these,
   // keep them the same as when you received the details for this restaurant.
-  async function onSaveSettings() {
-    console.log("Saving settings");
+  async function onSaveSettings(e: FormEvent) {
+    e.preventDefault();
     const hourMask = formatHourMask();
+    // Optional: ensure a booking duration has been chosen; if not, leave existing value
+    // (Backend will keep prior setting if this is undefined.)
     try {
-      setAvailability({
-        id: restaurantId,
+      const request: UpdateAvailabilitiesRequest = {
+        id: restaurantid,
         mondayHours: selectedDays.has("monday") ? Number(hourMask) : 0,
         tuesdayHours: selectedDays.has("tuesday") ? Number(hourMask) : 0,
         wednesdayHours: selectedDays.has("wednesday") ? Number(hourMask) : 0,
@@ -97,217 +164,211 @@ function BookingSettingPage() {
         fridayHours: selectedDays.has("friday") ? Number(hourMask) : 0,
         saturdayHours: selectedDays.has("saturday") ? Number(hourMask) : 0,
         sundayHours: selectedDays.has("sunday") ? Number(hourMask) : 0,
-      });
-
-      console.log(JSON.stringify(availability));
+      };
 
       const response = await fetch(`/api/availability/update`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(availability),
+        body: JSON.stringify(request),
       });
 
       if (!response.ok) throw new Error(response.status.toString());
 
       // Update restaurant-level settings (booking length, capacities)
+      const restaurantUpdatePayload: Record<string, unknown> = {
+        ...(existingRestaurant ?? {}),
+        id: restaurantid,
+      };
+      if (typeof timeSlot === "number")
+        restaurantUpdatePayload.bookingLength = timeSlot;
+      if (typeof maxPartySize === "number")
+        restaurantUpdatePayload.maxPartySize = maxPartySize;
+      if (typeof bookingCapacity === "number")
+        restaurantUpdatePayload.bookingCapacity = bookingCapacity;
 
       const res2 = await fetch(`/api/restaurant/update`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(restaurant),
+        body: JSON.stringify(restaurantUpdatePayload),
       });
       if (!res2.ok) throw new Error(res2.status.toString());
     } catch (error) {
-      console.error("Error updating restaurant details: ", error);
+      console.error("Error updating restaurant availabilities: ", error);
     }
-  }
-
-  if (restaurant == null) {
-    return <p>Something went wrong</p>;
   }
 
   return (
     <div className="bks-page">
-      <div style={{ display: "flex", gap: "20px", width: "max-content" }}>
-        <div className="bks-side">
-          <nav className="bks-side-nav">
-            <Link to="/account" className="bks-side-link">
-              Back to Account
-            </Link>
-            <Link
-              to="/account/$restaurantid"
-              className="bks-side-link"
-              params={{ restaurantid: restaurantId }}
-            >
-              Edit Restaurant Profile
-            </Link>
-            <Link
-              to="/account/$restaurantid/booking-settings"
-              className="bks-side-link bks-active"
-              params={{ restaurantid: restaurantId }}
-            >
-              Booking Settings
-            </Link>
-            <Link
-              to="/account/$restaurantid/view-bookings"
-              className="bks-side-link"
-              params={{ restaurantid: restaurantId }}
-            >
-              Bookings
-            </Link>
-            <Link
-              to="/account/$restaurantid/FOHtracker"
-              className="bks-side-link"
-              params={{ restaurantid: restaurantId }}
-            >
-              FOH Tracker
-            </Link>
-          </nav>
-        </div>
-      </div>
+      <aside className="bks-side">
+        <nav className="bks-side-nav">
+          <Link to="/account" className="bks-side-link">
+            Back to Account
+          </Link>
+          <Link
+            to="/account/$restaurantid"
+            className="bks-side-link"
+            params={{ restaurantid: restaurantid }}
+          >
+            Edit Restaurant Profile
+          </Link>
+          <Link
+            to="/account/$restaurantid/booking-settings"
+            className="bks-side-link bks-active"
+            params={{ restaurantid: restaurantid }}
+          >
+            Booking Settings
+          </Link>
+          <Link
+            to="/account/$restaurantid/view-bookings"
+            className="bks-side-link"
+            params={{ restaurantid: restaurantid }}
+          >
+            Bookings
+          </Link>
+          <Link
+            to="/account/$restaurantid/FOHtracker"
+            className="bks-side-link"
+            params={{ restaurantid: restaurantid }}
+          >
+            FOH Tracker
+          </Link>
+        </nav>
+      </aside>
 
       <main className="bks-main">
-        {/* Time */}
-        <section className="bks-section">
-          <div className="bks-title no-line">Time:</div>
-          <div className="bks-grid">
-            <label>
-              <span>Booking Duration:</span>
-              <div className="bks-days">
-                {[2, 3, 4].map((m) => (
-                  <button
-                    key={m}
-                    type="button"
-                    className={`bks-day ${restaurant.bookingLength === m ? "active" : ""}`}
-                    aria-pressed={restaurant.bookingLength === m}
-                    onClick={() =>
-                      setRestaurant({ ...restaurant, bookingLength: m })
-                    }
+        <form className="bks-card" onSubmit={onSaveSettings}>
+          {/* Time */}
+          <section className="bks-section">
+            <div className="bks-title no-line">Time:</div>
+            <div className="bks-grid">
+              <label>
+                <span>Booking Duration:</span>
+                <div className="bks-days">
+                  {[60, 90, 120].map((m) => (
+                    <button
+                      key={m}
+                      type="button"
+                      className={`bks-day ${timeSlot === m ? "active" : ""}`}
+                      aria-pressed={timeSlot === m}
+                      onClick={() => setTimeSlot(m)}
+                    >
+                      {m} min
+                    </button>
+                  ))}
+                </div>
+              </label>
+              <label>
+                <span>Opening Hours:</span>
+                <div className="bks-inline">
+                  {/* Start time */}
+                  <select
+                    value={startHour}
+                    onChange={(e) => setStartHour(e.target.value)}
                   >
-                    {m * 30} min
-                  </button>
-                ))}
-              </div>
-            </label>
-            <label>
-              <span>Opening Hours:</span>
-              <div className="bks-inline">
-                {/* Start time */}
-                <select
-                  value={startHour}
-                  onChange={(e) => setStartHour(e.target.value)}
-                >
-                  {HOURS.map((h) => (
-                    <option key={h} value={h}>
-                      {h}
-                    </option>
-                  ))}
-                </select>
-                :
-                <select
-                  value={startMinute}
-                  onChange={(e) => setStartMinute(e.target.value)}
-                >
-                  {MINUTES.map((m) => (
-                    <option key={m} value={m}>
-                      {m}
-                    </option>
-                  ))}
-                </select>
-                <span className="bks-dash" />
-                {/* End time */}
-                <select
-                  value={endHour}
-                  onChange={(e) => setEndHour(e.target.value)}
-                >
-                  {HOURS.map((h) => (
-                    <option key={h} value={h}>
-                      {h}
-                    </option>
-                  ))}
-                </select>
-                :
-                <select
-                  value={endMinute}
-                  onChange={(e) => setEndMinute(e.target.value)}
-                >
-                  {MINUTES.map((m) => (
-                    <option key={m} value={m}>
-                      {m}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </label>
-            <label className="bks-span-2">
-              <span>Opening Dates:</span>
-              <div className="bks-days">
-                {[
-                  ["monday", "Mon"],
-                  ["tuesday", "Tue"],
-                  ["wednesday", "Wed"],
-                  ["thursday", "Thur"],
-                  ["friday", "Fri"],
-                  ["saturday", "Sat"],
-                  ["sunday", "Sun"],
-                ].map(([key, label]) => (
-                  <button
-                    key={key}
-                    type="button"
-                    onClick={() => toggleDay(key)}
-                    className={`bks-day ${selectedDays.has(key) ? "active" : ""}`}
+                    {HOURS.map((h) => (
+                      <option key={h} value={h}>
+                        {h}
+                      </option>
+                    ))}
+                  </select>
+                  :
+                  <select
+                    value={startMinute}
+                    onChange={(e) => setStartMinute(e.target.value)}
                   >
-                    {label}
-                  </button>
-                ))}
-              </div>
-            </label>
-          </div>
-        </section>
+                    {MINUTES.map((m) => (
+                      <option key={m} value={m}>
+                        {m}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="bks-dash" />
+                  {/* End time */}
+                  <select
+                    value={endHour}
+                    onChange={(e) => setEndHour(e.target.value)}
+                  >
+                    {HOURS.map((h) => (
+                      <option key={h} value={h}>
+                        {h}
+                      </option>
+                    ))}
+                  </select>
+                  :
+                  <select
+                    value={endMinute}
+                    onChange={(e) => setEndMinute(e.target.value)}
+                  >
+                    {MINUTES.map((m) => (
+                      <option key={m} value={m}>
+                        {m}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </label>
+              <label className="bks-span-2">
+                <span>Opening Dates:</span>
+                <div className="bks-days">
+                  {[
+                    ["monday", "Mon"],
+                    ["tuesday", "Tue"],
+                    ["wednesday", "Wed"],
+                    ["thursday", "Thur"],
+                    ["friday", "Fri"],
+                    ["saturday", "Sat"],
+                    ["sunday", "Sun"],
+                  ].map(([key, label]) => (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => toggleDay(key)}
+                      className={`bks-day ${selectedDays.has(key) ? "active" : ""}`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </label>
+            </div>
+          </section>
 
-        <section className="bks-section">
-          <div className="bks-title">People & Table:</div>
-          <div className="bks-grid">
-            <label>
-              <span>Maximum Party Size:</span>
-              <input
-                type="number"
-                min={1}
-                value={restaurant.maxPartySize}
-                onChange={(e) =>
-                  setRestaurant({
-                    ...restaurant,
-                    maxPartySize: !isNaN(Number(e.target.value))
-                      ? Number(e.target.value)
-                      : 0,
-                  })
-                }
-              />
-            </label>
-            <label>
-              <span>Maximum Concurrent Bookings:</span>
-              <input
-                type="number"
-                min={0}
-                value={restaurant.bookingCapacity}
-                onChange={(e) =>
-                  setRestaurant({
-                    ...restaurant,
-                    bookingCapacity: !isNaN(Number(e.target.value))
-                      ? Number(e.target.value)
-                      : 0,
-                  })
-                }
-              />
-            </label>
-          </div>
-        </section>
+          <section className="bks-section">
+            <div className="bks-title">People & Table:</div>
+            <div className="bks-grid">
+              <label>
+                <span>Maximum Party Size:</span>
+                <input
+                  type="number"
+                  min={1}
+                  value={maxPartySize}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setMaxPartySize(v === "" ? "" : Math.max(1, Number(v)));
+                  }}
+                />
+              </label>
+              <label>
+                <span>Maximum Number of Tables:</span>
+                <input
+                  type="number"
+                  min={0}
+                  value={bookingCapacity}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setBookingCapacity(v === "" ? "" : Math.max(0, Number(v)));
+                  }}
+                />
+              </label>
+            </div>
+          </section>
 
-        <div className="bks-actions">
-          <button className="bks-primary" onClick={() => onSaveSettings()}>
-            Save
-          </button>
-        </div>
+          <div className="bks-actions">
+            <button className="bks-primary" type="submit">
+              Save
+            </button>
+          </div>
+        </form>
       </main>
     </div>
   );

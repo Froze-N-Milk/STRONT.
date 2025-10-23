@@ -1,243 +1,341 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createFileRoute } from "@tanstack/react-router";
 import "./index.css";
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
+import type React from "react";
 import { Link } from "@tanstack/react-router";
-import type { Restaurant } from "./-helper.ts";
+
+type RestaurantUpdateRequest = {
+  id: string;
+  name: string;
+  description: string;
+  locationText: string;
+  tags: string[];
+  frontpageMarkdown?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+};
+
+export function canAddTagCandidate(newTag: string, tags: string[]): boolean {
+  const trimmed = newTag.trim();
+  return trimmed.length > 0 && !tags.includes(trimmed);
+}
+
+export function makeUpdatePayload(
+  id: string,
+  name: string,
+  shortDesc: string,
+  address: string,
+  tags: string[],
+  email: string,
+  phone: string,
+  bio: string,
+): RestaurantUpdateRequest {
+  const payload: RestaurantUpdateRequest = {
+    id,
+    name,
+    description: shortDesc,
+    locationText: address,
+    tags,
+  };
+  if (email.trim()) payload.contactEmail = email.trim();
+  if (phone.trim()) payload.contactPhone = phone.trim();
+  if (bio.trim()) payload.frontpageMarkdown = bio.trim();
+  return payload;
+}
+
+export function normalizeTagInput(s: string): string {
+  return s.trim();
+}
+
+export function shouldIncludeOptional(value: string): boolean {
+  return value.trim().length > 0;
+}
 
 function Profile() {
-  const restaurantId = Route.useParams().restaurantid;
-  const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
+  const [tags, setTags] = useState<string[]>(["Tag", "Vegan"]);
   const [newTag, setNewTag] = useState("");
+  const [address, setAddress] = useState("");
+
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [shortDesc, setShortDesc] = useState("");
+  const [bio, setBio] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  const { restaurantid } = Route.useParams();
+
+  useEffect(() => {
+    if (!restaurantid) window.location.replace("/account");
+  }, [restaurantid]);
 
   // Load restaurant original information
   // Connected backend endpoint: GET /api/restaurant/{restaurantId}
   useEffect(() => {
-    fetch(`/api/restaurant/${restaurantId}`, {
-      method: "GET",
-    }).then(async (r) => {
-      if (r.status == 200) {
-        setRestaurant(await r.json());
+    if (!restaurantid) return;
+    (async () => {
+      try {
+        setLoading(true);
+        setErr(null);
+        const res = await fetch(`/api/restaurant/${restaurantid}`, {
+          method: "GET",
+          credentials: "include",
+          headers: { Accept: "application/json" },
+        });
+        if (!res.ok) throw new Error(`Load failed: ${res.status}`);
+        const data = await res.json();
+        setName(data.name ?? "");
+        setShortDesc(data.description ?? "");
+        setAddress(data.locationText ?? "");
+        setTags(Array.isArray(data.tags) ? data.tags : []);
+        setBio(data.frontpageMarkdown ?? "");
+        setEmail(data.contactEmail ?? "");
+        setPhone(data.contactPhone ?? "");
+      } catch (e) {
+        setErr(e instanceof Error ? e.message : String(e));
+      } finally {
+        setLoading(false);
       }
-    });
-  }, [restaurantId]);
+    })();
+  }, [restaurantid]);
 
-  async function onSave() {
+  const canAdd = newTag.trim().length > 0 && !tags.includes(newTag.trim());
+
+  function addTag() {
+    if (!canAdd) return;
+    setTags((list) => [...list, newTag.trim()]);
+    setNewTag("");
+  }
+
+  function removeTag(tag: string) {
+    setTags((list) => list.filter((t) => t !== tag));
+  }
+
+  // Save restaurant profile information
+  // Connected backend endpoint: POST /api/restaurant/update
+  async function onSave(e: React.FormEvent) {
+    e.preventDefault();
+    if (!restaurantid) return;
     try {
+      setLoading(true);
+      setErr(null);
+      const payload: RestaurantUpdateRequest = {
+        id: restaurantid,
+        name,
+        description: shortDesc,
+        locationText: address,
+        tags,
+      };
+
+      if (email.trim()) payload.contactEmail = email.trim();
+      if (phone.trim()) payload.contactPhone = phone.trim();
+      if (bio.trim()) payload.frontpageMarkdown = bio.trim();
       const res = await fetch("/api/restaurant/update", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(restaurant),
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(payload),
       });
+      if (res.status === 401) {
+        window.location.href = "/login";
+        return;
+      }
       if (!res.ok) {
         const text = await res.text();
         throw new Error(text || `Save failed: ${res.status}`);
       }
+      // optional success alert
+      // alert("Saved!");
     } catch (e) {
-      console.log(e);
+      setErr(e instanceof Error ? e.message : String(e));
+    } finally {
+      setLoading(false);
     }
-  }
-
-  if (restaurant == null) {
-    return <p>something went wrong</p>;
   }
 
   return (
     <div className="acc-page">
       <div className="acc-shell">
-        <div style={{ display: "flex", gap: "20px", width: "max-content" }}>
-          <div className="bks-side">
-            <nav className="bks-side-nav">
-              <Link to="/account" className="bks-side-link">
-                Back to Account
-              </Link>
-              <Link
-                to="/account/$restaurantid"
-                className="bks-side-link bks-active"
-                params={{ restaurantid: restaurantId }}
-              >
-                Edit Restaurant Profile
-              </Link>
-              <Link
-                to="/account/$restaurantid/booking-settings"
-                className="bks-side-link"
-                params={{ restaurantid: restaurantId }}
-              >
-                Booking Settings
-              </Link>
-              <Link
-                to="/account/$restaurantid/view-bookings"
-                className="bks-side-link"
-                params={{ restaurantid: restaurantId }}
-              >
-                Bookings
-              </Link>
-              <Link
-                to="/account/$restaurantid/FOHtracker"
-                className="bks-side-link"
-                params={{ restaurantid: restaurantId }}
-              >
-                FOH Tracker
-              </Link>
-            </nav>
+        <aside className="acc-side">
+          <nav className="acc-side-nav">
+            <Link to="/account" className="bks-side-link">
+              Back to Account
+            </Link>
+            <Link
+              to="/account/$restaurantid"
+              className="bks-side-link bks-active"
+              params={{ restaurantid: restaurantid }}
+            >
+              Edit Restaurant Profile
+            </Link>
+            <Link
+              to="/account/$restaurantid/booking-settings"
+              className="bks-side-link"
+              params={{ restaurantid: restaurantid }}
+            >
+              Booking Settings
+            </Link>
+            <Link
+              to="/account/$restaurantid/view-bookings"
+              className="bks-side-link"
+              params={{ restaurantid: restaurantid }}
+            >
+              Bookings
+            </Link>
+            <Link
+              to="/account/$restaurantid/FOHtracker"
+              className="bks-side-link"
+              params={{ restaurantid: restaurantid }}
+            >
+              FOH Tracker
+            </Link>
+          </nav>
+          <div className="side-footer">
+            <Link to="/account" className="acc-side-link">
+              ← Back to Dashboard
+            </Link>
           </div>
-        </div>
+        </aside>
+
         <main className="acc-main">
-          <div className="acc-grid">
-            <label className="acc-field">
-              <span>Restaurant Name:</span>
-              <input
-                placeholder="Enter the restaurant name here"
-                required
-                maxLength={80}
-                value={restaurant.name}
-                onChange={(e) =>
-                  setRestaurant({ ...restaurant, name: e.target.value })
-                }
-              />
-            </label>
-            <label className="acc-field">
-              <span>E-mail Address:</span>
-              <input
-                type="email"
-                required
-                placeholder="Enter the e-mail address here"
-                value={restaurant.email}
-                onChange={(e) =>
-                  setRestaurant({ ...restaurant, email: e.target.value })
-                }
-              />
-            </label>
-            <label className="acc-field">
-              <span>Phone Number:</span>
-              <input
-                placeholder="Enter the Contact Number here"
-                inputMode="tel"
-                value={restaurant.phone}
-                onChange={(e) =>
-                  setRestaurant({ ...restaurant, phone: e.target.value })
-                }
-              />
-            </label>
-            <label className="acc-field acc-span-2">
-              <span>Restaurant Address:</span>
-              <input
-                placeholder="Enter the restaurant address here"
-                value={restaurant.locationText}
-                onChange={(e) =>
-                  setRestaurant({
-                    ...restaurant,
-                    locationText: e.target.value,
-                  })
-                }
-              />
-            </label>
-            <label className="acc-field">
-              <span>Google Maps:</span>
-              <div
-                style={{ display: "flex", gap: "8px", alignItems: "center" }}
-              >
+          {loading && <div>Loading...</div>}
+          {err && <div style={{ color: "red" }}>{err}</div>}
+          <form className="acc-card" onSubmit={onSave}>
+            <div className="acc-grid">
+              <label className="acc-field">
+                <span>Restaurant Name:</span>
                 <input
-                  placeholder="Enter google maps link for your restaurant."
+                  placeholder="Enter the restaurant name here"
                   required
-                  value={restaurant.locationUrl}
-                  onChange={(e) =>
-                    setRestaurant({
-                      ...restaurant,
-                      locationUrl: e.target.value,
-                    })
-                  }
+                  maxLength={80}
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
                 />
-                <a
-                  href={restaurant.locationUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  title="Select on Google Maps"
-                  style={{ fontSize: "20px", textDecoration: "none" }}
+              </label>
+
+              <label className="acc-field">
+                <span>E-mail Address:</span>
+                <input
+                  type="email"
+                  required
+                  placeholder="Enter the e-mail address here"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </label>
+
+              <label className="acc-field">
+                <span>Phone Number:</span>
+                <input
+                  placeholder="Enter the Contact Number here"
+                  inputMode="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                />
+              </label>
+
+              <label className="acc-field acc-span-2">
+                <span>Restaurant Address:</span>
+                <input
+                  placeholder="Enter the restaurant address here"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                />
+              </label>
+
+              <label className="acc-field">
+                <span>Google Maps:</span>
+                <div
+                  style={{ display: "flex", gap: "8px", alignItems: "center" }}
                 >
-                  📍
-                </a>
-              </div>
-            </label>
-          </div>
-          <div className="acc-section">
-            <div className="acc-section-title">Add Search Tags</div>
-            <div className="acc-tags">
-              {restaurant.tags.map((t) => (
-                <span key={t} className="acc-tag">
-                  {t}
-                  <button
-                    type="button"
-                    aria-label="remove"
-                    onClick={() => {
-                      const newTags = restaurant.tags.filter(
-                        (tag) => tag !== t,
-                      );
-                      setRestaurant({ ...restaurant, tags: newTags });
-                    }}
+                  <input
+                    placeholder="Enter google maps link for your restaurant."
+                    required
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                  />
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                      address,
+                    )}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="Select on Google Maps"
+                    style={{ fontSize: "20px", textDecoration: "none" }}
                   >
-                    ×
-                  </button>
-                </span>
-              ))}
+                    📍
+                  </a>
+                </div>
+              </label>
             </div>
-            <div className="acc-tag-add">
-              <input
-                type="text"
-                value={newTag}
-                onChange={(e) => setNewTag(e.target.value)}
-                placeholder="Enter your restaurant's type and add it as a tag."
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    if (!restaurant.tags.includes(newTag)) {
-                      setRestaurant({
-                        ...restaurant,
-                        tags: [...restaurant.tags, newTag],
-                      });
+
+            <div className="acc-section">
+              <div className="acc-section-title">Add Search Tags</div>
+              <div className="acc-tags">
+                {tags.map((t) => (
+                  <span key={t} className="acc-tag">
+                    {t}
+                    <button
+                      type="button"
+                      aria-label="remove"
+                      onClick={() => removeTag(t)}
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+              <div className="acc-tag-add">
+                <input
+                  value={newTag}
+                  onChange={(e) => setNewTag(e.target.value)}
+                  placeholder="Enter your restaurant's type and add it as a tag."
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      addTag();
                     }
-                  }
-                }}
+                  }}
+                />
+                <button type="button" onClick={addTag} disabled={!canAdd}>
+                  +
+                </button>
+              </div>
+            </div>
+
+            <div className="acc-section">
+              <div className="acc-section-title">Short Description</div>
+              <textarea
+                className="short-desc"
+                placeholder="Enter the restaurant BIO here"
+                rows={6}
+                value={shortDesc}
+                onChange={(e) => setShortDesc(e.target.value)}
               />
-              <button
-                type="button"
-                onClick={() => {}}
-                disabled={restaurant.tags.includes(newTag)}
-              >
-                +
+            </div>
+
+            <div className="acc-section">
+              <div className="acc-section-title">BIO</div>
+              <textarea
+                className="bio-desc"
+                placeholder="Enter the restaurant BIO here"
+                rows={10}
+                value={bio}
+                onChange={(e) => setBio(e.target.value)}
+              />
+            </div>
+
+            <div className="acc-actions">
+              <button type="submit" className="acc-save">
+                Save
               </button>
             </div>
-          </div>
-          <div className="acc-section">
-            <div className="acc-section-title">Short Description</div>
-            <textarea
-              className="short-desc"
-              placeholder="Enter the restaurant bio here"
-              rows={6}
-              value={restaurant.description}
-              onChange={(e) =>
-                setRestaurant({ ...restaurant, description: e.target.value })
-              }
-            />
-          </div>
-          <div className="acc-section">
-            <div className="acc-section-title">BIO</div>
-            <textarea
-              className="bio-desc"
-              placeholder="Create the front page for your restaurant"
-              rows={10}
-              value={restaurant.frontpageMarkdown}
-              onChange={(e) =>
-                setRestaurant({
-                  ...restaurant,
-                  frontpageMarkdown: e.target.value,
-                })
-              }
-            />
-          </div>
-          <div className="acc-actions">
-            <button className="submit_button" onClick={() => onSave()}>
-              Save
-            </button>
-          </div>
+          </form>
         </main>
       </div>
     </div>
@@ -247,3 +345,5 @@ function Profile() {
 export const Route = createFileRoute("/account/$restaurantid/")({
   component: Profile,
 });
+
+export default Profile;

@@ -1,12 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import "./index.css";
-import {
-  useState,
-  useEffect,
-  useMemo,
-  type ChangeEvent,
-  type FormEvent,
-} from "react";
+import { useState, useEffect, useMemo, type FormEvent } from "react";
 import { Link } from "@tanstack/react-router";
 
 type Restaurant = {
@@ -31,10 +25,6 @@ function Account() {
     null,
   );
   const [newRestaurantName, setNewRestaurantName] = useState("");
-  const [newRestaurantImage, setNewRestaurantImage] = useState<string | null>(
-    null,
-  );
-  const [newRestaurantFile, setNewRestaurantFile] = useState<File | null>(null);
 
   const [newPwd, setNewPwd] = useState("");
   const [confirmPwd, setConfirmPwd] = useState("");
@@ -125,45 +115,24 @@ function Account() {
   // Connected backend endpoint: POST /api/restaurant/create
   const handleNewRestaurant = async (e: FormEvent) => {
     e.preventDefault();
-    try {
-      const res = await fetch("/api/restaurant/create", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newRestaurantName.trim() }),
-      });
-      if (res.ok) {
-        const newRestaurant = await res.json();
 
-        if (newRestaurantFile) {
-          const fd = new FormData();
-          fd.append("id", newRestaurant.id);
-          fd.append("image", newRestaurantFile);
-
-          await fetch("/api/restaurant/update", {
-            method: "POST",
-            credentials: "include",
-            body: fd,
-          });
-        }
-
-        setList((prev) => (prev ? [...prev, newRestaurant] : [newRestaurant]));
-        setShowNewModal(false);
-        setNewRestaurantName("");
-        setNewRestaurantImage(null);
-        setNewRestaurantFile(null);
-      }
-    } catch {
-      void 0;
+    const res = await fetch("/api/restaurant/create", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: newRestaurantName.trim(),
+        maxPartySize: 5,
+        bookingCapacity: 50,
+        bookingLength: 2,
+      }),
+    });
+    console.log(res);
+    if (res.redirected) {
+      setShowNewModal(false);
+      setNewRestaurantName("");
+      window.location.assign(res.url);
     }
-  };
-
-  const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const url = URL.createObjectURL(file);
-    setNewRestaurantImage(url);
-    setNewRestaurantFile(file);
   };
 
   // Save account settings
@@ -270,20 +239,6 @@ function Account() {
           <div className="modal-card" onClick={(e) => e.stopPropagation()}>
             <h2 className="modal-title">New Restaurant</h2>
             <form onSubmit={handleNewRestaurant}>
-              <label className="image-upload-area">
-                {newRestaurantImage ? (
-                  <img src={newRestaurantImage} alt="Restaurant preview" />
-                ) : (
-                  <div className="upload-icon">+</div>
-                )}
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  style={{ display: "none" }}
-                />
-              </label>
-
               <div className="form-field">
                 <label className="form-label">Restaurant Name:</label>
                 <input

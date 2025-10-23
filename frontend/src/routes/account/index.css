@@ -253,6 +253,7 @@
   box-sizing: border-box;
   transition: all 0.2s;
   background: #fafafa;
+  color: black;
 }
 
 .form-input:focus {
