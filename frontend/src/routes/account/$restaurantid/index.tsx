@@ -127,6 +127,7 @@ function Profile() {
         const text = await res.text();
         throw new Error(text || `Save failed: ${res.status}`);
       }
+      window.location.reload();
       // optional success alert
       // alert("Saved!");
     } catch (e) {
@@ -231,7 +232,7 @@ function Profile() {
                 >
                   <input
                     placeholder="Enter google maps link for your restaurant."
-                    value={address}
+                    value={mapsLink}
                     onChange={(e) => setMapsLink(e.target.value)}
                   />
                 </div>
@@ -295,7 +296,7 @@ function Profile() {
             </div>
 
             <div className="acc-actions">
-              <button type="submit" className="acc-save">
+              <button type="submit" className="submit_button">
                 Save
               </button>
             </div>
