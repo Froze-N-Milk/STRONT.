@@ -30,8 +30,8 @@ func (*GetAvailabilitiesHandler) handle(ctx context.Context, db *gorm.DB, id uui
 SELECT availability.*
 FROM availability
 INNER JOIN restaurant
-	ON restaurant.id = ?
-	AND restaurant.availability_id = availability.id`,
+ON restaurant.id = ?
+AND restaurant.availability_id = availability.id`,
 		id,
 	).First(ctx)
 
@@ -43,8 +43,8 @@ INNER JOIN restaurant
 SELECT occasion.*
 FROM occasion
 INNER JOIN availability
-	ON availability.id = ?
-	AND occasion.availability_id = availability.id`,
+ON availability.id = ?
+AND occasion.availability_id = availability.id`,
 		availability.ID,
 	).Find(ctx)
 
@@ -79,21 +79,7 @@ func (h *GetAvailabilitiesHandler) ServeHTTP(ctx AppContext, w http.ResponseWrit
 	json.NewEncoder(w).Encode(availability)
 }
 
-// UpdateAvailabilitiesHandler updates the availability details for a restaurant
-// owned by the currently authed user.
-//
-// expects: { id: restaurant id, *_hour_mask: hour for that day }
-//
-// bound to: POST /api/availabilities/update
-type UpdateAvailabilitiesHandler struct{}
-
-type invalidRestaurantRequestError struct{}
-
-func (invalidRestaurantRequestError) Error() string {
-	return "No such restaurant associated with account"
-}
-
-type updateRestaurantAvailabilitiesRequest struct {
+type rawAvailabilities struct {
 	ID                uuid.UUID `json:"id"`
 	MondayHourMask    int64     `json:"mondayHours"`
 	TuesdayHourMask   int64     `json:"tuesdayHours"`
@@ -104,11 +90,75 @@ type updateRestaurantAvailabilitiesRequest struct {
 	SundayHourMask    int64     `json:"sundayHours"`
 }
 
+type invalidRestaurantRequestError struct{}
+
+func (invalidRestaurantRequestError) Error() string {
+	return "No such restaurant associated with account"
+}
+
+// GetRawAvailabilitiesHandler gets the raw availabilities for a
+// restaurant, for editing them
+//
+// expects: .../{restaurant}: restaurant id path-param
+//
+// bound to: GET /api/availability/{restaurant}/raw
+type GetRawAvailabilitiesHandler struct{}
+
+func (*GetRawAvailabilitiesHandler) handle(ctx context.Context, db *gorm.DB, id uuid.UUID, email string) (model.Availability, error) {
+	return gorm.G[model.Availability](db).Raw(`
+SELECT availability.*
+FROM availability
+JOIN restaurant
+ON restaurant.id = ?
+AND restaurant.availability_id = availability.id
+JOIN account
+ON account.email = ?
+AND restaurant.account_id = account.id`, id, email).First(ctx)
+}
+
+func (h *GetRawAvailabilitiesHandler) ServeHTTP(ctx AuthedAppContext, w http.ResponseWriter, r *http.Request) {
+	restaurant, err := uuid.Parse(r.PathValue("restaurant"))
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	db := ctx.DB.Session(&gorm.Session{SkipDefaultTransaction: true}).Begin()
+
+	availability, err := h.handle(r.Context(), db, restaurant, ctx.User.Email)
+
+	if err != nil {
+		db.Rollback()
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	db.Commit()
+	json.NewEncoder(w).Encode(rawAvailabilities {
+		ID:                availability.ID,
+		MondayHourMask:    availability.MondayHourMask,
+		TuesdayHourMask:   availability.TuesdayHourMask,
+		WednesdayHourMask: availability.WednesdayHourMask,
+		ThursdayHourMask:  availability.ThursdayHourMask,
+		FridayHourMask:    availability.FridayHourMask,
+		SaturdayHourMask:  availability.SaturdayHourMask,
+		SundayHourMask:    availability.SundayHourMask,
+	})
+}
+
+// UpdateAvailabilitiesHandler updates the availability details for a restaurant
+// owned by the currently authed user.
+//
+// expects: { id: restaurant id, *_hour_mask: hour for that day }
+//
+// bound to: POST /api/availabilities/update
+type UpdateAvailabilitiesHandler struct{}
+
 func (*UpdateAvailabilitiesHandler) handle(
 	ctx context.Context,
 	db *gorm.DB,
 	email string,
-	request updateRestaurantAvailabilitiesRequest,
+	request rawAvailabilities,
 ) error {
 	result := gorm.WithResult()
 	err := gorm.G[any](db, result).Exec(ctx, `
@@ -156,7 +206,7 @@ WHERE availability.id = authed.id`,
 }
 
 func (h *UpdateAvailabilitiesHandler) ServeHTTP(ctx AuthedAppContext, w http.ResponseWriter, r *http.Request) {
-	request := updateRestaurantAvailabilitiesRequest{}
+	request := rawAvailabilities{}
 	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)

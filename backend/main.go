@@ -274,6 +274,7 @@ INSERT INTO booking (id, contact_id, restaurant_id, party_size, booking_date, ti
 	})
 
 	appMux.Handle("GET /api/availability/{restaurant}", &api.GetAvailabilitiesHandler{})
+	authedAppMux.Handle("GET /api/availability/{restaurant}/raw", &api.GetRawAvailabilitiesHandler{})
 	authedAppMux.Handle("POST /api/availability/update", &api.UpdateAvailabilitiesHandler{})
 
 	appMux.Handle("GET /api/restaurants", &api.BrowseRestaurantsHandler{})

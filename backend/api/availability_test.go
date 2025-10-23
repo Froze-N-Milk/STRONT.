@@ -36,6 +36,31 @@ func TestGetAvailabilities(t *testing.T) {
 	})
 }
 
+func TestGetRawAvailabilities(t *testing.T) {
+	t.Parallel()
+	WithTestDB(t, func(db *gorm.DB) {
+		s := SeedDB(db)
+
+		h := GetRawAvailabilitiesHandler{}
+
+		t.Run("Get Availabilities", func (t *testing.T) {
+			_, err := h.handle(s.Ctx, db, s.Restaurant.ID, s.Account.Email)
+
+			if err != nil {
+				t.Errorf("unexpected query error")
+			}
+		})
+		t.Run("Get Non-Existent Availabilities", func (t *testing.T) {
+			_, err := h.handle(s.Ctx, db, uuid.MustParse("ffffffff-ffff-ffff-ffff-ffffffffffff"), "")
+
+			if err == nil {
+				t.Errorf("expected query error")
+			}
+		})
+	})
+}
+
+
 func TestUpdateAvailabilities(t *testing.T) {
 	t.Parallel()
 	WithTestDB(t, func(db *gorm.DB) {
@@ -44,7 +69,7 @@ func TestUpdateAvailabilities(t *testing.T) {
 		h := UpdateAvailabilitiesHandler{}
 
 		t.Run("Update Availabilities", func (t *testing.T) {
-			err := h.handle(s.Ctx, db, s.Account.Email, updateRestaurantAvailabilitiesRequest{
+			err := h.handle(s.Ctx, db, s.Account.Email, rawAvailabilities{
 				ID:                s.Restaurant.ID,
 				MondayHourMask:    0,
 				TuesdayHourMask:   0,
@@ -60,7 +85,7 @@ func TestUpdateAvailabilities(t *testing.T) {
 			}
 		})
 		t.Run("Update Non-Existent Availabilities", func (t *testing.T) {
-			err := h.handle(s.Ctx, db, s.Account.Email, updateRestaurantAvailabilitiesRequest{
+			err := h.handle(s.Ctx, db, s.Account.Email, rawAvailabilities{
 				ID:                uuid.MustParse("ffffffff-ffff-ffff-ffff-ffffffffffff"),
 				MondayHourMask:    0,
 				TuesdayHourMask:   0,
@@ -76,7 +101,7 @@ func TestUpdateAvailabilities(t *testing.T) {
 			}
 		})
 		t.Run("Update Un-owned Availabilities", func (t *testing.T) {
-			err := h.handle(s.Ctx, db, "a", updateRestaurantAvailabilitiesRequest{
+			err := h.handle(s.Ctx, db, "a", rawAvailabilities{
 				ID:                s.Availability.ID,
 				MondayHourMask:    0,
 				TuesdayHourMask:   0,
